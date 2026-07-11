@@ -383,7 +383,7 @@ setInterval(refreshProfile,5000);
 =========================== */
 
 const discordLink =
-"https://discord.gg/bSEXHAhDwQ";
+"https://discord.com/users/1194074826571259944";
 
 document.querySelectorAll(".fa-discord").forEach(icon=>{
 

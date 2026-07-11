@@ -433,7 +433,12 @@ section h2{
     color:#00e5ff;
     margin-bottom:50px;
 }
-
+.song-title{
+    color:#ffffff; /* ay loun bghiti */
+}
+.song-title1{
+    color:#867a7a; /* ay loun bghiti */
+}
 /* ===========================
    GLASS CARD
 =========================== */
@@ -510,79 +515,11 @@ section h2{
    PROJECTS
 =========================== */
 
-.projects{
-
-    display:grid;
-
-    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-
-    gap:25px;
-
-}
-
-.project{
-
-    background:#111;
-
-    border-radius:20px;
-
-    padding:25px;
-
-    transition:.4s;
-
-    border:1px solid transparent;
-
-}
-
-.project:hover{
-
-    transform:translateY(-8px);
-
-    border-color:#ff7b00;
-
-    box-shadow:0 0 25px rgba(255,123,0,.3);
-
-}
-
-.project h3{
-
-    color:#ff7b00;
-
-    margin-bottom:15px;
-
-}
-
-.project p{
-
-    color:#bbb;
-
-    line-height:28px;
-
-}
-
 /* ===========================
    ANIME
 =========================== */
 
-#anime{
 
-    text-align:center;
-
-}
-
-#anime img{
-
-    width:600px;
-
-    max-width:100%;
-
-    border-radius:25px;
-
-    border:3px solid #ff7b00;
-
-    box-shadow:0 0 35px rgba(255,123,0,.4);
-
-}
 
 /* ===========================
    CONTACT
@@ -1866,6 +1803,98 @@ margin-top:15px;
 /* ===========================
    na3na33
 =========================== */
+.favorites{
+    display:flex;
+    justify-content:center;
+    gap:20px;
+    flex-wrap:wrap;
+}
+
+.fav-card{
+    position:relative;
+    width:400px;
+    height:620px;
+    border-radius:18px;
+    overflow:hidden;
+    cursor:pointer;
+    transition:.35s;
+    box-shadow:0 10px 25px rgba(0,0,0,.4);
+}
+
+.fav-card img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    transition:.35s;
+}
+
+.fav-card::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(to top,
+    rgba(0,0,0,.95),
+    rgba(0,0,0,.2),
+    transparent);
+}
+
+.badge{
+    position:absolute;
+    top:15px;
+    left:15px;
+    padding:6px 12px;
+    border-radius:20px;
+    font-size:12px;
+    font-weight:700;
+    background:#29b6f6; /* ila bghiti background yb9a nafsso */
+    color:white;
+}
+
+.fav-info{
+    position:absolute;
+    bottom:20px;
+    left:18px;
+    z-index:2;
+}
+
+.fav-info h3{
+    color:white;
+    font-size:28px;
+    margin:0;
+}
+
+.fav-card:hover{
+    transform:translateY(-10px);
+}
+
+.fav-card:hover img{
+    transform:scale(1.08);
+}
+.badge.anime{
+    background:#ff9800;
+}
+
+.badge.series{
+    background:#29b6f6;
+}
+
+.badge.movie{
+    background:#ef4444;
+}
+/* ===========================
+   na3na34
+=========================== */
+body{
+    background:
+        linear-gradient(rgba(0,0,0,.75), rgba(0,0,0,.85)),
+        url("https://i.pinimg.com/736x/68/8a/2b/688a2b835f74cd543071f2d05abf7d54.jpg");
+
+    background-size:cover;
+    background-position:center;
+    background-attachment:fixed;
+    background-repeat:no-repeat;
+}
+
 /* ===========================
    END DISCORD PROFILE
 =========================== *

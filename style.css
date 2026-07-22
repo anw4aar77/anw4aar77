@@ -1531,6 +1531,28 @@ margin-top:15px;
 
 }
 
+.discord-badges{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:8px;
+
+    margin-top:20px;
+
+}
+
+.discord-badge-icon{
+
+    width:22px;
+
+    height:22px;
+
+    object-fit:contain;
+
+}
+
 /* ===========================
    ACTIVITY BOX
 =========================== */

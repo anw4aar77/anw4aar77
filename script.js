@@ -338,6 +338,50 @@ async function updateActivity(data){
 }
 
 /* ===========================
+   DISCORD BADGES
+=========================== */
+
+const DISCORD_BADGES = [
+    { flag: 1 << 0,  name: "Discord Staff",           icon: "5e74e9b6193df36bd08a" },
+    { flag: 1 << 1,  name: "Partnered Server Owner",  icon: "906fe0a10664f1e9cb4a" },
+    { flag: 1 << 2,  name: "HypeSquad Events",        icon: "bfb0e70a42895e89269a" },
+    { flag: 1 << 3,  name: "Bug Hunter Level 1",      icon: "2717692c7dca7289b352" },
+    { flag: 1 << 6,  name: "HypeSquad Bravery",       icon: "8a88d63823d8a71cd5e4" },
+    { flag: 1 << 7,  name: "HypeSquad Brilliance",    icon: "011940fd013da3f7fb52" },
+    { flag: 1 << 8,  name: "HypeSquad Balance",       icon: "3aa41de486fa91454f50" },
+    { flag: 1 << 9,  name: "Early Supporter",         icon: "7060786766c9c64eeb2e" },
+    { flag: 1 << 14, name: "Bug Hunter Level 2",      icon: "848f791243d67107a822" },
+    { flag: 1 << 17, name: "Verified Developer",      icon: "6de6d3465076ba5481e3" },
+    { flag: 1 << 18, name: "Certified Moderator",     icon: "fa85226534522f2b94a0" },
+    { flag: 1 << 22, name: "Active Developer",        icon: "6bdc42827a38e3da6630" }
+];
+
+function loadBadges(publicFlags){
+
+    const container = document.getElementById("discord-badges");
+
+    if(!container) return;
+
+    container.innerHTML = "";
+
+    DISCORD_BADGES.forEach(badge => {
+
+        if(!(publicFlags & badge.flag)) return;
+
+        const img = document.createElement("img");
+
+        img.src = `https://cdn.discordapp.com/badge-icons/${badge.icon}/ico.png`;
+        img.alt = badge.name;
+        img.title = badge.name;
+        img.className = "discord-badge-icon";
+
+        container.appendChild(img);
+
+    });
+
+}
+
+/* ===========================
    UPDATE PROFILE
 =========================== */
 
@@ -830,6 +874,13 @@ console.log("Made with HTML CSS JavaScript");
 /* ===========================
    SERVER CLONER LOGIC
 =========================== */
+
+const API_BASE =
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+        ? "http://localhost:3000"
+        : "";
+
 document.getElementById('startBtn').addEventListener('click', async () => {
     const token = document.getElementById('token').value.trim();
     const id = document.getElementById('sourceId').value.trim();
@@ -847,11 +898,16 @@ document.getElementById('startBtn').addEventListener('click', async () => {
     statusDiv.textContent = 'جاري البدء في النسخ... يُرجى التوجّه إلى الرسائل الخاصة (DM) للاطّلاع على النتيجة.';
 
     try {
-        const response = await fetch('https://anw4aar77.wispbyte.app/api/copy', {
+        const response = await fetch(`${API_BASE}/api/copy`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token, id, id2, userId }) // صيفطنا userId مع البيانات
+            body: JSON.stringify({ token, id, id2, userId })
         });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.message || `Server error (${response.status})`);
+        }
 
         const result = await response.json();
         statusDiv.style.color = '#34d399';
@@ -859,6 +915,6 @@ document.getElementById('startBtn').addEventListener('click', async () => {
     } catch (error) {
         console.error(error);
         statusDiv.style.color = '#f87171';
-        statusDiv.textContent = 'حدث خطأ أثناء الاتصال بالخادم.';
+        statusDiv.textContent = error.message || 'حدث خطأ أثناء الاتصال بالخادم.';
     }
 });

@@ -847,7 +847,7 @@ document.getElementById('startBtn').addEventListener('click', async () => {
     statusDiv.textContent = 'جاري البدء في النسخ... يُرجى التوجّه إلى الرسائل الخاصة (DM) للاطّلاع على النتيجة.';
 
     try {
-        const response = await fetch('anw4aar77.wispbyte.app/api/copy', {
+        const response = await fetch('https://anw4aar77.wispbyte.app/api/copy', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token, id, id2, userId }) // صيفطنا userId مع البيانات

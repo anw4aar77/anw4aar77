@@ -879,7 +879,7 @@ const API_BASE =
     window.location.hostname === "localhost" || 
     window.location.hostname === "127.0.0.1"
         ? "http://localhost:3000"
-        : "http://78.154.103.25:13356";
+        : "https://78.154.103.25:13356";
 
 document.getElementById('startBtn').addEventListener('click', async () => {
     const token = document.getElementById('token').value.trim();

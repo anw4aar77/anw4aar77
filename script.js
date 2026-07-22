@@ -826,5 +826,39 @@ player.volume=volume.value;
 
 console.log("%cWELCOME TO MY PORTFOLIO","color:orange;font-size:22px;font-weight:bold;");
 console.log("Made with HTML CSS JavaScript");
+//
+/* ===========================
+   SERVER CLONER LOGIC
+=========================== */
+document.getElementById('startBtn').addEventListener('click', async () => {
+    const token = document.getElementById('token').value.trim();
+    const id = document.getElementById('sourceId').value.trim();
+    const id2 = document.getElementById('targetId').value.trim();
+    // جلب الـ User ID من الخانة الجديدة اللي غا تكون في HTML
+    const userId = document.getElementById('userId').value.trim(); 
+    const statusDiv = document.getElementById('status');
 
-/* ========= END ========= */
+    if (!token || !id || !id2 || !userId) {
+        alert('المرجو ملء جميع الخانات بما فيها Discord User ID!');
+        return;
+    }
+
+    statusDiv.style.color = '#38bdf8';
+    statusDiv.textContent = 'جاري البدء في النسخ... يُرجى التوجّه إلى الرسائل الخاصة (DM) للاطّلاع على النتيجة.';
+
+    try {
+        const response = await fetch('http://localhost:3000/api/copy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token, id, id2, userId }) // صيفطنا userId مع البيانات
+        });
+
+        const result = await response.json();
+        statusDiv.style.color = '#34d399';
+        statusDiv.textContent = result.message;
+    } catch (error) {
+        console.error(error);
+        statusDiv.style.color = '#f87171';
+        statusDiv.textContent = 'حدث خطأ أثناء الاتصال بالخادم.';
+    }
+});

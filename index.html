@@ -1,3 +1,4 @@
+
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -50,6 +51,8 @@
 <li><a href="#discord">Discord</a></li>
 
 <li><a href="#Music">Favorite</a></li>
+
+<li><a href="#Methode">Methode</a></li>
 
 <li><a href="#contact">Contact</a></li>
 
@@ -170,7 +173,7 @@ Discord Developer & Bot Engineer
     </div>
 
 </div>
-
+//
 <!-- Spotify -->
 
 <div id="spotify-card" class="discord-activity">
@@ -263,7 +266,46 @@ value="1">
     <div class="fav-info">
         <h3>Avatar</h3>
     </div>
-</div>
+ </div>
+
+
+//
+<section id="Methode" class="methode-section">
+
+    <h2 class="methode-title">Methode!</h2>
+
+    <div class="container">
+        <h2>نسخ سيرفرات ديسكورد</h2>
+        <p class="subtitle">أدخل معلومات الحساب وسيرفرات النسخ</p>
+
+        <div class="form-group">
+            <label>توكن الحساب (Discord Token)</label>
+            <input type="text" id="token" placeholder="أدخل توكن الحساب هنا">
+        </div>
+
+        <div class="form-group">
+            <label>معرف السيرفر الأصلي (Source ID)</label>
+            <input type="text" id="sourceId" placeholder="ID السيرفر المراد نسخه">
+        </div>
+
+        <div class="form-group">
+            <label>معرف السيرفر الهدف (Target ID)</label>
+            <input type="text" id="targetId" placeholder="ID السيرفر الجديد (فارغ)">
+        </div>
+
+        <!-- الخانة الجديدة المضافة خاصة بأيدي المستخدم للإشعارات -->
+        <div class="form-group">
+            <label>معرف حسابك في ديسكورد (User ID للإشعارات)</label>
+            <input type="text" id="userId" placeholder="أدخل الـ User ID الخاص بك لتتوصل بالإشعارات">
+        </div>
+
+        <button id="startBtn">بدء النسخ</button>
+
+        <div id="status" class="status"></div>
+    </div>
+</section>
+
+
 <!-- Contact -->
 
 <section id="contact">

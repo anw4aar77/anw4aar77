@@ -11,15 +11,24 @@ enter.addEventListener("click", () => {
     loader.style.opacity = "0";
 
     // جلب وزيادة عدد الزوار تلقائياً
-    fetch('https://api.codetabs.com/v1/counter/?key=anw4aar77-portfolio')
-        .then(res => res.json())
-        .then(data => {
-            const visitsElement = document.getElementById('visits');
-            if (visitsElement && data.count) {
-                visitsElement.textContent = data.count;
-            }
-        })
-        .catch(err => console.log("خطأ في العداد:", err));
+   // جلب وزيادة عدد الزوار
+fetch('https://api.counterapi.dev/v1/anw4aar77_portfolio/visits/up')
+    .then(res => res.json())
+    .then(data => {
+        const visitsElement = document.getElementById('visits');
+        if (visitsElement && data.count) {
+            visitsElement.textContent = data.count;
+        }
+    })
+    .catch(() => {
+        // إذا فشل الـ API (مثلاً فـ التجربة المحلية)، غادي يخدم بـ LocalStorage تلقائياً
+        let localVisits = parseInt(localStorage.getItem('page_views') || '0') + 1;
+        localStorage.setItem('page_views', localVisits);
+        const visitsElement = document.getElementById('visits');
+        if (visitsElement) {
+            visitsElement.textContent = localVisits;
+        }
+    });
 
     setTimeout(() => {
         loader.style.display = "none";

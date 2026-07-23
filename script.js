@@ -890,6 +890,21 @@ volume.oninput = () => {
 player.onended = () => {
     nextBtn.click();
 };
+
+//
+// جلب ورفع عدد الزيارات
+function updateVisitorCount() {
+    // بدّل "my-unique-website-name" باسم خاص بالموقع ديالك
+    fetch('https://api.countapi.xyz/hit/my-unique-website-name/visits')
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('visits').textContent = data.value;
+        })
+        .catch(err => console.error("خطأ في جلب عدد الزوار:", err));
+}
+
+// تشغيل الدالة عند تحميل الصفحة
+updateVisitorCount();
 /* ========= CONSOLE ========= */
 
 console.log("%cWELCOME TO MY PORTFOLIO","color:orange;font-size:22px;font-weight:bold;");

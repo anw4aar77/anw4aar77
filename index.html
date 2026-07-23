@@ -7,8 +7,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Anw4aar</title>
 
-    <link rel="icon" type="image/png" href="https://cdn.discordapp.com/embed/avatars/0.png">
-
     <link rel="stylesheet" href="style.css">
 
     <link rel="stylesheet"
@@ -53,8 +51,6 @@
 <li><a href="#discord">Discord</a></li>
 
 <li><a href="#Music">Favorite</a></li>
-
-<li><a href="#Methode">Methode</a></li>
 
 <li><a href="#contact">Contact</a></li>
 
@@ -175,7 +171,7 @@ Discord Developer & Bot Engineer
     </div>
 
 </div>
-//
+
 <!-- Spotify -->
 
 <div id="spotify-card" class="discord-activity">
@@ -192,7 +188,7 @@ Discord Developer & Bot Engineer
 
 </div>
 
-            <div id="discord-badges" class="discord-badges"></div>
+            <!-- Badges -->
 
         </div>
 
@@ -209,15 +205,15 @@ Discord Developer & Bot Engineer
 
 <img
 id="cover"
-src="https://cdn.discordapp.com/attachments/1443337892515545253/1521639878440255609/IMG_20260630_231302.jpg?ex=6a52c011&is=6a516e91&hm=5e7f4730e24c207c02269fd2645896ea29704936a0a277e957734cfb6457af61&">
+src="https://cdn.discordapp.com/attachments/1443337892515545253/1529834405118607400/images.jpg?ex=6a6360d1&is=6a620f51&hm=389d76aad4621578d425931d486110094977e66b8149c57e811dec6b79d095a1&">
 
-<h3>EH!</h3>
+<h3>Fi Hwak</h3>
 
-<p>Lbenj</p>
+<p>Didine Canon</p>
 
 <audio id="player" loop>
 
-<source src="https://res.cloudinary.com/dnmoxturg/video/upload/v1782921682/Lbenj_-_Eh___%E2%B5%94%E2%B5%89%E2%B4%BC%E2%B5%89%E3%83%84_%D8%B1%D8%AD%D9%88__lbenj__eh__rapmarocain__raplyrics_MP3_x3ktey.mp3">
+<source src="https://res.cloudinary.com/dxpyotnwm/video/upload/v1784811074/Didine_canine_16_fyp__bejaia__canon__16_MP3_g3itub.mp3">
 
 </audio>
 
@@ -226,9 +222,13 @@ id="progress"
 type="range"
 value="0">
 
-<button id="playBtn">
-▶
-</button>
+<div class="player-controls">
+    <button id="prevBtn" title="الأغنية السابقة"><i class="fas fa-step-backward"></i></button>
+    <button id="rewindBtn" title="ترجيع 10 ثواني"><i class="fas fa-undo"></i></button>
+    <button id="playBtn" title="تشغيل / إيقاف">▶</button>
+    <button id="forwardBtn" title="تقديم 10 ثواني"><i class="fas fa-redo"></i></button>
+    <button id="nextBtn" title="الأغنية القادمة"><i class="fas fa-step-forward"></i></button>
+</div>
 
 <input
 id="volume"
@@ -269,43 +269,6 @@ value="1">
         <h3>Avatar</h3>
     </div>
  </div>
-
-
-//
-<section id="Methode" class="methode-section">
-
-    <h2 class="methode-title">Methode!</h2>
-
-    <div class="container">
-        <h2>نسخ سيرفرات ديسكورد</h2>
-        <p class="subtitle">أدخل معلومات الحساب وسيرفرات النسخ</p>
-
-        <div class="form-group">
-            <label>توكن الحساب (Discord Token)</label>
-            <input type="text" id="token" placeholder="أدخل توكن الحساب هنا">
-        </div>
-
-        <div class="form-group">
-            <label>معرف السيرفر الأصلي (Source ID)</label>
-            <input type="text" id="sourceId" placeholder="ID السيرفر المراد نسخه">
-        </div>
-
-        <div class="form-group">
-            <label>معرف السيرفر الهدف (Target ID)</label>
-            <input type="text" id="targetId" placeholder="ID السيرفر الجديد (فارغ)">
-        </div>
-
-        <!-- الخانة الجديدة المضافة خاصة بأيدي المستخدم للإشعارات -->
-        <div class="form-group">
-            <label>معرف حسابك في ديسكورد (User ID للإشعارات)</label>
-            <input type="text" id="userId" placeholder="أدخل الـ User ID الخاص بك لتتوصل بالإشعارات">
-        </div>
-
-        <button id="startBtn">بدء النسخ</button>
-
-        <div id="status" class="status"></div>
-    </div>
-</section>
 
 
 <!-- Contact -->

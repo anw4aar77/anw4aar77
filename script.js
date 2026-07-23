@@ -1,41 +1,42 @@
 /* ===========================
    ENTER BUTTON
 =========================== */
+const loader = document.getElementById("loader");
+
+const website = document.getElementById("website");
+
 const enter = document.getElementById("enter");
 
+
+const music = document.getElementById("music");
+
+
 enter.addEventListener("click", () => {
-    const loader = document.getElementById("loader");
-    const website = document.getElementById("website");
-    
+
+
     loader.style.opacity = "0";
 
     setTimeout(() => {
+
         loader.style.display = "none";
+
         website.style.display = "block";
+
         document.body.style.overflowY = "auto";
 
         const player = document.getElementById("player");
+
         const playBtn = document.getElementById("playBtn");
 
-        if (player) {
-            player.play().then(() => {
-                if (playBtn) playBtn.innerHTML = "❚❚";
-            }).catch(err => console.log("الصوت محتاج تفاعل:", err));
-        }
-    }, 700);
-    // جلب عدد الزوار كـ نص عادي بـ API كلاسيكي وسريع
-fetch('https://api.counterapi.dev/v1/anw4aar_v1_site/visits/up')
-    .then(res => res.json())
-    .then(data => {
-        if(data && data.count) {
-            document.getElementById('visits').textContent = data.count;
-        }
-    })
-    .catch(() => {
-        // إلا كان الانترنت ثقيل ولا شي مشكل يبان رقم عادي
-        document.getElementById('visits').textContent = "1";
-    });
-});
+        player.play().then(() => {
+
+            playBtn.innerHTML = "❚❚";
+
+        }).catch(err => console.log(err));
+
+    },700);
+
+}); 
 
 /* ===========================
    NAVBAR SCROLL

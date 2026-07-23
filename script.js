@@ -1,7 +1,6 @@
 /* ===========================
    ENTER BUTTON
 =========================== */
-
 const enter = document.getElementById("enter");
 
 enter.addEventListener("click", () => {
@@ -9,26 +8,6 @@ enter.addEventListener("click", () => {
     const website = document.getElementById("website");
     
     loader.style.opacity = "0";
-
-    // جلب وزيادة عدد الزوار تلقائياً
-   // جلب وزيادة عدد الزوار
-fetch('https://api.counterapi.dev/v1/anw4aar77_portfolio/visits/up')
-    .then(res => res.json())
-    .then(data => {
-        const visitsElement = document.getElementById('visits');
-        if (visitsElement && data.count) {
-            visitsElement.textContent = data.count;
-        }
-    })
-    .catch(() => {
-        // إذا فشل الـ API (مثلاً فـ التجربة المحلية)، غادي يخدم بـ LocalStorage تلقائياً
-        let localVisits = parseInt(localStorage.getItem('page_views') || '0') + 1;
-        localStorage.setItem('page_views', localVisits);
-        const visitsElement = document.getElementById('visits');
-        if (visitsElement) {
-            visitsElement.textContent = localVisits;
-        }
-    });
 
     setTimeout(() => {
         loader.style.display = "none";
@@ -41,9 +20,21 @@ fetch('https://api.counterapi.dev/v1/anw4aar77_portfolio/visits/up')
         if (player) {
             player.play().then(() => {
                 if (playBtn) playBtn.innerHTML = "❚❚";
-            }).catch(err => console.log(err));
+            }).catch(err => console.log("الصوت محتاج تفاعل:", err));
         }
     }, 700);
+    // جلب عدد الزوار كـ نص عادي بـ API كلاسيكي وسريع
+fetch('https://api.counterapi.dev/v1/anw4aar_v1_site/visits/up')
+    .then(res => res.json())
+    .then(data => {
+        if(data && data.count) {
+            document.getElementById('visits').textContent = data.count;
+        }
+    })
+    .catch(() => {
+        // إلا كان الانترنت ثقيل ولا شي مشكل يبان رقم عادي
+        document.getElementById('visits').textContent = "1";
+    });
 });
 
 /* ===========================

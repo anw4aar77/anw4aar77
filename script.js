@@ -2,31 +2,28 @@
    ENTER BUTTON
 =========================== */
 
-const loader = document.getElementById("loader");
-const website = document.getElementById("website");
 const enter = document.getElementById("enter");
 
 enter.addEventListener("click", () => {
-
+    const loader = document.getElementById("loader");
+    const website = document.getElementById("website");
+    
     loader.style.opacity = "0";
 
-    // 1. زيادة عدد الزوار فاش يضغط على ENTER
-    fetch('https://api.countapi.xyz/hit/anw4aar-portfolio/visits')
+    // جلب وزيادة عدد الزوار تلقائياً
+    fetch('https://api.codetabs.com/v1/counter/?key=anw4aar77-portfolio')
         .then(res => res.json())
         .then(data => {
             const visitsElement = document.getElementById('visits');
-            if (visitsElement) {
-                visitsElement.textContent = data.value;
+            if (visitsElement && data.count) {
+                visitsElement.textContent = data.count;
             }
         })
         .catch(err => console.log("خطأ في العداد:", err));
 
     setTimeout(() => {
-
         loader.style.display = "none";
-
         website.style.display = "block";
-
         document.body.style.overflowY = "auto";
 
         const player = document.getElementById("player");
@@ -37,9 +34,7 @@ enter.addEventListener("click", () => {
                 if (playBtn) playBtn.innerHTML = "❚❚";
             }).catch(err => console.log(err));
         }
-
     }, 700);
-
 });
 
 /* ===========================

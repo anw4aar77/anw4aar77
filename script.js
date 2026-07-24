@@ -797,21 +797,21 @@ const songs = [
     {
         title: "Fi Hwak",
         artist: "Didine Canon",
-        cover: "https://cdn.discordapp.com/attachments/1443337892515545253/1529834405118607400/images.jpg?ex=6a6360d1&is=6a620f51&hm=389d76aad4621578d425931d486110094977e66b8149c57e811dec6b79d095a1&",
+        cover: "https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/01/99/c9/0199c9ea-010a-391c-689e-86e077dbb9e9/cover.jpg/316x316bb.webp",
         src: "https://res.cloudinary.com/dxpyotnwm/video/upload/v1784811074/Didine_canine_16_fyp__bejaia__canon__16_MP3_g3itub.mp3",
         themeColor: "#000000" // لون الثيم الخاص بالأغنية الأولى
     },
     {
         title: "GHALAT",
         artist: "Najm",
-        cover: "https://cdn.discordapp.com/attachments/1443337892515545253/1529834419395891230/af5ac4b7fea8cc8cf9f13eb1611c0be5.1000x1000x1.png?ex=6a6360d4&is=6a620f54&hm=9eebc9481fab0ff21e404b972dff4828e2f5cfae68106644df9ae26f7a8f4989&", // بدّل رابط التصويرة
+        cover: "https://t2.genius.com/unsafe/344x344/https%3A%2F%2Fimages.genius.com%2Faf5ac4b7fea8cc8cf9f13eb1611c0be5.1000x1000x1.png", // بدّل رابط التصويرة
         src: "https://res.cloudinary.com/dxpyotnwm/video/upload/v1784811254/Ghalat__songs__music__viral__song_MP3_mhjpa2.mp3", // بدّل رابط الأغنية
         themeColor: "#d18136" // لون الثيم للأغنية الثانية
     },
     {
         title: "CAMEMBERT",
         artist: "Stormy",
-        cover: "https://cdn.discordapp.com/attachments/1443337892515545253/1529834427876774079/ab67616d0000b2736699b6d2fbb3aa5f07b3e0d8.jpg?ex=6a6360d6&is=6a620f56&hm=16f10b621a89939e537977b4519cc30b9f9f5ad5ed8905ca160c9c2a8fa81601&", // بدّل رابط التصويرة
+        cover: "https://t2.genius.com/unsafe/344x344/https%3A%2F%2Fimages.genius.com%2Fdb169e619eeb584226e4508d4c8dbbb9.1000x1000x1.png", // بدّل رابط التصويرة
         src: "https://res.cloudinary.com/dxpyotnwm/video/upload/v1784811312/Stormy_-_Camembert_.._MP3_x22qmy.mp3", // بدّل رابط الأغنية
         themeColor: "#e11d1d" // لون الثيم للأغنية الثالثة
     }

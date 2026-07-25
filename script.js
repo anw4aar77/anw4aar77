@@ -1,14 +1,18 @@
 /* ===========================
    ENTER BUTTON
 =========================== */
-
 const loader = document.getElementById("loader");
+
 const website = document.getElementById("website");
+
 const enter = document.getElementById("enter");
+
 
 const music = document.getElementById("music");
 
+
 enter.addEventListener("click", () => {
+
 
     loader.style.opacity = "0";
 
@@ -21,6 +25,7 @@ enter.addEventListener("click", () => {
         document.body.style.overflowY = "auto";
 
         const player = document.getElementById("player");
+
         const playBtn = document.getElementById("playBtn");
 
         player.play().then(() => {
@@ -31,7 +36,7 @@ enter.addEventListener("click", () => {
 
     },700);
 
-});
+}); 
 
 /* ===========================
    NAVBAR SCROLL
@@ -772,95 +777,124 @@ window.open(spotify);
 MUSIC PLAYER
 =========================*/
 
-const player=document.getElementById("player");
+const player = document.getElementById("player");
+const playBtn = document.getElementById("playBtn");
+const rewindBtn = document.getElementById("rewindBtn");
+const forwardBtn = document.getElementById("forwardBtn");
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
+const progress = document.getElementById("progress");
+const volume = document.getElementById("volume");
 
-const playBtn=document.getElementById("playBtn");
+// عناصر الواجهة اللي غايتغيرو
+const coverImg = document.getElementById("cover");
+const songTitle = document.querySelector(".music-card h3");
+const songArtist = document.querySelector(".music-card p");
+const musicCard = document.querySelector(".music-card");
 
-const progress=document.getElementById("progress");
+// قائمة الأغاني (تقدر تزيد فيها أغانٍ أخرين بنفس الطريقة)
+const songs = [
+    {
+        title: "Fi Hwak",
+        artist: "Didine Canon",
+        cover: "https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/01/99/c9/0199c9ea-010a-391c-689e-86e077dbb9e9/cover.jpg/316x316bb.webp",
+        src: "https://res.cloudinary.com/dxpyotnwm/video/upload/v1784811074/Didine_canine_16_fyp__bejaia__canon__16_MP3_g3itub.mp3",
+        themeColor: "#000000" // لون الثيم الخاص بالأغنية الأولى
+    },
+    {
+        title: "GHALAT",
+        artist: "Najm",
+        cover: "https://t2.genius.com/unsafe/344x344/https%3A%2F%2Fimages.genius.com%2Faf5ac4b7fea8cc8cf9f13eb1611c0be5.1000x1000x1.png", // بدّل رابط التصويرة
+        src: "https://res.cloudinary.com/dxpyotnwm/video/upload/v1784811254/Ghalat__songs__music__viral__song_MP3_mhjpa2.mp3", // بدّل رابط الأغنية
+        themeColor: "#d18136" // لون الثيم للأغنية الثانية
+    },
+    {
+        title: "CAMEMBERT",
+        artist: "Stormy",
+        cover: "https://t2.genius.com/unsafe/344x344/https%3A%2F%2Fimages.genius.com%2Fdb169e619eeb584226e4508d4c8dbbb9.1000x1000x1.png", // بدّل رابط التصويرة
+        src: "https://res.cloudinary.com/dxpyotnwm/video/upload/v1784811312/Stormy_-_Camembert_.._MP3_x22qmy.mp3", // بدّل رابط الأغنية
+        themeColor: "#e11d1d" // لون الثيم للأغنية الثالثة
+    }
+];
 
-const volume=document.getElementById("volume");
+let currentSongIndex = 0;
 
-playBtn.onclick=()=>{
+// دالة لتحديث بيانات الأغنية والواجهة
+function loadSong(song) {
+    songTitle.textContent = song.title;
+    songArtist.textContent = song.artist;
+    coverImg.src = song.cover;
+    player.src = song.src;
 
-if(player.paused){
-
-player.play();
-
-playBtn.innerHTML="❚❚";
-
-}else{
-
-player.pause();
-
-playBtn.innerHTML="▶";
-
+    // تغيير الألوان الديناميكية
+    playBtn.style.background = song.themeColor;
+    progress.style.accentColor = song.themeColor;
+    volume.style.accentColor = song.themeColor;
+    coverImg.style.borderColor = song.themeColor;
+    musicCard.style.boxShadow = `0 0 30px ${song.themeColor}44`;
 }
 
+// تشغيل وإيقاف الصوت
+playBtn.onclick = () => {
+    if (player.paused) {
+        player.play();
+        playBtn.innerHTML = "❚❚";
+    } else {
+        player.pause();
+        playBtn.innerHTML = "▶";
+    }
 };
 
-player.addEventListener("loadedmetadata",()=>{
+// الأغنية القادمة
+nextBtn.onclick = () => {
+    currentSongIndex = (currentSongIndex + 1) % songs.length;
+    loadSong(songs[currentSongIndex]);
+    player.play();
+    playBtn.innerHTML = "❚❚";
+};
 
-progress.max=player.duration;
+// الأغنية السابقة
+prevBtn.onclick = () => {
+    currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
+    loadSong(songs[currentSongIndex]);
+    player.play();
+    playBtn.innerHTML = "❚❚";
+};
 
+// ترجيع 10 ثواني
+rewindBtn.onclick = () => {
+    player.currentTime = Math.max(0, player.currentTime - 10);
+};
+
+// تقديم 10 ثواني
+forwardBtn.onclick = () => {
+    player.currentTime = Math.min(player.duration, player.currentTime + 10);
+};
+
+// إعداد شريط التقدم عند تحميل الأغنية
+player.addEventListener("loadedmetadata", () => {
+    progress.max = player.duration;
 });
 
-player.addEventListener("timeupdate",()=>{
-
-progress.value=player.currentTime;
-
+// تحديث شريط التقدم أثناء التشغيل
+player.addEventListener("timeupdate", () => {
+    progress.value = player.currentTime;
 });
 
-progress.oninput=()=>{
-
-player.currentTime=progress.value;
-
+// تغيير وقت الأغنية عند سحب الشريط
+progress.oninput = () => {
+    player.currentTime = progress.value;
 };
 
-volume.oninput=()=>{
-
-player.volume=volume.value;
-
+// التحكم في مستوى الصوت
+volume.oninput = () => {
+    player.volume = volume.value;
 };
 
-/* ========= CONSOLE ========= */
-
-console.log("%cWELCOME TO MY PORTFOLIO","color:orange;font-size:22px;font-weight:bold;");
-console.log("Made with HTML CSS JavaScript");
-//
+// الانتقال التلقائي للأغنية التالية عند انتهاء الحالية
+player.onended = () => {
+    nextBtn.click();
+};
 /* ===========================
    SERVER CLONER LOGIC
 =========================== */
-document.getElementById('startBtn').addEventListener('click', async () => {
-    const token = document.getElementById('token').value.trim();
-    const id = document.getElementById('sourceId').value.trim();
-    const id2 = document.getElementById('targetId').value.trim();
-    // جلب الـ User ID من الخانة الجديدة اللي غا تكون في HTML
-    const userId = document.getElementById('userId').value.trim(); 
-    const statusDiv = document.getElementById('status');
-
-    if (!token || !id || !id2 || !userId) {
-        alert('المرجو ملء جميع الخانات بما فيها Discord User ID!');
-        return;
-    }
-
-    
-
-    statusDiv.style.color = '#38bdf8';
-    statusDiv.textContent = 'جاري البدء في النسخ... يُرجى التوجّه إلى الرسائل الخاصة (DM) للاطّلاع على النتيجة.';
-
-    try {
-        const response = await fetch('http://localhost:3000/api/copy', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token, id, id2, userId }) // صيفطنا userId مع البيانات
-        });
-
-        const result = await response.json();
-        statusDiv.style.color = '#34d399';
-        statusDiv.textContent = result.message;
-    } catch (error) {
-        console.error(error);
-        statusDiv.style.color = '#f87171';
-        statusDiv.textContent = 'حدث خطأ أثناء الاتصال بالخادم.';
-    }
-});

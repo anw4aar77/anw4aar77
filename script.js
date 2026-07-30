@@ -896,28 +896,7 @@ player.onended = () => {
     nextBtn.click();
 };
 //
-const githubUsername = "anw4aar77"; // دير سميتك هنا
 
-async function fetchGithubActivity() {
-    try {
-        const response = await fetch(`https://api.github.com/users/${githubUsername}/events/public`);
-        const data = await response.json();
-        const pushEvent = data.find(event => event.type === "PushEvent");
-
-        if (pushEvent) {
-            const repoName = pushEvent.repo.name;
-            const message = pushEvent.payload.commits[0].message;
-            document.getElementById("latest-commit").innerHTML = `
-                <p>Working on <strong>${repoName}</strong>: <br> 
-                <span style="color: #ff7b00">"${message}"</span></p>
-            `;
-            document.getElementById("github-link").href = `https://github.com/${repoName}`;
-        }
-    } catch (err) {
-        console.log("GitHub Error:", err);
-    }
-}
-fetchGithubActivity();
 /* ===========================
    SERVER CLONER LOGIC
 =========================== */

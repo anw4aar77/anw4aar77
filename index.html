@@ -1,302 +1,237 @@
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anw4aar</title>
+
+    <title>MyMusic</title>
 
     <link rel="stylesheet" href="style.css">
-
-    <link rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-
-    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;700&family=Orbitron:wght@700;800&display=swap" rel="stylesheet">
-
 </head>
+
 <body>
 
-<!-- Loading Screen -->
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
 
-<div id="loader">
+        <h1 class="logo">♫ MyMusic</h1>
+
+        <button class="nav-btn active">
+            🏠 Home
+        </button>
+
+        <button class="nav-btn">
+            🔎 Search
+        </button>
+
+        <button class="nav-btn">
+            ❤️ My Playlist
+        </button>
+
+    </aside>
 
 
-    <h1>WELCOME</h1>
+    <!-- MAIN -->
+    <main class="main">
 
-    <h2>Anw4aar</h2>
+        <header class="topbar">
 
-    <button id="enter">ENTER</button>
+            <h2>Welcome back 👋</h2>
 
-</div>
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="Search songs..."
+            >
 
-<!-- Website -->
+        </header>
 
-<div id="website">
 
-<header>
+        <!-- HOME -->
+        <section>
 
-<nav>
+            <h2>Popular Songs</h2>
 
-<div class="logo">
-    <img src="https://i.pinimg.com/originals/70/8a/98/708a98600fa6b1c32eaeaaaac3e8ec39.gif">
-</div>
+            <div class="songs" id="songsList">
 
-<ul>
+                <div class="song">
 
-<li><a href="#home">Home</a></li>
+                    <img src="https://picsum.photos/100?random=1">
 
-<li><a href="#about">About</a></li>
+                    <div class="song-info">
+                        <strong>Ocean Breeze</strong>
+                        <span>Nova Echo</span>
+                    </div>
 
-<li><a href="#discord">Discord</a></li>
+                    <button
+                        class="add-btn"
+                        onclick="addToPlaylist('Ocean Breeze','Nova Echo')">
+                        ＋
+                    </button>
 
-<li><a href="#Music">Favorite</a></li>
+                    <button
+                        class="play-btn"
+                        onclick="playSong('Ocean Breeze','Nova Echo')">
+                        ▶
+                    </button>
 
-<li><a href="#contact">Contact</a></li>
+                </div>
 
-</ul>
 
-</nav>
+                <div class="song">
 
-</header>
+                    <img src="https://picsum.photos/100?random=2">
 
-<!-- Hero -->
+                    <div class="song-info">
+                        <strong>Midnight Waves</strong>
+                        <span>Nova Echo</span>
+                    </div>
 
-<section id="home">
+                    <button
+                        class="add-btn"
+                        onclick="addToPlaylist('Midnight Waves','Nova Echo')">
+                        ＋
+                    </button>
 
-<div class="left">
+                    <button
+                        class="play-btn"
+                        onclick="playSong('Midnight Waves','Nova Echo')">
+                        ▶
+                    </button>
 
-<h3>Hello, I'm</h3>
+                </div>
 
-<h1>Anw4aar</h1>
 
-<p>
+                <div class="song">
 
-Discord Developer & Bot Engineer
+                    <img src="https://picsum.photos/100?random=3">
 
-</p>
+                    <div class="song-info">
+                        <strong>Night Drive</strong>
+                        <span>Nova Echo</span>
+                    </div>
 
-</div>
+                    <button
+                        class="add-btn"
+                        onclick="addToPlaylist('Night Drive','Nova Echo')">
+                        ＋
+                    </button>
 
-<div class="right">
+                    <button
+                        class="play-btn"
+                        onclick="playSong('Night Drive','Nova Echo')">
+                        ▶
+                    </button>
 
-<img src="https://i.pinimg.com/webp87/1200x/9d/63/f9/9d63f9356d9fca9db01e7e31e00842a0.webp">
+                </div>
 
-</div>
+            </div>
 
-</section>
+        </section>
 
-<!-- Discord -->
-<!-- ===========================
-     DISCORD PROFILE
-=========================== -->
 
-<section id="discord">
+        <!-- PLAYLIST -->
+        <section class="playlist-section">
 
-    <h2>Discord Profile</h2>
+            <h2>❤️ My Playlist</h2>
 
-    <div class="discord-profile">
+            <div id="playlist"></div>
 
-        <!-- Banner -->
+        </section>
 
-        <div id="discord-banner"></div>
+    </main>
 
-        <!-- Avatar -->
 
-   <div class="discord-avatar-box">
+    <!-- MUSIC PLAYER -->
+    <div class="player">
 
-    <img
-    id="discord-avatar"
-    src="https://cdn.discordapp.com/embed/avatars/0.png"
-    alt="Avatar">
+        <div class="current-song">
 
-    <img
-    id="avatar-decoration"
-    src=""
-    alt="Decoration">
+            <img
+                id="currentImage"
+                src="https://picsum.photos/100?random=1"
+            >
 
-    <div id="discord-status-dot"></div>
+            <div>
+                <strong id="currentTitle">
+                    Nothing playing
+                </strong>
 
-</div>
-
-        <!-- Content -->
-
-        <div class="discord-content">
-
-            <div class="discord-top">
-
-                <span id="discord-username">
-                    @loading
+                <span id="currentArtist">
+                    Select a song
                 </span>
+            </div>
 
-         <div class="discord-name-row">
+        </div>
 
-    <h3 id="discord-display-name"></h3>
 
-    <div class="guild-badge-box">
-    <img id="guild-badge">
-</div>
+        <div class="controls">
 
-    <span id="discord-tag"></span>
+            <div class="progress-container">
 
-</div>
+                <span id="currentTime">0:00</span>
 
+                <input
+                    type="range"
+                    id="progress"
+                    value="0"
+                    min="0"
+                    max="100"
+                >
+
+                <span id="duration">0:00</span>
 
             </div>
 
-            <div id="discord-status">
-                Loading...
+
+            <div class="buttons">
+
+                <button onclick="previousSong()">
+                    ⏮
+                </button>
+
+                <button onclick="skip(-10)">
+                    ↶ 10
+                </button>
+
+                <button
+                    class="main-play"
+                    id="mainPlay"
+                    onclick="togglePlay()">
+                    ▶
+                </button>
+
+                <button onclick="skip(10)">
+                    10 ↷
+                </button>
+
+                <button onclick="nextSong()">
+                    ⏭
+                </button>
+
             </div>
 
-            <p id="discord-bio">
-                Discord Developer & Bot Engineer.
-            </p>
+        </div>
 
-            <!-- Activity -->
 
-           <!-- Current Activity -->
+        <div class="volume">
 
-<div id="activity-card" class="discord-activity">
+            🔊
 
-    <img id="activity-image" src="">
-
-    <div>
-
-        <h4 id="activity-name">No Activity</h4>
-
-        <p id="activity-details"></p>
-
-        <small id="activity-state"></small>
-
-    </div>
-
-</div>
-
-<!-- Spotify -->
-
-<div id="spotify-card" class="discord-activity">
-
-    <img id="spotify-cover" src="">
-
-    <div>
-
-        <h4 id="spotify-song"></h4>
-
-        <p id="spotify-artist"></p>
-
-    </div>
-
-</div>
-
-            <!-- Badges -->
+            <input
+                type="range"
+                id="volume"
+                min="0"
+                max="100"
+                value="100"
+            >
 
         </div>
 
     </div>
 
-</section>
 
-<!-- Spotify -->
-<section id="Music">
+    <script src="script.js"></script>
 
-<h2 class="song-title">The best!</h2>
-
-<div class="card music-card">
-
-<img
-id="cover"
-src="https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/01/99/c9/0199c9ea-010a-391c-689e-86e077dbb9e9/cover.jpg/316x316bb.webp">
-
-<h3>Fi Hwak</h3>
-
-<p>Didine Canon</p>
-
-<audio id="player" loop>
-
-<source src="https://res.cloudinary.com/dxpyotnwm/video/upload/v1784811074/Didine_canine_16_fyp__bejaia__canon__16_MP3_g3itub.mp3">
-
-</audio>
-
-<input
-id="progress"
-type="range"
-value="0">
-
-<div class="player-controls">
-    <button id="prevBtn" title="الأغنية السابقة"><i class="fas fa-step-backward"></i></button>
-    <button id="rewindBtn" title="ترجيع 10 ثواني"><i class="fas fa-undo"></i></button>
-    <button id="playBtn" title="تشغيل / إيقاف">▶</button>
-    <button id="forwardBtn" title="تقديم 10 ثواني"><i class="fas fa-redo"></i></button>
-    <button id="nextBtn" title="الأغنية القادمة"><i class="fas fa-step-forward"></i></button>
-</div>
-
-<input
-id="volume"
-type="range"
-min="0"
-max="1"
-step="0.01"
-value="1">
-
-</div>
-
-</section>
-
-
-
-
-<!-- Anime -->
-
-<div class="favorites">
-
-  <div class="fav-card">
-    <img src="https://i.pinimg.com/webp87/736x/f6/68/a3/f668a3141dc9ccd4afb7e4545ca1cf6b.webp" alt="">
-    <span class="badge anime">ANIME</span>
-    <div class="fav-info">
-        <h3>Hunter x Hunter</h3>
-    </div>
-</div>
-
-<div class="fav-card">
-    <img src="https://i.pinimg.com/736x/8d/ea/4b/8dea4bcbd8a9c73ac8f4ae4e7b5bab22.jpg" alt="">
-    <span class="badge series">SERIES</span>
-    <div class="fav-info">
-        <h3>Game of Thrones</h3>
-    </div>
-</div>
-
-<div class="fav-card">
-    <img src="https://i.pinimg.com/736x/fc/64/f4/fc64f4ef0381331d52a80b204ce75749.jpg" alt="">
-    <span class="badge movie">MOVIE</span>
-    <div class="fav-info">
-        <h3>Avatar</h3>
-    </div>
- </div>
-
- <!-- game -->
-
-
-
-<!-- Contact -->
-
-<section id="contact">
-
-<h2 class="song-title1">Contact</h2>
-
-<div class="icons">
-
-<a href="#"><i class="fab fa-discord"></i></a>
-
-<a href="#"><i class="fab fa-github"></i></a>
-
-<a href="#"><i class="fab fa-instagram"></i></a>
-
-<a href="#"><i class="fab fa-spotify"></i></a>
-
-</div>
-
-</section>
-
-<p>
-
-<script src="script.js"></script>
+</body>
+</html>

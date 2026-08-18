@@ -4,168 +4,47 @@ let currentSongIndex = -1;
 
 let isPlaying = false;
 
+const audio = document.getElementById("audioPlayer");
+
 
 // ================================
-// ADD TO PLAYLIST
+// SONGS
 // ================================
 
-function addToPlaylist(title, artist) {
-
-    const exists = playlist.some(
-        song => song.title === title
-    );
-
-    if (exists) {
-        alert("Already in your playlist ❤️");
-        return;
+const songs = [
+    {
+        title: "Song 1",
+        artist: "My Artist",
+        file: "https://res.cloudinary.com/dxpyotnwm/video/upload/v1784811312/Stormy_-_Camembert_.._MP3_x22qmy.mp3"
     }
-
-    playlist.push({
-        title: title,
-        artist: artist
-    });
-
-    savePlaylist();
-
-    displayPlaylist();
-}
-
-
-// ================================
-// DISPLAY PLAYLIST
-// ================================
-
-function displayPlaylist() {
-
-    const playlistElement =
-        document.getElementById("playlist");
-
-    playlistElement.innerHTML = "";
-
-    if (playlist.length === 0) {
-
-        playlistElement.innerHTML =
-            "<p style='color:#777'>Your playlist is empty.</p>";
-
-        return;
-    }
-
-
-    playlist.forEach((song, index) => {
-
-        const item =
-            document.createElement("div");
-
-        item.className = "playlist-item";
-
-        item.innerHTML = `
-
-            <div>
-                <strong>${song.title}</strong>
-                <br>
-                <small style="color:#888">
-                    ${song.artist}
-                </small>
-            </div>
-
-            <button
-                class="play-btn"
-                onclick="playPlaylistSong(${index})">
-                ▶
-            </button>
-
-            <button
-                class="remove-btn"
-                onclick="removeSong(${index})">
-                Remove
-            </button>
-
-        `;
-
-        playlistElement.appendChild(item);
-    });
-}
-
-
-// ================================
-// REMOVE
-// ================================
-
-function removeSong(index) {
-
-    playlist.splice(index, 1);
-
-    savePlaylist();
-
-    displayPlaylist();
-}
-
-
-// ================================
-// SAVE
-// ================================
-
-function savePlaylist() {
-
-    localStorage.setItem(
-        "myPlaylist",
-        JSON.stringify(playlist)
-    );
-}
-
-
-// ================================
-// LOAD
-// ================================
-
-function loadPlaylist() {
-
-    const saved =
-        localStorage.getItem("myPlaylist");
-
-    if (saved) {
-
-        playlist = JSON.parse(saved);
-
-    }
-
-    displayPlaylist();
-}
+];
 
 
 // ================================
 // PLAY SONG
 // ================================
 
-function playSong(title, artist) {
+function playSong(index) {
 
-    document.getElementById("currentTitle")
-        .textContent = title;
-
-    document.getElementById("currentArtist")
-        .textContent = artist;
-
-    isPlaying = true;
-
-    document.getElementById("mainPlay")
-        .textContent = "⏸";
-}
-
-
-// ================================
-// PLAY PLAYLIST SONG
-// ================================
-
-function playPlaylistSong(index) {
+    if (!songs[index]) return;
 
     currentSongIndex = index;
 
-    const song = playlist[index];
+    const song = songs[index];
 
-    playSong(
-        song.title,
-        song.artist
-    );
+    audio.src = song.file;
+
+    document.getElementById("currentTitle").textContent =
+        song.title;
+
+    document.getElementById("currentArtist").textContent =
+        song.artist;
+
+    audio.play();
+
+    isPlaying = true;
+
+    document.getElementById("mainPlay").textContent = "⏸";
 }
 
 
@@ -175,17 +54,29 @@ function playPlaylistSong(index) {
 
 function togglePlay() {
 
-    if (currentSongIndex === -1 &&
-        playlist.length === 0) {
+    if (!audio.src) {
+
+        playSong(0);
 
         return;
     }
 
-    isPlaying = !isPlaying;
+    if (audio.paused) {
 
-    document.getElementById("mainPlay")
-        .textContent =
-        isPlaying ? "⏸" : "▶";
+        audio.play();
+
+        isPlaying = true;
+
+        document.getElementById("mainPlay").textContent = "⏸";
+
+    } else {
+
+        audio.pause();
+
+        isPlaying = false;
+
+        document.getElementById("mainPlay").textContent = "▶";
+    }
 }
 
 
@@ -195,15 +86,15 @@ function togglePlay() {
 
 function nextSong() {
 
-    if (playlist.length === 0) return;
+    if (songs.length === 0) return;
 
-    currentSongIndex++;
+    let next = currentSongIndex + 1;
 
-    if (currentSongIndex >= playlist.length) {
-        currentSongIndex = 0;
+    if (next >= songs.length) {
+        next = 0;
     }
 
-    playPlaylistSong(currentSongIndex);
+    playSong(next);
 }
 
 
@@ -213,30 +104,25 @@ function nextSong() {
 
 function previousSong() {
 
-    if (playlist.length === 0) return;
+    if (songs.length === 0) return;
 
-    currentSongIndex--;
+    let previous = currentSongIndex - 1;
 
-    if (currentSongIndex < 0) {
-        currentSongIndex = playlist.length - 1;
+    if (previous < 0) {
+        previous = songs.length - 1;
     }
 
-    playPlaylistSong(currentSongIndex);
+    playSong(previous);
 }
 
 
 // ================================
-// SKIP
+// SKIP 10 SECONDS
 // ================================
 
 function skip(seconds) {
 
-    console.log(
-        "Skip:",
-        seconds,
-        "seconds"
-    );
-
+    audio.currentTime += seconds;
 }
 
 
@@ -244,19 +130,80 @@ function skip(seconds) {
 // VOLUME
 // ================================
 
-document.getElementById("volume")
-    .addEventListener("input", function () {
+document.getElementById("volume").addEventListener(
+    "input",
+    function () {
 
-        console.log(
-            "Volume:",
-            this.value
-        );
+        audio.volume = this.value / 100;
 
-    });
+    }
+);
 
 
 // ================================
-// START
+// PROGRESS BAR
 // ================================
 
-loadPlaylist();
+audio.addEventListener("timeupdate", function () {
+
+    const progress =
+        document.getElementById("progress");
+
+    if (!audio.duration) return;
+
+    progress.value =
+        (audio.currentTime / audio.duration) * 100;
+
+    document.getElementById("currentTime").textContent =
+        formatTime(audio.currentTime);
+
+    document.getElementById("duration").textContent =
+        formatTime(audio.duration);
+});
+
+
+// ================================
+// CLICK PROGRESS BAR
+// ================================
+
+document.getElementById("progress").addEventListener(
+    "input",
+    function () {
+
+        if (!audio.duration) return;
+
+        audio.currentTime =
+            (this.value / 100) * audio.duration;
+    }
+);
+
+
+// ================================
+// AUTO NEXT
+// ================================
+
+audio.addEventListener("ended", function () {
+
+    nextSong();
+
+});
+
+
+// ================================
+// TIME FORMAT
+// ================================
+
+function formatTime(seconds) {
+
+    if (isNaN(seconds)) return "0:00";
+
+    const minutes =
+        Math.floor(seconds / 60);
+
+    const secs =
+        Math.floor(seconds % 60)
+        .toString()
+        .padStart(2, "0");
+
+    return `${minutes}:${secs}`;
+}

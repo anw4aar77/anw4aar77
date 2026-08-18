@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,127 +12,55 @@
 
 <body>
 
-    <!-- SIDEBAR -->
     <aside class="sidebar">
 
         <h1 class="logo">♫ MyMusic</h1>
 
-        <button class="nav-btn active">
+        <button class="nav-btn active" onclick="showHome()">
             🏠 Home
         </button>
 
-        <button class="nav-btn">
-            🔎 Search
-        </button>
-
-        <button class="nav-btn">
+        <button class="nav-btn" onclick="showPlaylist()">
             ❤️ My Playlist
         </button>
 
     </aside>
 
 
-    <!-- MAIN -->
     <main class="main">
 
         <header class="topbar">
 
-            <h2>Welcome back 👋</h2>
+            <h2>MyMusic</h2>
 
-            <input
-                type="text"
-                id="searchInput"
-                placeholder="Search songs..."
-            >
+            <div class="search-box">
+
+                <input
+                    id="searchInput"
+                    type="text"
+                    placeholder="Search YouTube..."
+                    onkeydown="searchEnter(event)"
+                >
+
+                <button onclick="searchYouTube()">
+                    🔎
+                </button>
+
+            </div>
 
         </header>
 
 
-        <!-- HOME -->
-        <section>
+        <section id="homeSection">
 
-            <h2>Popular Songs</h2>
+            <h2>Search Results</h2>
 
-            <div class="songs" id="songsList">
-
-                <div class="song">
-
-                    <img src="https://picsum.photos/100?random=1">
-
-                    <div class="song-info">
-                        <strong>Ocean Breeze</strong>
-                        <span>Nova Echo</span>
-                    </div>
-
-                    <button
-                        class="add-btn"
-                        onclick="addToPlaylist('Ocean Breeze','Nova Echo')">
-                        ＋
-                    </button>
-
-                    <button
-                        class="play-btn"
-                        onclick="playSong(0)"
-                        ▶
-                    </button>
-
-                </div>
-
-
-                <div class="song">
-
-                    <img src="https://picsum.photos/100?random=2">
-
-                    <div class="song-info">
-                        <strong>Midnight Waves</strong>
-                        <span>Nova Echo</span>
-                    </div>
-
-                    <button
-                        class="add-btn"
-                        onclick="addToPlaylist('Midnight Waves','Nova Echo')">
-                        ＋
-                    </button>
-
-                    <button
-                        class="play-btn"
-                        onclick="playSong('Midnight Waves','Nova Echo')">
-                        ▶
-                    </button>
-
-                </div>
-
-
-                <div class="song">
-
-                    <img src="https://picsum.photos/100?random=3">
-
-                    <div class="song-info">
-                        <strong>Night Drive</strong>
-                        <span>Nova Echo</span>
-                    </div>
-
-                    <button
-                        class="add-btn"
-                        onclick="addToPlaylist('Night Drive','Nova Echo')">
-                        ＋
-                    </button>
-
-                    <button
-                        class="play-btn"
-                        onclick="playSong('Night Drive','Nova Echo')">
-                        ▶
-                    </button>
-
-                </div>
-
-            </div>
+            <div id="results"></div>
 
         </section>
 
 
-        <!-- PLAYLIST -->
-        <section class="playlist-section">
+        <section id="playlistSection">
 
             <h2>❤️ My Playlist</h2>
 
@@ -142,24 +71,32 @@
     </main>
 
 
+    <!-- YOUTUBE PLAYER -->
+
+    <div id="youtubePlayer"></div>
+
+
     <!-- MUSIC PLAYER -->
+
     <div class="player">
 
         <div class="current-song">
 
             <img
                 id="currentImage"
-                src="https://picsum.photos/100?random=1"
+                src="https://via.placeholder.com/60"
             >
 
             <div>
+
                 <strong id="currentTitle">
                     Nothing playing
                 </strong>
 
                 <span id="currentArtist">
-                    Select a song
+                    Search for a song
                 </span>
+
             </div>
 
         </div>
@@ -169,17 +106,21 @@
 
             <div class="progress-container">
 
-                <span id="currentTime">0:00</span>
+                <span id="currentTime">
+                    0:00
+                </span>
 
                 <input
                     type="range"
                     id="progress"
-                    value="0"
                     min="0"
                     max="100"
+                    value="0"
                 >
 
-                <span id="duration">0:00</span>
+                <span id="duration">
+                    0:00
+                </span>
 
             </div>
 
@@ -197,7 +138,8 @@
                 <button
                     class="main-play"
                     id="mainPlay"
-                    onclick="togglePlay()">
+                    onclick="togglePlay()"
+                >
                     ▶
                 </button>
 
@@ -224,6 +166,7 @@
                 min="0"
                 max="100"
                 value="100"
+                oninput="changeVolume()"
             >
 
         </div>
@@ -231,9 +174,10 @@
     </div>
 
 
-    <audio id="audioPlayer"></audio>
+    <script src="https://www.youtube.com/iframe_api"></script>
 
-<script src="script.js"></script>
+    <script src="script.js"></script>
 
 </body>
+
 </html>

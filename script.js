@@ -16,10 +16,9 @@ let progressTimer = null;
 let currentPlaylistName = "Favorites";
 let songToAddToPlaylist = null;
 
-// New Features State
 let isShuffle = false;
 let isRepeat = false;
-let currentFilter = "all"; // 'all', 'music', 'podcasts'
+let currentFilter = "all";
 
 let playlists = JSON.parse(localStorage.getItem("myPlaylists")) || {
     "Favorites": []
@@ -34,6 +33,24 @@ window.addEventListener("DOMContentLoaded", function () {
     renderPlaylistTabs();
     displayPlaylist();
 });
+
+
+// ==========================================
+// TOAST NOTIFICATION FUNCTION
+// ==========================================
+
+function showToast(message, type = "success") {
+    const container = document.getElementById("toastContainer");
+    const toast = document.createElement("div");
+    toast.className = `toast ${type === "error" ? "error" : ""}`;
+    toast.innerHTML = `<i class="fa-solid ${type === "error" ? "fa-circle-exclamation" : "fa-circle-check"}"></i> ${message}`;
+    
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
 
 
 // ==========================================
@@ -60,16 +77,47 @@ function onYouTubeIframeAPIReady() {
                 if (event.data === YT.PlayerState.PLAYING) {
                     document.getElementById("mainPlay").innerHTML = '<i class="fa-solid fa-pause"></i>';
                     startProgress();
+                    updateMediaSessionState("playing");
                 } else if (event.data === YT.PlayerState.ENDED) {
                     handleSongEnded();
                 } else {
                     document.getElementById("mainPlay").innerHTML = '<i class="fa-solid fa-play"></i>';
                     stopProgress();
+                    updateMediaSessionState("paused");
                 }
             }
         }
     });
 
+}
+
+
+// ==========================================
+// MEDIA SESSION API (BACKGROUND PLAYBACK ON PHONES)
+// ==========================================
+
+function updateMediaSession(song) {
+    if ("mediaSession" in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: song.title,
+            artist: song.artist,
+            album: "MyMusic Player",
+            artwork: [
+                { src: song.thumbnail, sizes: "512x512", type: "image/png" }
+            ]
+        });
+
+        navigator.mediaSession.setActionHandler("play", () => togglePlay());
+        navigator.mediaSession.setActionHandler("pause", () => togglePlay());
+        navigator.mediaSession.setActionHandler("previoustrack", () => previousSong());
+        navigator.mediaSession.setActionHandler("nexttrack", () => nextSong());
+    }
+}
+
+function updateMediaSessionState(state) {
+    if ("mediaSession" in navigator) {
+        navigator.mediaSession.playbackState = state;
+    }
 }
 
 
@@ -100,14 +148,13 @@ async function searchYouTube() {
     let query = input.value.trim();
 
     if (!query) {
-        alert("Write a song name first.");
+        showToast("Write a song name first.", "error");
         return;
     }
 
     const results = document.getElementById("results");
     results.innerHTML = "<p style='color:#888;margin-top:20px'>Searching...</p>";
 
-    // Apply Filter Logic
     let categoryParam = "";
     if (currentFilter === "music") {
         categoryParam = "&videoCategoryId=10";
@@ -212,10 +259,10 @@ function closeModal() {
 
 function saveNewPlaylist() {
     const name = document.getElementById("newPlaylistName").value.trim();
-    if (!name) return alert("Enter playlist name!");
+    if (!name) return showToast("Enter playlist name!", "error");
 
     if (playlists[name]) {
-        return alert("Playlist already exists!");
+        return showToast("Playlist already exists!", "error");
     }
 
     playlists[name] = [];
@@ -224,6 +271,7 @@ function saveNewPlaylist() {
     renderPlaylistTabs();
     displayPlaylist();
     closeModal();
+    showToast(`Playlist "${name}" created! ❤️`);
 }
 
 function savePlaylistsToStorage() {
@@ -255,7 +303,7 @@ function renderPlaylistTabs() {
 function openSelectPlaylistModal(song) {
     const names = Object.keys(playlists);
     if (names.length === 0) {
-        alert("Create a playlist first!");
+        showToast("Create a playlist first!", "error");
         return;
     }
 
@@ -285,7 +333,7 @@ function selectPlaylistAndAdd(targetPlaylist) {
     const exists = playlists[targetPlaylist].some(item => item.videoId === songToAddToPlaylist.videoId);
 
     if (exists) {
-        alert(`Already in "${targetPlaylist}"!`);
+        showToast(`Already in "${targetPlaylist}"!`, "error");
         return;
     }
 
@@ -297,6 +345,7 @@ function selectPlaylistAndAdd(targetPlaylist) {
     }
 
     closeSelectPlaylistModal();
+    showToast(`Added to "${targetPlaylist}" ❤️`);
 }
 
 function displayPlaylist() {
@@ -342,38 +391,40 @@ function removeFromPlaylist(index) {
     playlists[currentPlaylistName].splice(index, 1);
     savePlaylistsToStorage();
     displayPlaylist();
+    showToast("Removed from playlist");
 }
 
 
 // ==========================================
-// PLAYBACK & SHUFFLE / REPEAT CONTROLS
+// PLAYBACK CONTROLS
 // ==========================================
 
 function toggleShuffle() {
     isShuffle = !isShuffle;
     const btn = document.getElementById("shuffleBtn");
     btn.classList.toggle("active-control", isShuffle);
+    showToast(isShuffle ? "Shuffle ON" : "Shuffle OFF");
 }
 
 function toggleRepeat() {
     isRepeat = !isRepeat;
     const btn = document.getElementById("repeatBtn");
     btn.classList.toggle("active-control", isRepeat);
+    showToast(isRepeat ? "Repeat ON" : "Repeat OFF");
 }
 
 function handleSongEnded() {
     if (isRepeat) {
-        player.playVideo(); // Repeat same song
+        player.playVideo();
         return;
     }
-
     nextSong();
 }
 
 function playVideo(song) {
 
     if (!player || typeof player.loadVideoById !== "function") {
-        alert("Player is initializing... Please wait 2 seconds and try again.");
+        showToast("Player is initializing...", "error");
         return;
     }
 
@@ -385,6 +436,7 @@ function playVideo(song) {
     document.getElementById("currentImage").src = song.thumbnail;
 
     player.loadVideoById(song.videoId);
+    updateMediaSession(song);
 
 }
 

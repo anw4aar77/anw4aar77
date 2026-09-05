@@ -18,7 +18,14 @@ let songToAddToPlaylist = null;
 
 let isShuffle = false;
 let isRepeat = false;
+let isMuted = false;
+let previousVolume = 100;
 let currentFilter = "all";
+
+// SLEEP TIMER VARIABLES
+let sleepTimeout = null;
+let sleepInterval = null;
+let remainingSleepTime = 0;
 
 let playlists = JSON.parse(localStorage.getItem("myPlaylists")) || {
     "Favorites": []
@@ -26,13 +33,107 @@ let playlists = JSON.parse(localStorage.getItem("myPlaylists")) || {
 
 
 // ==========================================
-// LOAD DATA ON START
+// LOAD DATA & KEYBOARD SHORTCUTS ON START
 // ==========================================
 
 window.addEventListener("DOMContentLoaded", function () {
     renderPlaylistTabs();
     displayPlaylist();
+    setupKeyboardShortcuts();
 });
+
+
+// ==========================================
+// SLEEP TIMER FUNCTIONS
+// ==========================================
+
+function toggleSleepMenu() {
+    const menu = document.getElementById("sleepMenu");
+    menu.classList.toggle("active");
+}
+
+function setSleepTimer(minutes) {
+    cancelSleepTimer();
+
+    remainingSleepTime = minutes * 60;
+    const btn = document.getElementById("sleepTimerBtn");
+    const badge = document.getElementById("timerBadge");
+
+    btn.classList.add("active");
+    badge.style.display = "block";
+    badge.textContent = minutes + "m";
+
+    showToast(`Sleep timer set for ${minutes} minutes 🌙`);
+    toggleSleepMenu();
+
+    sleepInterval = setInterval(() => {
+        remainingSleepTime--;
+        let minsLeft = Math.ceil(remainingSleepTime / 60);
+        badge.textContent = minsLeft + "m";
+
+        if (remainingSleepTime <= 0) {
+            clearInterval(sleepInterval);
+            if (player && typeof player.pauseVideo === "function") {
+                player.pauseVideo();
+            }
+            cancelSleepTimer();
+            showToast("Sleep timer finished. Music paused 😴", "error");
+        }
+    }, 1000);
+}
+
+function cancelSleepTimer() {
+    if (sleepInterval) clearInterval(sleepInterval);
+    if (sleepTimeout) clearTimeout(sleepTimeout);
+
+    const btn = document.getElementById("sleepTimerBtn");
+    const badge = document.getElementById("timerBadge");
+
+    btn.classList.remove("active");
+    badge.style.display = "none";
+    badge.textContent = "";
+
+    const menu = document.getElementById("sleepMenu");
+    menu.classList.remove("active");
+}
+
+
+// ==========================================
+// KEYBOARD SHORTCUTS
+// ==========================================
+
+function setupKeyboardShortcuts() {
+    document.addEventListener("keydown", function (event) {
+        if (event.target.tagName === "INPUT") return;
+
+        switch (event.code) {
+            case "Space":
+                event.preventDefault();
+                togglePlay();
+                break;
+            case "ArrowRight":
+                event.preventDefault();
+                skip(10);
+                break;
+            case "ArrowLeft":
+                event.preventDefault();
+                skip(-10);
+                break;
+            case "ArrowUp":
+                event.preventDefault();
+                adjustVolume(10);
+                break;
+            case "ArrowDown":
+                event.preventDefault();
+                adjustVolume(-10);
+                break;
+            case "KeyM":
+                event.preventDefault();
+                toggleMute();
+                break;
+        }
+    });
+}
 
 
 // ==========================================
@@ -74,14 +175,18 @@ function onYouTubeIframeAPIReady() {
                 console.log("YouTube Player Ready");
             },
             onStateChange: function (event) {
+                const equalizer = document.getElementById("equalizer");
                 if (event.data === YT.PlayerState.PLAYING) {
                     document.getElementById("mainPlay").innerHTML = '<i class="fa-solid fa-pause"></i>';
+                    equalizer.classList.add("active");
                     startProgress();
                     updateMediaSessionState("playing");
                 } else if (event.data === YT.PlayerState.ENDED) {
+                    equalizer.classList.remove("active");
                     handleSongEnded();
                 } else {
                     document.getElementById("mainPlay").innerHTML = '<i class="fa-solid fa-play"></i>';
+                    equalizer.classList.remove("active");
                     stopProgress();
                     updateMediaSessionState("paused");
                 }
@@ -93,7 +198,7 @@ function onYouTubeIframeAPIReady() {
 
 
 // ==========================================
-// MEDIA SESSION API (BACKGROUND PLAYBACK ON PHONES)
+// MEDIA SESSION API (BACKGROUND PLAYBACK)
 // ==========================================
 
 function updateMediaSession(song) {
@@ -493,6 +598,33 @@ function changeVolume() {
     if (!player || typeof player.setVolume !== "function") return;
     const value = document.getElementById("volume").value;
     player.setVolume(Number(value));
+
+    const icon = document.getElementById("volumeIcon");
+    if (value == 0) {
+        icon.className = "fa-solid fa-volume-xmark";
+    } else {
+        icon.className = "fa-solid fa-volume-high";
+    }
+}
+
+function adjustVolume(amount) {
+    const slider = document.getElementById("volume");
+    let val = Math.min(100, Math.max(0, Number(slider.value) + amount));
+    slider.value = val;
+    changeVolume();
+}
+
+function toggleMute() {
+    const slider = document.getElementById("volume");
+    if (isMuted) {
+        slider.value = previousVolume;
+        isMuted = false;
+    } else {
+        previousVolume = slider.value;
+        slider.value = 0;
+        isMuted = true;
+    }
+    changeVolume();
 }
 
 function startProgress() {

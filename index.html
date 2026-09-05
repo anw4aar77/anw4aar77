@@ -115,10 +115,18 @@
 
         <div class="current-song">
 
-            <img
-                id="currentImage"
-                src="https://via.placeholder.com/60"
-            >
+            <div class="img-container">
+                <img
+                    id="currentImage"
+                    src="https://via.placeholder.com/60"
+                >
+                <div id="equalizer" class="equalizer">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
 
             <div>
 
@@ -199,7 +207,23 @@
 
         <div class="volume">
 
-            <i class="fa-solid fa-volume-high"></i>
+            <div class="sleep-timer-wrapper">
+                <button id="sleepTimerBtn" onclick="toggleSleepMenu()" title="Sleep Timer">
+                    <i class="fa-solid fa-moon"></i>
+                    <span id="timerBadge" class="timer-badge"></span>
+                </button>
+
+                <div id="sleepMenu" class="sleep-menu">
+                    <h4>Sleep Timer</h4>
+                    <button onclick="setSleepTimer(5)">5 Minutes</button>
+                    <button onclick="setSleepTimer(15)">15 Minutes</button>
+                    <button onclick="setSleepTimer(30)">30 Minutes</button>
+                    <button onclick="setSleepTimer(60)">1 Hour</button>
+                    <button class="cancel-timer-btn" onclick="cancelSleepTimer()">Turn Off</button>
+                </div>
+            </div>
+
+            <i class="fa-solid fa-volume-high" id="volumeIcon" onclick="toggleMute()" style="cursor: pointer;"></i>
 
             <input
                 type="range"

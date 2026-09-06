@@ -362,17 +362,38 @@ function displayResults(items) {
 // DOWNLOAD FUNCTIONALITY
 // ==========================================
 
+// ==========================================
+// DOWNLOAD FUNCTIONALITY (COBALT)
+// ==========================================
+
+// ==========================================
+// DOWNLOAD FUNCTIONALITY (Y2MATE SEARCH)
+// ==========================================
+
+// ==========================================
+// DOWNLOAD FUNCTIONALITY (DIRECT DOWNLOAD)
+// ==========================================
+
+// ==========================================
+// DOWNLOAD FUNCTIONALITY (DIRECT & GUARANTEED 100%)
+// ==========================================
+
+// ==========================================
+// DOWNLOAD FUNCTIONALITY (STABLE DIRECT LINK)
+// ==========================================
+
 function downloadAudio(videoId = null) {
     const idToDownload = videoId || currentPlayingVideoId;
     if (!idToDownload) {
-        showToast("No song selected to download!", "error");
+        showToast("Select a song first!", "error");
         return;
     }
-    showToast("Opening download page... 🚀");
-    window.open(`https://y2mate.is/en/youtube-to-mp3/${idToDownload}`, "_blank");
+
+    showToast("Opening downloader... 🚀");
+    
+    // Stable converter without proxy blocks
+    window.open(`https://loader.to/api/card/?url=https://www.youtube.com/watch?v=${idToDownload}`, "_blank");
 }
-
-
 // ==========================================
 // CREATE & MANAGE PLAYLISTS
 // ==========================================

@@ -17,7 +17,7 @@ body {
 }
 
 
-/* SIDEBAR */
+/* SIDEBAR (DESKTOP) */
 
 .sidebar {
     position: fixed;
@@ -89,6 +89,13 @@ body {
 
 .create-playlist-btn:hover {
     background: #1fdf64;
+}
+
+
+/* MOBILE NAV BAR (Hidden on PC) */
+
+.mobile-nav {
+    display: none;
 }
 
 
@@ -655,7 +662,7 @@ body {
 }
 
 
-/* MOBILE */
+/* MOBILE SPECIFIC STYLES */
 
 @media (max-width: 700px) {
 
@@ -663,9 +670,45 @@ body {
         display: none;
     }
 
+    .mobile-nav {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        background: #111;
+        padding: 10px;
+        margin-bottom: 15px;
+        border-radius: 12px;
+        border: 1px solid #222;
+    }
+
+    .mobile-nav-btn {
+        background: transparent;
+        border: none;
+        color: #aaa;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border-radius: 20px;
+        cursor: pointer;
+    }
+
+    .mobile-nav-btn.active {
+        background: #282828;
+        color: #1ed760;
+        font-weight: bold;
+    }
+
+    .mobile-nav-btn.create-btn {
+        background: #1ed760;
+        color: black;
+        font-weight: bold;
+    }
+
     .main {
         margin-left: 0;
-        padding: 18px;
+        padding: 15px;
     }
 
     .topbar {

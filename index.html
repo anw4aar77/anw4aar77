@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MyMusic</title>
 
+    <!-- FontAwesome Library for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <link rel="stylesheet" href="style.css">
@@ -13,6 +14,7 @@
 
 <body>
 
+    <!-- DESKTOP SIDEBAR -->
     <aside class="sidebar">
 
         <h1 class="logo"><i class="fa-solid fa-compact-disc"></i> MyMusic</h1>
@@ -33,6 +35,19 @@
 
 
     <main class="main">
+
+        <!-- MOBILE NAVIGATION BAR (Kaban ghir f téléphone) -->
+        <div class="mobile-nav">
+            <button class="mobile-nav-btn active" onclick="showHome()">
+                <i class="fa-solid fa-house"></i> Home
+            </button>
+            <button class="mobile-nav-btn" onclick="showPlaylist()">
+                <i class="fa-solid fa-heart"></i> Playlists
+            </button>
+            <button class="mobile-nav-btn create-btn" onclick="openModal()">
+                <i class="fa-solid fa-plus"></i> New
+            </button>
+        </div>
 
         <header class="topbar">
 
@@ -58,6 +73,7 @@
 
         <section id="homeSection">
 
+            <!-- SEARCH FILTERS -->
             <div class="filter-container">
                 <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
                 <button class="filter-btn" onclick="setFilter('music', this)">Music</button>
@@ -75,8 +91,10 @@
 
             <h2><i class="fa-solid fa-heart" style="color: #e74c3c;"></i> My Playlists</h2>
 
+            <!-- PLAYLIST TABS / SELECTOR -->
             <div id="playlistTabs" class="playlist-tabs"></div>
 
+            <!-- SONGS IN SELECTED PLAYLIST -->
             <div id="playlist"></div>
 
         </section>
@@ -84,6 +102,7 @@
     </main>
 
 
+    <!-- CREATE PLAYLIST MODAL -->
     <div id="playlistModal" class="modal">
         <div class="modal-content">
             <h3>Create New Playlist</h3>
@@ -96,6 +115,7 @@
     </div>
 
 
+    <!-- ADD TO PLAYLIST MODAL WITH BUTTONS -->
     <div id="addToPlaylistModal" class="modal">
         <div class="modal-content">
             <h3>Select Playlist</h3>
@@ -105,12 +125,15 @@
     </div>
 
 
+    <!-- TOAST NOTIFICATION CONTAINER -->
     <div id="toastContainer" class="toast-container"></div>
 
 
+    <!-- YOUTUBE PLAYER -->
     <div id="youtubePlayer"></div>
 
 
+    <!-- MUSIC PLAYER -->
     <div class="player">
 
         <div class="current-song">
@@ -120,6 +143,7 @@
                     id="currentImage"
                     src="https://via.placeholder.com/60"
                 >
+                <!-- AUDIO EQUALIZER ANIMATION -->
                 <div id="equalizer" class="equalizer">
                     <span></span>
                     <span></span>
@@ -207,6 +231,7 @@
 
         <div class="volume">
 
+            <!-- SLEEP TIMER MENU -->
             <div class="sleep-timer-wrapper">
                 <button id="sleepTimerBtn" onclick="toggleSleepMenu()" title="Sleep Timer">
                     <i class="fa-solid fa-moon"></i>
@@ -240,7 +265,6 @@
 
 
     <script src="https://www.youtube.com/iframe_api"></script>
-
     <script src="script.js"></script>
 
 </body>

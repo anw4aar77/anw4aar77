@@ -16,10 +16,6 @@ let progressTimer = null;
 let currentPlaylistName = "Favorites";
 let songToAddToPlaylist = null;
 
-// HTML5 Audio Player for mobile background playback bypass
-let bgAudio = new Audio();
-let isUsingBgAudio = false;
-
 let isShuffle = false;
 let isRepeat = false;
 let isMuted = false;
@@ -44,32 +40,7 @@ window.addEventListener("DOMContentLoaded", function () {
     renderPlaylistTabs();
     displayPlaylist();
     setupKeyboardShortcuts();
-    setupBgAudioListeners();
 });
-
-function setupBgAudioListeners() {
-    bgAudio.addEventListener("play", () => {
-        document.getElementById("mainPlay").innerHTML = '<i class="fa-solid fa-pause"></i>';
-        const equalizer = document.getElementById("equalizer");
-        if (equalizer) equalizer.classList.add("active");
-        startProgress();
-        updateMediaSessionState("playing");
-    });
-
-    bgAudio.addEventListener("pause", () => {
-        document.getElementById("mainPlay").innerHTML = '<i class="fa-solid fa-play"></i>';
-        const equalizer = document.getElementById("equalizer");
-        if (equalizer) equalizer.classList.remove("active");
-        stopProgress();
-        updateMediaSessionState("paused");
-    });
-
-    bgAudio.addEventListener("ended", () => {
-        const equalizer = document.getElementById("equalizer");
-        if (equalizer) equalizer.classList.remove("active");
-        handleSongEnded();
-    });
-}
 
 
 // ==========================================
@@ -102,9 +73,7 @@ function setSleepTimer(minutes) {
 
         if (remainingSleepTime <= 0) {
             clearInterval(sleepInterval);
-            if (isUsingBgAudio) {
-                bgAudio.pause();
-            } else if (player && typeof player.pauseVideo === "function") {
+            if (player && typeof player.pauseVideo === "function") {
                 player.pauseVideo();
             }
             cancelSleepTimer();
@@ -120,14 +89,12 @@ function cancelSleepTimer() {
     const btn = document.getElementById("sleepTimerBtn");
     const badge = document.getElementById("timerBadge");
 
-    if (btn) btn.classList.remove("active");
-    if (badge) {
-        badge.style.display = "none";
-        badge.textContent = "";
-    }
+    btn.classList.remove("active");
+    badge.style.display = "none";
+    badge.textContent = "";
 
     const menu = document.getElementById("sleepMenu");
-    if (menu) menu.classList.remove("active");
+    menu.classList.remove("active");
 }
 
 
@@ -175,8 +142,6 @@ function setupKeyboardShortcuts() {
 
 function showToast(message, type = "success") {
     const container = document.getElementById("toastContainer");
-    if (!container) return;
-    
     const toast = document.createElement("div");
     toast.className = `toast ${type === "error" ? "error" : ""}`;
     toast.innerHTML = `<i class="fa-solid ${type === "error" ? "fa-circle-exclamation" : "fa-circle-check"}"></i> ${message}`;
@@ -202,7 +167,6 @@ function onYouTubeIframeAPIReady() {
         playerVars: {
             autoplay: 1,
             controls: 0,
-            playsinline: 1,
             origin: window.location.origin
         },
         events: {
@@ -211,19 +175,18 @@ function onYouTubeIframeAPIReady() {
                 console.log("YouTube Player Ready");
             },
             onStateChange: function (event) {
-                if (isUsingBgAudio) return;
                 const equalizer = document.getElementById("equalizer");
                 if (event.data === YT.PlayerState.PLAYING) {
                     document.getElementById("mainPlay").innerHTML = '<i class="fa-solid fa-pause"></i>';
-                    if (equalizer) equalizer.classList.add("active");
+                    equalizer.classList.add("active");
                     startProgress();
                     updateMediaSessionState("playing");
                 } else if (event.data === YT.PlayerState.ENDED) {
-                    if (equalizer) equalizer.classList.remove("active");
+                    equalizer.classList.remove("active");
                     handleSongEnded();
                 } else {
                     document.getElementById("mainPlay").innerHTML = '<i class="fa-solid fa-play"></i>';
-                    if (equalizer) equalizer.classList.remove("active");
+                    equalizer.classList.remove("active");
                     stopProgress();
                     updateMediaSessionState("paused");
                 }
@@ -422,7 +385,6 @@ function savePlaylistsToStorage() {
 
 function renderPlaylistTabs() {
     const tabsContainer = document.getElementById("playlistTabs");
-    if (!tabsContainer) return;
     tabsContainer.innerHTML = "";
 
     Object.keys(playlists).forEach(name => {
@@ -493,7 +455,6 @@ function selectPlaylistAndAdd(targetPlaylist) {
 
 function displayPlaylist() {
     const container = document.getElementById("playlist");
-    if (!container) return;
     container.innerHTML = "";
 
     const activeList = playlists[currentPlaylistName] || [];
@@ -546,31 +507,31 @@ function removeFromPlaylist(index) {
 function toggleShuffle() {
     isShuffle = !isShuffle;
     const btn = document.getElementById("shuffleBtn");
-    if (btn) btn.classList.toggle("active-control", isShuffle);
+    btn.classList.toggle("active-control", isShuffle);
     showToast(isShuffle ? "Shuffle ON" : "Shuffle OFF");
 }
 
 function toggleRepeat() {
     isRepeat = !isRepeat;
     const btn = document.getElementById("repeatBtn");
-    if (btn) btn.classList.toggle("active-control", isRepeat);
+    btn.classList.toggle("active-control", isRepeat);
     showToast(isRepeat ? "Repeat ON" : "Repeat OFF");
 }
 
 function handleSongEnded() {
     if (isRepeat) {
-        if (isUsingBgAudio) {
-            bgAudio.currentTime = 0;
-            bgAudio.play();
-        } else if (player) {
-            player.playVideo();
-        }
+        player.playVideo();
         return;
     }
     nextSong();
 }
 
-async function playVideo(song) {
+function playVideo(song) {
+
+    if (!player || typeof player.loadVideoById !== "function") {
+        showToast("Player is initializing...", "error");
+        return;
+    }
 
     const currentList = playlists[currentPlaylistName] || [];
     currentIndex = currentList.findIndex(item => item.videoId === song.videoId);
@@ -579,33 +540,8 @@ async function playVideo(song) {
     document.getElementById("currentArtist").textContent = song.artist;
     document.getElementById("currentImage").src = song.thumbnail;
 
+    player.loadVideoById(song.videoId);
     updateMediaSession(song);
-
-    // Try fetching audio stream to bypass Chrome mobile background limits
-    try {
-        const res = await fetch(`https://pipedapi.kavin.rocks/streams/${song.videoId}`);
-        const data = await res.json();
-        
-        if (data.audioStreams && data.audioStreams.length > 0) {
-            if (player && typeof player.stopVideo === "function") player.stopVideo();
-            
-            isUsingBgAudio = true;
-            bgAudio.src = data.audioStreams[0].url;
-            bgAudio.play();
-            return;
-        }
-    } catch (e) {
-        console.warn("Background audio fetch failed, falling back to YouTube Player API", e);
-    }
-
-    // Fallback to standard YouTube Player
-    isUsingBgAudio = false;
-    bgAudio.pause();
-    if (player && typeof player.loadVideoById === "function") {
-        player.loadVideoById(song.videoId);
-    } else {
-        showToast("Player is initializing...", "error");
-    }
 
 }
 
@@ -617,12 +553,6 @@ function playPlaylistSong(index) {
 }
 
 function togglePlay() {
-    if (isUsingBgAudio) {
-        if (bgAudio.paused) bgAudio.play();
-        else bgAudio.pause();
-        return;
-    }
-
     if (!player || typeof player.getPlayerState !== "function") return;
     const state = player.getPlayerState();
     if (state === YT.PlayerState.PLAYING) {
@@ -659,38 +589,26 @@ function previousSong() {
 }
 
 function skip(seconds) {
-    if (isUsingBgAudio) {
-        bgAudio.currentTime = Math.max(0, bgAudio.currentTime + seconds);
-        return;
-    }
-
     if (!player || typeof player.getCurrentTime !== "function") return;
     const current = player.getCurrentTime();
     player.seekTo(Math.max(0, current + seconds), true);
 }
 
 function changeVolume() {
+    if (!player || typeof player.setVolume !== "function") return;
     const value = document.getElementById("volume").value;
-
-    if (isUsingBgAudio) {
-        bgAudio.volume = Number(value) / 100;
-    } else if (player && typeof player.setVolume === "function") {
-        player.setVolume(Number(value));
-    }
+    player.setVolume(Number(value));
 
     const icon = document.getElementById("volumeIcon");
-    if (icon) {
-        if (value == 0) {
-            icon.className = "fa-solid fa-volume-xmark";
-        } else {
-            icon.className = "fa-solid fa-volume-high";
-        }
+    if (value == 0) {
+        icon.className = "fa-solid fa-volume-xmark";
+    } else {
+        icon.className = "fa-solid fa-volume-high";
     }
 }
 
 function adjustVolume(amount) {
     const slider = document.getElementById("volume");
-    if (!slider) return;
     let val = Math.min(100, Math.max(0, Number(slider.value) + amount));
     slider.value = val;
     changeVolume();
@@ -698,7 +616,6 @@ function adjustVolume(amount) {
 
 function toggleMute() {
     const slider = document.getElementById("volume");
-    if (!slider) return;
     if (isMuted) {
         slider.value = previousVolume;
         isMuted = false;
@@ -713,22 +630,13 @@ function toggleMute() {
 function startProgress() {
     stopProgress();
     progressTimer = setInterval(() => {
-        let current = 0;
-        let duration = 0;
-
-        if (isUsingBgAudio) {
-            current = bgAudio.currentTime;
-            duration = bgAudio.duration;
-        } else if (player && typeof player.getCurrentTime === "function") {
-            current = player.getCurrentTime();
-            duration = player.getDuration();
-        }
-
-        if (!duration || isNaN(duration)) return;
+        if (!player || typeof player.getCurrentTime !== "function") return;
+        const current = player.getCurrentTime();
+        const duration = player.getDuration();
+        if (!duration) return;
 
         const percentage = (current / duration) * 100;
-        const progressEl = document.getElementById("progress");
-        if (progressEl) progressEl.value = percentage;
+        document.getElementById("progress").value = percentage;
         document.getElementById("currentTime").textContent = formatTime(current);
         document.getElementById("duration").textContent = formatTime(duration);
     }, 500);
@@ -741,20 +649,13 @@ function stopProgress() {
     }
 }
 
-const progressInput = document.getElementById("progress");
-if (progressInput) {
-    progressInput.addEventListener("input", function () {
-        let duration = isUsingBgAudio ? bgAudio.duration : (player ? player.getDuration() : 0);
-        if (!duration) return;
-        const time = (this.value / 100) * duration;
-
-        if (isUsingBgAudio) {
-            bgAudio.currentTime = time;
-        } else if (player && typeof player.seekTo === "function") {
-            player.seekTo(time, true);
-        }
-    });
-}
+document.getElementById("progress").addEventListener("input", function () {
+    if (!player || typeof player.seekTo !== "function") return;
+    const duration = player.getDuration();
+    if (!duration) return;
+    const time = (this.value / 100) * duration;
+    player.seekTo(time, true);
+});
 
 function formatTime(seconds) {
     if (!seconds || isNaN(seconds)) return "0:00";
@@ -765,36 +666,23 @@ function formatTime(seconds) {
 
 
 // ==========================================
-// NAVIGATION (PC & MOBILE FLEXIBLE)
+// NAVIGATION
 // ==========================================
 
 function showHome() {
     document.getElementById("homeSection").style.display = "block";
     document.getElementById("playlistSection").style.display = "none";
 
-    document.querySelectorAll("#navHome, .mobile-nav-btn").forEach(el => {
-        if (el.id === "navHome" || el.getAttribute("onclick") === "showHome()") {
-            el.classList.add("active");
-        } else {
-            el.classList.remove("active");
-        }
-    });
+    document.getElementById("navHome").classList.add("active");
+    document.getElementById("navPlaylist").classList.remove("active");
 }
 
 function showPlaylist() {
     document.getElementById("homeSection").style.display = "none";
     document.getElementById("playlistSection").style.display = "block";
 
-    document.querySelectorAll("#navPlaylist, .mobile-nav-btn").forEach(el => {
-        if (el.id === "navPlaylist" || el.getAttribute("onclick") === "showPlaylist()") {
-            el.classList.add("active");
-        } else {
-            el.classList.remove("active");
-        }
-    });
-
-    renderPlaylistTabs();
-    displayPlaylist();
+    document.getElementById("navHome").classList.remove("active");
+    document.getElementById("navPlaylist").classList.add("active");
 }
 
 function cleanText(text) {

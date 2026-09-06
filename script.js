@@ -382,6 +382,10 @@ function displayResults(items) {
 // DOWNLOAD FUNCTIONALITY (STABLE DIRECT LINK)
 // ==========================================
 
+// ==========================================
+// DOWNLOAD FUNCTIONALITY (PC & MOBILE COMPATIBLE)
+// ==========================================
+
 function downloadAudio(videoId = null) {
     const idToDownload = videoId || currentPlayingVideoId;
     if (!idToDownload) {
@@ -390,9 +394,17 @@ function downloadAudio(videoId = null) {
     }
 
     showToast("Opening downloader... 🚀");
-    
-    // Stable converter without proxy blocks
-    window.open(`https://loader.to/api/card/?url=https://www.youtube.com/watch?v=${idToDownload}`, "_blank");
+
+    const targetUrl = `https://loader.to/api/card/?url=https://www.youtube.com/watch?v=${idToDownload}`;
+
+    // Mobile-friendly link trigger (bypasses mobile browser pop-up blockers)
+    const a = document.createElement("a");
+    a.href = targetUrl;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 }
 // ==========================================
 // CREATE & MANAGE PLAYLISTS

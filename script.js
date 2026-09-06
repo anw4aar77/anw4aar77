@@ -15,6 +15,7 @@ let currentIndex = -1;
 let progressTimer = null;
 let currentPlaylistName = "Favorites";
 let songToAddToPlaylist = null;
+let currentPlayingVideoId = null;
 
 let isShuffle = false;
 let isRepeat = false;
@@ -89,12 +90,14 @@ function cancelSleepTimer() {
     const btn = document.getElementById("sleepTimerBtn");
     const badge = document.getElementById("timerBadge");
 
-    btn.classList.remove("active");
-    badge.style.display = "none";
-    badge.textContent = "";
+    if (btn) btn.classList.remove("active");
+    if (badge) {
+        badge.style.display = "none";
+        badge.textContent = "";
+    }
 
     const menu = document.getElementById("sleepMenu");
-    menu.classList.remove("active");
+    if (menu) menu.classList.remove("active");
 }
 
 
@@ -142,10 +145,12 @@ function setupKeyboardShortcuts() {
 
 function showToast(message, type = "success") {
     const container = document.getElementById("toastContainer");
+    if (!container) return;
+
     const toast = document.createElement("div");
     toast.className = `toast ${type === "error" ? "error" : ""}`;
     toast.innerHTML = `<i class="fa-solid ${type === "error" ? "fa-circle-exclamation" : "fa-circle-check"}"></i> ${message}`;
-    
+
     container.appendChild(toast);
 
     setTimeout(() => {
@@ -178,15 +183,15 @@ function onYouTubeIframeAPIReady() {
                 const equalizer = document.getElementById("equalizer");
                 if (event.data === YT.PlayerState.PLAYING) {
                     document.getElementById("mainPlay").innerHTML = '<i class="fa-solid fa-pause"></i>';
-                    equalizer.classList.add("active");
+                    if (equalizer) equalizer.classList.add("active");
                     startProgress();
                     updateMediaSessionState("playing");
                 } else if (event.data === YT.PlayerState.ENDED) {
-                    equalizer.classList.remove("active");
+                    if (equalizer) equalizer.classList.remove("active");
                     handleSongEnded();
                 } else {
                     document.getElementById("mainPlay").innerHTML = '<i class="fa-solid fa-play"></i>';
-                    equalizer.classList.remove("active");
+                    if (equalizer) equalizer.classList.remove("active");
                     stopProgress();
                     updateMediaSessionState("paused");
                 }
@@ -323,6 +328,10 @@ function displayResults(items) {
                 <span>${cleanText(channel)}</span>
             </div>
 
+            <button class="add-btn" onclick='downloadAudio("${videoId}")' title="Download MP3">
+                <i class="fa-solid fa-download"></i>
+            </button>
+
             <button class="add-btn" onclick='openSelectPlaylistModal(${JSON.stringify({
                 videoId: videoId,
                 title: title,
@@ -346,6 +355,21 @@ function displayResults(items) {
 
     });
 
+}
+
+
+// ==========================================
+// DOWNLOAD FUNCTIONALITY
+// ==========================================
+
+function downloadAudio(videoId = null) {
+    const idToDownload = videoId || currentPlayingVideoId;
+    if (!idToDownload) {
+        showToast("No song selected to download!", "error");
+        return;
+    }
+    showToast("Opening download page... 🚀");
+    window.open(`https://y2mate.is/en/youtube-to-mp3/${idToDownload}`, "_blank");
 }
 
 
@@ -385,6 +409,7 @@ function savePlaylistsToStorage() {
 
 function renderPlaylistTabs() {
     const tabsContainer = document.getElementById("playlistTabs");
+    if (!tabsContainer) return;
     tabsContainer.innerHTML = "";
 
     Object.keys(playlists).forEach(name => {
@@ -455,6 +480,7 @@ function selectPlaylistAndAdd(targetPlaylist) {
 
 function displayPlaylist() {
     const container = document.getElementById("playlist");
+    if (!container) return;
     container.innerHTML = "";
 
     const activeList = playlists[currentPlaylistName] || [];
@@ -477,6 +503,10 @@ function displayPlaylist() {
                 <br>
                 <small style="color:#888">${cleanText(song.artist)}</small>
             </div>
+
+            <button class="play-btn" onclick='downloadAudio("${song.videoId}")' title="Download MP3">
+                <i class="fa-solid fa-download"></i>
+            </button>
 
             <button class="play-btn" onclick="playPlaylistSong(${index})">
                 <i class="fa-solid fa-play"></i>
@@ -507,20 +537,22 @@ function removeFromPlaylist(index) {
 function toggleShuffle() {
     isShuffle = !isShuffle;
     const btn = document.getElementById("shuffleBtn");
-    btn.classList.toggle("active-control", isShuffle);
+    if (btn) btn.classList.toggle("active-control", isShuffle);
     showToast(isShuffle ? "Shuffle ON" : "Shuffle OFF");
 }
 
 function toggleRepeat() {
     isRepeat = !isRepeat;
     const btn = document.getElementById("repeatBtn");
-    btn.classList.toggle("active-control", isRepeat);
+    if (btn) btn.classList.toggle("active-control", isRepeat);
     showToast(isRepeat ? "Repeat ON" : "Repeat OFF");
 }
 
 function handleSongEnded() {
     if (isRepeat) {
-        player.playVideo();
+        if (player && typeof player.playVideo === "function") {
+            player.playVideo();
+        }
         return;
     }
     nextSong();
@@ -533,6 +565,7 @@ function playVideo(song) {
         return;
     }
 
+    currentPlayingVideoId = song.videoId;
     const currentList = playlists[currentPlaylistName] || [];
     currentIndex = currentList.findIndex(item => item.videoId === song.videoId);
 
@@ -600,15 +633,18 @@ function changeVolume() {
     player.setVolume(Number(value));
 
     const icon = document.getElementById("volumeIcon");
-    if (value == 0) {
-        icon.className = "fa-solid fa-volume-xmark";
-    } else {
-        icon.className = "fa-solid fa-volume-high";
+    if (icon) {
+        if (value == 0) {
+            icon.className = "fa-solid fa-volume-xmark";
+        } else {
+            icon.className = "fa-solid fa-volume-high";
+        }
     }
 }
 
 function adjustVolume(amount) {
     const slider = document.getElementById("volume");
+    if (!slider) return;
     let val = Math.min(100, Math.max(0, Number(slider.value) + amount));
     slider.value = val;
     changeVolume();
@@ -616,6 +652,7 @@ function adjustVolume(amount) {
 
 function toggleMute() {
     const slider = document.getElementById("volume");
+    if (!slider) return;
     if (isMuted) {
         slider.value = previousVolume;
         isMuted = false;
@@ -636,7 +673,8 @@ function startProgress() {
         if (!duration) return;
 
         const percentage = (current / duration) * 100;
-        document.getElementById("progress").value = percentage;
+        const progressEl = document.getElementById("progress");
+        if (progressEl) progressEl.value = percentage;
         document.getElementById("currentTime").textContent = formatTime(current);
         document.getElementById("duration").textContent = formatTime(duration);
     }, 500);
@@ -649,13 +687,16 @@ function stopProgress() {
     }
 }
 
-document.getElementById("progress").addEventListener("input", function () {
-    if (!player || typeof player.seekTo !== "function") return;
-    const duration = player.getDuration();
-    if (!duration) return;
-    const time = (this.value / 100) * duration;
-    player.seekTo(time, true);
-});
+const progressInput = document.getElementById("progress");
+if (progressInput) {
+    progressInput.addEventListener("input", function () {
+        if (!player || typeof player.seekTo !== "function") return;
+        const duration = player.getDuration();
+        if (!duration) return;
+        const time = (this.value / 100) * duration;
+        player.seekTo(time, true);
+    });
+}
 
 function formatTime(seconds) {
     if (!seconds || isNaN(seconds)) return "0:00";
@@ -673,16 +714,23 @@ function showHome() {
     document.getElementById("homeSection").style.display = "block";
     document.getElementById("playlistSection").style.display = "none";
 
-    document.getElementById("navHome").classList.add("active");
-    document.getElementById("navPlaylist").classList.remove("active");
+    const navHome = document.getElementById("navHome");
+    const navPlaylist = document.getElementById("navPlaylist");
+    if (navHome) navHome.classList.add("active");
+    if (navPlaylist) navPlaylist.classList.remove("active");
 }
 
 function showPlaylist() {
     document.getElementById("homeSection").style.display = "none";
     document.getElementById("playlistSection").style.display = "block";
 
-    document.getElementById("navHome").classList.remove("active");
-    document.getElementById("navPlaylist").classList.add("active");
+    const navHome = document.getElementById("navHome");
+    const navPlaylist = document.getElementById("navPlaylist");
+    if (navHome) navHome.classList.remove("active");
+    if (navPlaylist) navPlaylist.classList.add("active");
+
+    renderPlaylistTabs();
+    displayPlaylist();
 }
 
 function cleanText(text) {

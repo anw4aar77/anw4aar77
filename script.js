@@ -23,17 +23,11 @@ let isMuted = false;
 let previousVolume = 100;
 let currentFilter = "all";
 
-// AUTHENTICATION VARIABLE
+// AUTHENTICATION & USER PLAYLISTS
 let currentUser = localStorage.getItem("myMusicCurrentUser") || null;
 
-// SLEEP TIMER VARIABLES
-let sleepTimeout = null;
-let sleepInterval = null;
-let remainingSleepTime = 0;
-
-let playlists = JSON.parse(localStorage.getItem("myPlaylists")) || {
-    "Favorites": []
-};
+// 🔴 هنا مسحنا الكود القديم ودرنا هادي خاوية حيت غاتعمر f loadUserPlaylists()
+let playlists = {}; 
 
 
 // ==========================================
@@ -41,11 +35,51 @@ let playlists = JSON.parse(localStorage.getItem("myPlaylists")) || {
 // ==========================================
 
 window.addEventListener("DOMContentLoaded", function () {
-    checkAuthStatus();
-    renderPlaylistTabs();
-    displayPlaylist();
+    checkAuthStatus(); // هادي هي اللي غاتشارجي الـ Playlists د اليوزر ديريكت
     setupKeyboardShortcuts();
 });
+
+
+// ==========================================
+// AUTHENTICATION SYSTEM & USER PLAYLISTS
+// ==========================================
+
+// ==========================================
+// USER PLAYLISTS STORAGE MANAGEMENT
+// ==========================================
+
+function loadUserPlaylists() {
+    if (!currentUser) {
+        playlists = {};
+        return;
+    }
+    
+    // Saret khass b kul User: myPlaylists_hamoda11 / myPlaylists_abdelhak22
+    let userStorageKey = "myPlaylists_" + currentUser;
+    
+    let savedData = localStorage.getItem(userStorageKey);
+    
+    if (savedData) {
+        playlists = JSON.parse(savedData);
+    } else {
+        // Ila kan account jdid, ndiro "Favorites" playlist khawya
+        playlists = {
+            "Favorites": []
+        };
+        // N-sjeloha ni3nan f localStorage باش t-thfad direct
+        localStorage.setItem(userStorageKey, JSON.stringify(playlists));
+    }
+
+    currentPlaylistName = Object.keys(playlists)[0] || "Favorites";
+    renderPlaylistTabs();
+    displayPlaylist();
+}
+
+function savePlaylistsToStorage() {
+    if (!currentUser) return;
+    let userStorageKey = "myPlaylists_" + currentUser;
+    localStorage.setItem(userStorageKey, JSON.stringify(playlists));
+}
 
 
 // ==========================================
@@ -58,36 +92,21 @@ function checkAuthStatus() {
     const usernameDisplay = document.getElementById("usernameDisplay");
 
     if (!currentUser) {
-        if (authModal) authModal.style.display = "flex";
+        if (authModal) authModal.style.setProperty("display", "flex", "important");
         if (userProfile) userProfile.style.display = "none";
+        playlists = {};
         if (player && typeof player.pauseVideo === "function") {
             player.pauseVideo();
         }
     } else {
-        if (authModal) authModal.style.display = "none";
+        if (authModal) authModal.style.setProperty("display", "none", "important");
         if (userProfile) {
             userProfile.style.display = "flex";
             if (usernameDisplay) usernameDisplay.textContent = currentUser;
         }
-    }
-}
 
-function switchAuthTab(tab) {
-    const loginForm = document.getElementById("loginForm");
-    const signupForm = document.getElementById("signupForm");
-    const tabLoginBtn = document.getElementById("tabLoginBtn");
-    const tabSignupBtn = document.getElementById("tabSignupBtn");
-
-    if (tab === "login") {
-        loginForm.style.display = "block";
-        signupForm.style.display = "none";
-        tabLoginBtn.classList.add("active");
-        tabSignupBtn.classList.remove("active");
-    } else {
-        loginForm.style.display = "none";
-        signupForm.style.display = "block";
-        tabLoginBtn.classList.remove("active");
-        tabSignupBtn.classList.add("active");
+        // Load playlists specific to the current active user
+        loadUserPlaylists();
     }
 }
 
@@ -104,11 +123,17 @@ function handleSignup(event) {
         return showToast("Username already exists!", "error");
     }
 
+    // Save User Credentials
     users[user] = { password: pass };
     localStorage.setItem("myMusicUsers", JSON.stringify(users));
 
+    // Set Active User
     currentUser = user;
     localStorage.setItem("myMusicCurrentUser", currentUser);
+
+    // Initialize & Save Empty Playlists for new user
+    playlists = { "Favorites": [] };
+    savePlaylistsToStorage();
 
     checkAuthStatus();
     showToast(`Account created! Welcome ${user} 🎉`);
@@ -125,16 +150,25 @@ function handleLogin(event) {
         return showToast("Invalid username or password!", "error");
     }
 
+    // Set Active User
     currentUser = user;
     localStorage.setItem("myMusicCurrentUser", currentUser);
 
+    // Load Playlists of this logged in user
     checkAuthStatus();
     showToast(`Welcome back, ${user}! 👋`);
 }
 
 function handleLogout() {
+    // Save state before logging out
+    if (currentUser) {
+        savePlaylistsToStorage();
+    }
+
     currentUser = null;
     localStorage.removeItem("myMusicCurrentUser");
+    playlists = {};
+    
     checkAuthStatus();
     showToast("Logged out successfully");
 }

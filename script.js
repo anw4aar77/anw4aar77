@@ -23,6 +23,9 @@ let isMuted = false;
 let previousVolume = 100;
 let currentFilter = "all";
 
+// AUTHENTICATION VARIABLE
+let currentUser = localStorage.getItem("myMusicCurrentUser") || null;
+
 // SLEEP TIMER VARIABLES
 let sleepTimeout = null;
 let sleepInterval = null;
@@ -38,10 +41,103 @@ let playlists = JSON.parse(localStorage.getItem("myPlaylists")) || {
 // ==========================================
 
 window.addEventListener("DOMContentLoaded", function () {
+    checkAuthStatus();
     renderPlaylistTabs();
     displayPlaylist();
     setupKeyboardShortcuts();
 });
+
+
+// ==========================================
+// AUTHENTICATION SYSTEM
+// ==========================================
+
+function checkAuthStatus() {
+    const authModal = document.getElementById("authModal");
+    const userProfile = document.getElementById("userProfile");
+    const usernameDisplay = document.getElementById("usernameDisplay");
+
+    if (!currentUser) {
+        if (authModal) authModal.style.display = "flex";
+        if (userProfile) userProfile.style.display = "none";
+        if (player && typeof player.pauseVideo === "function") {
+            player.pauseVideo();
+        }
+    } else {
+        if (authModal) authModal.style.display = "none";
+        if (userProfile) {
+            userProfile.style.display = "flex";
+            if (usernameDisplay) usernameDisplay.textContent = currentUser;
+        }
+    }
+}
+
+function switchAuthTab(tab) {
+    const loginForm = document.getElementById("loginForm");
+    const signupForm = document.getElementById("signupForm");
+    const tabLoginBtn = document.getElementById("tabLoginBtn");
+    const tabSignupBtn = document.getElementById("tabSignupBtn");
+
+    if (tab === "login") {
+        loginForm.style.display = "block";
+        signupForm.style.display = "none";
+        tabLoginBtn.classList.add("active");
+        tabSignupBtn.classList.remove("active");
+    } else {
+        loginForm.style.display = "none";
+        signupForm.style.display = "block";
+        tabLoginBtn.classList.remove("active");
+        tabSignupBtn.classList.add("active");
+    }
+}
+
+function handleSignup(event) {
+    event.preventDefault();
+    const user = document.getElementById("signupUser").value.trim();
+    const pass = document.getElementById("signupPass").value.trim();
+
+    if (!user || !pass) return showToast("Please fill all fields!", "error");
+
+    let users = JSON.parse(localStorage.getItem("myMusicUsers")) || {};
+
+    if (users[user]) {
+        return showToast("Username already exists!", "error");
+    }
+
+    users[user] = { password: pass };
+    localStorage.setItem("myMusicUsers", JSON.stringify(users));
+
+    currentUser = user;
+    localStorage.setItem("myMusicCurrentUser", currentUser);
+
+    checkAuthStatus();
+    showToast(`Account created! Welcome ${user} 🎉`);
+}
+
+function handleLogin(event) {
+    event.preventDefault();
+    const user = document.getElementById("loginUser").value.trim();
+    const pass = document.getElementById("loginPass").value.trim();
+
+    let users = JSON.parse(localStorage.getItem("myMusicUsers")) || {};
+
+    if (!users[user] || users[user].password !== pass) {
+        return showToast("Invalid username or password!", "error");
+    }
+
+    currentUser = user;
+    localStorage.setItem("myMusicCurrentUser", currentUser);
+
+    checkAuthStatus();
+    showToast(`Welcome back, ${user}! 👋`);
+}
+
+function handleLogout() {
+    currentUser = null;
+    localStorage.removeItem("myMusicCurrentUser");
+    checkAuthStatus();
+    showToast("Logged out successfully");
+}
 
 
 // ==========================================
@@ -362,30 +458,6 @@ function displayResults(items) {
 // DOWNLOAD FUNCTIONALITY
 // ==========================================
 
-// ==========================================
-// DOWNLOAD FUNCTIONALITY (COBALT)
-// ==========================================
-
-// ==========================================
-// DOWNLOAD FUNCTIONALITY (Y2MATE SEARCH)
-// ==========================================
-
-// ==========================================
-// DOWNLOAD FUNCTIONALITY (DIRECT DOWNLOAD)
-// ==========================================
-
-// ==========================================
-// DOWNLOAD FUNCTIONALITY (DIRECT & GUARANTEED 100%)
-// ==========================================
-
-// ==========================================
-// DOWNLOAD FUNCTIONALITY (STABLE DIRECT LINK)
-// ==========================================
-
-// ==========================================
-// DOWNLOAD FUNCTIONALITY (PC & MOBILE COMPATIBLE)
-// ==========================================
-
 function downloadAudio(videoId = null) {
     const idToDownload = videoId || currentPlayingVideoId;
     if (!idToDownload) {
@@ -397,7 +469,6 @@ function downloadAudio(videoId = null) {
 
     const targetUrl = `https://loader.to/api/card/?url=https://www.youtube.com/watch?v=${idToDownload}`;
 
-    // Mobile-friendly link trigger (bypasses mobile browser pop-up blockers)
     const a = document.createElement("a");
     a.href = targetUrl;
     a.target = "_blank";
@@ -406,6 +477,8 @@ function downloadAudio(videoId = null) {
     a.click();
     document.body.removeChild(a);
 }
+
+
 // ==========================================
 // CREATE & MANAGE PLAYLISTS
 // ==========================================

@@ -14,6 +14,44 @@
 
 <body>
 
+    <!-- AUTHENTICATION MODAL (LOGIN / SIGN UP) -->
+    <div id="authModal" class="modal-overlay">
+        <div class="auth-card">
+            <div class="auth-tabs">
+                <button id="tabLoginBtn" class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
+                <button id="tabSignupBtn" class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</button>
+            </div>
+
+            <!-- LOGIN FORM -->
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <h2>Welcome Back</h2>
+                <div class="input-group">
+                    <i class="fa-solid fa-user"></i>
+                    <input type="text" id="loginUser" placeholder="Username" required>
+                </div>
+                <div class="input-group">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="loginPass" placeholder="Password" required>
+                </div>
+                <button type="submit" class="auth-btn">Login</button>
+            </form>
+
+            <!-- SIGN UP FORM -->
+            <form id="signupForm" onsubmit="handleSignup(event)" style="display: none;">
+                <h2>Create Account</h2>
+                <div class="input-group">
+                    <i class="fa-solid fa-user"></i>
+                    <input type="text" id="signupUser" placeholder="Choose Username" required>
+                </div>
+                <div class="input-group">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="signupPass" placeholder="Choose Password" required>
+                </div>
+                <button type="submit" class="auth-btn">Sign Up</button>
+            </form>
+        </div>
+    </div>
+
     <!-- DESKTOP SIDEBAR -->
     <aside class="sidebar">
 
@@ -31,12 +69,23 @@
             <i class="fa-solid fa-plus"></i> Create Playlist
         </button>
 
+        <!-- USER PROFILE SECTION IN SIDEBAR -->
+        <div id="userProfile" class="user-profile">
+            <div class="user-info">
+                <i class="fa-solid fa-circle-user"></i>
+                <span id="usernameDisplay">User</span>
+            </div>
+            <button class="logout-btn" onclick="handleLogout()" title="Logout">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </button>
+        </div>
+
     </aside>
 
 
     <main class="main">
 
-        <!-- MOBILE NAVIGATION BAR (Kaban ghir f téléphone) -->
+        <!-- MOBILE NAVIGATION BAR -->
         <div class="mobile-nav">
             <button class="mobile-nav-btn active" onclick="showHome()">
                 <i class="fa-solid fa-house"></i> Home

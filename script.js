@@ -23,11 +23,14 @@ let isMuted = false;
 let previousVolume = 100;
 let currentFilter = "all";
 
-// AUTHENTICATION & USER PLAYLISTS
-let currentUser = localStorage.getItem("myMusicCurrentUser") || null;
+// SLEEP TIMER VARIABLES
+let sleepTimeout = null;
+let sleepInterval = null;
+let remainingSleepTime = 0;
 
-// 🔴 هنا مسحنا الكود القديم ودرنا هادي خاوية حيت غاتعمر f loadUserPlaylists()
-let playlists = {}; 
+let playlists = JSON.parse(localStorage.getItem("myPlaylists")) || {
+    "Favorites": []
+};
 
 
 // ==========================================
@@ -35,143 +38,10 @@ let playlists = {};
 // ==========================================
 
 window.addEventListener("DOMContentLoaded", function () {
-    checkAuthStatus(); // هادي هي اللي غاتشارجي الـ Playlists د اليوزر ديريكت
-    setupKeyboardShortcuts();
-});
-
-
-// ==========================================
-// AUTHENTICATION SYSTEM & USER PLAYLISTS
-// ==========================================
-
-// ==========================================
-// USER PLAYLISTS STORAGE MANAGEMENT
-// ==========================================
-
-function loadUserPlaylists() {
-    if (!currentUser) {
-        playlists = {};
-        return;
-    }
-    
-    // Saret khass b kul User: myPlaylists_hamoda11 / myPlaylists_abdelhak22
-    let userStorageKey = "myPlaylists_" + currentUser;
-    
-    let savedData = localStorage.getItem(userStorageKey);
-    
-    if (savedData) {
-        playlists = JSON.parse(savedData);
-    } else {
-        // Ila kan account jdid, ndiro "Favorites" playlist khawya
-        playlists = {
-            "Favorites": []
-        };
-        // N-sjeloha ni3nan f localStorage باش t-thfad direct
-        localStorage.setItem(userStorageKey, JSON.stringify(playlists));
-    }
-
-    currentPlaylistName = Object.keys(playlists)[0] || "Favorites";
     renderPlaylistTabs();
     displayPlaylist();
-}
-
-function savePlaylistsToStorage() {
-    if (!currentUser) return;
-    let userStorageKey = "myPlaylists_" + currentUser;
-    localStorage.setItem(userStorageKey, JSON.stringify(playlists));
-}
-
-
-// ==========================================
-// AUTHENTICATION SYSTEM
-// ==========================================
-
-function checkAuthStatus() {
-    const authModal = document.getElementById("authModal");
-    const userProfile = document.getElementById("userProfile");
-    const usernameDisplay = document.getElementById("usernameDisplay");
-
-    if (!currentUser) {
-        if (authModal) authModal.style.setProperty("display", "flex", "important");
-        if (userProfile) userProfile.style.display = "none";
-        playlists = {};
-        if (player && typeof player.pauseVideo === "function") {
-            player.pauseVideo();
-        }
-    } else {
-        if (authModal) authModal.style.setProperty("display", "none", "important");
-        if (userProfile) {
-            userProfile.style.display = "flex";
-            if (usernameDisplay) usernameDisplay.textContent = currentUser;
-        }
-
-        // Load playlists specific to the current active user
-        loadUserPlaylists();
-    }
-}
-
-function handleSignup(event) {
-    event.preventDefault();
-    const user = document.getElementById("signupUser").value.trim();
-    const pass = document.getElementById("signupPass").value.trim();
-
-    if (!user || !pass) return showToast("Please fill all fields!", "error");
-
-    let users = JSON.parse(localStorage.getItem("myMusicUsers")) || {};
-
-    if (users[user]) {
-        return showToast("Username already exists!", "error");
-    }
-
-    // Save User Credentials
-    users[user] = { password: pass };
-    localStorage.setItem("myMusicUsers", JSON.stringify(users));
-
-    // Set Active User
-    currentUser = user;
-    localStorage.setItem("myMusicCurrentUser", currentUser);
-
-    // Initialize & Save Empty Playlists for new user
-    playlists = { "Favorites": [] };
-    savePlaylistsToStorage();
-
-    checkAuthStatus();
-    showToast(`Account created! Welcome ${user} 🎉`);
-}
-
-function handleLogin(event) {
-    event.preventDefault();
-    const user = document.getElementById("loginUser").value.trim();
-    const pass = document.getElementById("loginPass").value.trim();
-
-    let users = JSON.parse(localStorage.getItem("myMusicUsers")) || {};
-
-    if (!users[user] || users[user].password !== pass) {
-        return showToast("Invalid username or password!", "error");
-    }
-
-    // Set Active User
-    currentUser = user;
-    localStorage.setItem("myMusicCurrentUser", currentUser);
-
-    // Load Playlists of this logged in user
-    checkAuthStatus();
-    showToast(`Welcome back, ${user}! 👋`);
-}
-
-function handleLogout() {
-    // Save state before logging out
-    if (currentUser) {
-        savePlaylistsToStorage();
-    }
-
-    currentUser = null;
-    localStorage.removeItem("myMusicCurrentUser");
-    playlists = {};
-    
-    checkAuthStatus();
-    showToast("Logged out successfully");
-}
+    setupKeyboardShortcuts();
+});
 
 
 // ==========================================
@@ -492,6 +362,30 @@ function displayResults(items) {
 // DOWNLOAD FUNCTIONALITY
 // ==========================================
 
+// ==========================================
+// DOWNLOAD FUNCTIONALITY (COBALT)
+// ==========================================
+
+// ==========================================
+// DOWNLOAD FUNCTIONALITY (Y2MATE SEARCH)
+// ==========================================
+
+// ==========================================
+// DOWNLOAD FUNCTIONALITY (DIRECT DOWNLOAD)
+// ==========================================
+
+// ==========================================
+// DOWNLOAD FUNCTIONALITY (DIRECT & GUARANTEED 100%)
+// ==========================================
+
+// ==========================================
+// DOWNLOAD FUNCTIONALITY (STABLE DIRECT LINK)
+// ==========================================
+
+// ==========================================
+// DOWNLOAD FUNCTIONALITY (PC & MOBILE COMPATIBLE)
+// ==========================================
+
 function downloadAudio(videoId = null) {
     const idToDownload = videoId || currentPlayingVideoId;
     if (!idToDownload) {
@@ -503,6 +397,7 @@ function downloadAudio(videoId = null) {
 
     const targetUrl = `https://loader.to/api/card/?url=https://www.youtube.com/watch?v=${idToDownload}`;
 
+    // Mobile-friendly link trigger (bypasses mobile browser pop-up blockers)
     const a = document.createElement("a");
     a.href = targetUrl;
     a.target = "_blank";
@@ -511,8 +406,6 @@ function downloadAudio(videoId = null) {
     a.click();
     document.body.removeChild(a);
 }
-
-
 // ==========================================
 // CREATE & MANAGE PLAYLISTS
 // ==========================================

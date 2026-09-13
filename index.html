@@ -105,16 +105,33 @@
 
             <!-- PLAYLIST TABS / SELECTOR -->
             <div id="playlistTabs" class="playlist-tabs"></div>
+<!-- PLAYLIST ACTION BUTTONS -->
+<div class="playlist-share-controls" style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+    <button onclick="shareCurrentPlaylist()" class="share-btn">
+        <i class="fa-solid fa-share-nodes"></i> Share Current Playlist
+    </button>
+    <button onclick="openImportModal()" class="import-btn">
+        <i class="fa-solid fa-file-import"></i> Import Playlist
+    </button>
+    <button onclick="openRenameModal()" class="action-btn">
+        <i class="fa-solid fa-pen"></i> Rename
+    </button>
+    <button onclick="confirmDeleteCurrentPlaylist()" class="action-btn btn-danger">
+        <i class="fa-solid fa-trash"></i> Delete
+    </button>
+</div>
 
-            <!-- SHARE & IMPORT BUTTONS -->
-            <div class="playlist-share-controls" style="margin-bottom: 15px; display: flex; gap: 10px;">
-                <button onclick="shareCurrentPlaylist()" class="share-btn">
-                    <i class="fa-solid fa-share-nodes"></i> Share Current Playlist
-                </button>
-                <button onclick="openImportModal()" class="import-btn">
-                    <i class="fa-solid fa-file-import"></i> Import Playlist
-                </button>
-            </div>
+<!-- RENAME PLAYLIST MODAL -->
+<div id="renamePlaylistModal" class="modal">
+    <div class="modal-content">
+        <h3>Rename Playlist</h3>
+        <input type="text" id="renamePlaylistInput" placeholder="Enter new name...">
+        <div class="modal-buttons">
+            <button onclick="confirmRenamePlaylist()">Save</button>
+            <button class="cancel-btn" onclick="closeRenameModal()">Cancel</button>
+        </div>
+    </div>
+</div>
 
             <!-- SONGS IN SELECTED PLAYLIST -->
             <div id="playlist"></div>
@@ -199,6 +216,7 @@
                 >
                 <!-- AUDIO EQUALIZER ANIMATION -->
                 <div id="equalizer" class="equalizer">
+                    <span></span>
                     <span></span>
                     <span></span>
                     <span></span>

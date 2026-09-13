@@ -239,7 +239,7 @@ body {
 }
 
 
-/* PLAYLIST TABS */
+/* PLAYLIST TABS & ACTIONS */
 
 #playlistSection {
     display: none;
@@ -268,6 +268,42 @@ body {
     color: black;
     border-color: #1ed760;
     font-weight: bold;
+}
+
+.playlist-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    background: #282828;
+    color: #fff;
+    border: 1px solid #444;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.action-btn:hover {
+    background: #333;
+    border-color: #1ed760;
+}
+
+.action-btn.btn-danger {
+    color: #ff5555;
+    border-color: rgba(255, 85, 85, 0.4);
+}
+
+.action-btn.btn-danger:hover {
+    background: rgba(255, 85, 85, 0.2);
+    border-color: #ff5555;
 }
 
 .playlist-item {
@@ -358,12 +394,12 @@ body {
     color: white;
 }
 
-.modal-buttons {
+.modal-buttons, .modal-actions {
     display: flex;
     gap: 10px;
 }
 
-.modal-buttons button {
+.modal-buttons button, .modal-actions button {
     flex: 1;
     padding: 10px;
     border: none;
@@ -373,7 +409,7 @@ body {
     cursor: pointer;
 }
 
-.modal-buttons .cancel-btn {
+.modal-buttons .cancel-btn, .modal-actions .btn-secondary {
     background: #555;
     color: white;
 }

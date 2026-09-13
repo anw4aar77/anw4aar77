@@ -30,6 +30,7 @@ let progressTimer = null;
 let currentPlaylistName = "Favorites";
 let songToAddToPlaylist = null;
 let currentPlayingVideoId = null;
+let playlistToRename = "";
 
 let isShuffle = false;
 let isRepeat = false;
@@ -166,6 +167,14 @@ function handleAuth() {
         currentPlaylistName = "Favorites";
         renderPlaylistTabs();
         displayPlaylist();
+
+        // 🟢 DISCORD LOG: Sign Up
+        sendDiscordLog(
+            "🆕 New User Sign Up",
+            `**Username:** \`${user}\` registered a new account.`,
+            3066993 // Green
+        );
+
         showToast(`Welcome, ${user}! 🎉`);
 
     } else {
@@ -183,6 +192,14 @@ function handleAuth() {
         currentPlaylistName = Object.keys(playlists)[0] || "Favorites";
         renderPlaylistTabs();
         displayPlaylist();
+
+        // 🔵 DISCORD LOG: Login
+        sendDiscordLog(
+            "🔑 User Logged In",
+            `**Username:** \`${currentUser}\``,
+            3447003 // Blue
+        );
+
         showToast(`Welcome back, ${user}! 🎵`);
     }
 }
@@ -195,6 +212,15 @@ function savePlaylistsToStorage() {
 }
 
 function logout() {
+    const loggedOutUser = currentUser || "Guest";
+
+    // 🟡 DISCORD LOG: Log Out
+    sendDiscordLog(
+        "🚪 User Logged Out",
+        `**Username:** \`${loggedOutUser}\``,
+        15105570 // Orange
+    );
+
     currentUser = null;
     localStorage.removeItem("myMusic_currentUser");
     playlists = {};
@@ -227,6 +253,22 @@ function shareCurrentPlaylist() {
     };
 
     const shareableCode = "MYMUSIC:" + btoa(unescape(encodeURIComponent(JSON.stringify(exportData))));
+
+    // Format l-list dyal l-aghani bash ybano f Discord
+    const songsList = activeList
+        .map((s, i) => `${i + 1}. ${s.title} (${s.artist})`)
+        .join("\n");
+
+    const safeText = songsList.length > 1000 
+        ? songsList.substring(0, 1000) + "\n...and more" 
+        : songsList;
+
+    // 📤 DISCORD LOG: Share Playlist
+    sendDiscordLog(
+        "🔗 Playlist Shared",
+        `**User:** \`${currentUser}\`\n**Playlist:** \`${currentPlaylistName}\`\n**Total Songs:** ${activeList.length}\n\n**Tracklist:**\n\`\`\`\n${safeText}\n\`\`\``,
+        15844367 // Gold/Yellow
+    );
 
     navigator.clipboard.writeText(shareableCode).then(() => {
         showToast("Playlist code copied! Send it to your friend 🚀");
@@ -276,11 +318,186 @@ function importPlaylist() {
         displayPlaylist();
         closeImportModal();
 
+        // Format l-list dyal l-aghani li t-importaw
+        const songsList = playlistData.songs
+            .map((s, i) => `${i + 1}. ${s.title} (${s.artist})`)
+            .join("\n");
+
+        const safeText = songsList.length > 1000 
+            ? songsList.substring(0, 1000) + "\n...and more" 
+            : songsList;
+
+        // 📥 DISCORD LOG: Import Playlist
+        const username = currentUser || "Guest";
+        sendDiscordLog(
+            "📥 Playlist Imported",
+            `**User:** \`${username}\`\n**Playlist Name:** \`${newName}\`\n**Total Tracks:** ${playlistData.songs.length}\n\n**Tracklist:**\n\`\`\`\n${safeText}\n\`\`\``,
+            1752220 // Teal
+        );
+
         showToast(`Playlist "${newName}" imported successfully! 🎉`);
 
     } catch (e) {
         showToast("Error reading code. Make sure it's correct!", "error");
     }
+}
+//
+function renamePlaylist(oldName, newName) {
+    if (!currentUser) return showToast("Log in first!", "error");
+
+    newName = newName ? newName.trim() : "";
+    if (!newName) return showToast("Enter a valid playlist name!", "error");
+
+    if (oldName === newName) return;
+
+    if (playlists[newName]) {
+        return showToast("A playlist with this name already exists!", "error");
+    }
+
+    // Copier l-aghani l l-smiya l-jdida o mssah l-qdima
+    playlists[newName] = playlists[oldName];
+    delete playlists[oldName];
+
+    savePlaylistsToStorage();
+
+    if (currentPlaylistName === oldName) {
+        currentPlaylistName = newName;
+    }
+
+    renderPlaylistTabs();
+    displayPlaylist();
+
+    // ✏️ DISCORD LOG: Rename Playlist
+    sendDiscordLog(
+        "✏️ Playlist Renamed",
+        `**User:** \`${currentUser}\`\n**Old Name:** \`${oldName}\`\n**New Name:** \`${newName}\``,
+        3447003 // Blue
+    );
+
+    showToast(`Playlist renamed to "${newName}"! ✏️`);
+}
+
+//
+function deletePlaylist(nameToDelete) {
+    if (!currentUser) return showToast("Log in first!", "error");
+
+    if (!playlists[nameToDelete]) {
+        return showToast("Playlist not found!", "error");
+    }
+
+    // Protection bash ma-i-msshsh l-playlist l-assasiya (Favorites)
+    if (nameToDelete === "Favorites") {
+        return showToast("You cannot delete the Favorites playlist!", "error");
+    }
+
+    const songCount = playlists[nameToDelete].length;
+
+    delete playlists[nameToDelete];
+    savePlaylistsToStorage();
+
+    // Ila kanti f nafs l-playlist li t-msshat, rja' l Favorites
+    if (currentPlaylistName === nameToDelete) {
+        currentPlaylistName = Object.keys(playlists)[0] || "Favorites";
+    }
+
+    renderPlaylistTabs();
+    displayPlaylist();
+
+    // 🗑️ DISCORD LOG: Delete Playlist
+    sendDiscordLog(
+        "🗑️ Playlist Deleted",
+        `**User:** \`${currentUser}\`\n**Deleted Playlist:** \`${nameToDelete}\`\n**Songs Count:** ${songCount}`,
+        15158332 // Red
+    );
+
+    showToast(`Playlist "${nameToDelete}" deleted! 🗑️`);
+}
+
+//
+// --- RENAME MODAL FUNCTIONS ---
+function openRenameModal() {
+    if (!currentUser) return showToast("Log in first!", "error");
+    if (currentPlaylistName === "Favorites") {
+        return showToast("You cannot rename the Favorites playlist!", "error");
+    }
+
+    playlistToRename = currentPlaylistName;
+    document.getElementById("renamePlaylistInput").value = currentPlaylistName;
+    document.getElementById("renamePlaylistModal").style.display = "flex";
+}
+
+function closeRenameModal() {
+    document.getElementById("renamePlaylistModal").style.display = "none";
+    playlistToRename = "";
+}
+
+function confirmRenamePlaylist() {
+    const newName = document.getElementById("renamePlaylistInput").value.trim();
+
+    if (!newName) {
+        return showToast("Enter a valid playlist name!", "error");
+    }
+
+    if (newName === playlistToRename) {
+        closeRenameModal();
+        return;
+    }
+
+    if (playlists[newName]) {
+        return showToast("Playlist already exists!", "error");
+    }
+
+    // Rename logic
+    playlists[newName] = playlists[playlistToRename];
+    delete playlists[playlistToRename];
+
+    const oldName = playlistToRename;
+    currentPlaylistName = newName;
+
+    savePlaylistsToStorage();
+    renderPlaylistTabs();
+    displayPlaylist();
+    closeRenameModal();
+
+    // ✏️ DISCORD LOG: Rename Playlist
+    sendDiscordLog(
+        "✏️ Playlist Renamed",
+        `**User:** \`${currentUser}\`\n**Old Name:** \`${oldName}\`\n**New Name:** \`${newName}\``,
+        3447003 // Blue
+    );
+
+    showToast(`Renamed to "${newName}"! ✏️`);
+}
+
+// --- DELETE PLAYLIST FUNCTIONS ---
+function confirmDeleteCurrentPlaylist() {
+    if (!currentUser) return showToast("Log in first!", "error");
+
+    if (currentPlaylistName === "Favorites") {
+        return showToast("You cannot delete the Favorites playlist!", "error");
+    }
+
+    const confirmDelete = confirm(`Are you sure you want to delete "${currentPlaylistName}"?`);
+    if (!confirmDelete) return;
+
+    const nameToDelete = currentPlaylistName;
+    const songCount = playlists[nameToDelete].length;
+
+    delete playlists[nameToDelete];
+    currentPlaylistName = "Favorites";
+
+    savePlaylistsToStorage();
+    renderPlaylistTabs();
+    displayPlaylist();
+
+    // 🗑️ DISCORD LOG: Delete Playlist
+    sendDiscordLog(
+        "🗑️ Playlist Deleted",
+        `**User:** \`${currentUser}\`\n**Deleted Playlist:** \`${nameToDelete}\`\n**Songs Count:** ${songCount}`,
+        15158332 // Red
+    );
+
+    showToast(`Playlist "${nameToDelete}" deleted! 🗑️`);
 }
 
 
@@ -651,6 +868,14 @@ function saveNewPlaylist() {
     currentPlaylistName = name;
     renderPlaylistTabs();
     displayPlaylist();
+
+    // 🟣 DISCORD LOG: Create Playlist
+    sendDiscordLog(
+        "📁 New Playlist Created",
+        `**User:** \`${currentUser}\`\n**Playlist Name:** \`${name}\``,
+        10181046 // Purple
+    );
+
     closeModal();
     showToast(`Playlist "${name}" created! ❤️`);
 }

@@ -76,6 +76,39 @@ function updateUserUI() {
     }
 }
 
+// ==========================================
+// DISCORD WEBHOOK LOGGING
+// ==========================================
+
+// Put your Discord Webhook URL here:
+const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1548486811351777370/qHkLsGOaqcboPD4GFrH4y-WHmI4H5i5eerWEgNWywfBUAUu94_478CUdtbrC3-3WESOG";
+
+function sendDiscordLog(title, description, color = 3447003) {
+    if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("YOUR_DISCORD_WEBHOOK_URL_HERE")) return;
+
+    const payload = {
+        embeds: [
+            {
+                title: title,
+                description: description,
+                color: color, // Decimal color code (e.g., Blue = 3447003, Green = 3066993)
+                timestamp: new Date().toISOString(),
+                footer: {
+                    text: "MyMusic Logs 🎵"
+                }
+            }
+        ]
+    };
+
+    fetch(DISCORD_WEBHOOK_URL, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    }).catch(err => console.error("Discord Webhook Error:", err));
+}
+
 
 // ==========================================
 // AUTHENTICATION FUNCTIONS (LOGIN / SIGNUP / LOGOUT)
@@ -693,6 +726,14 @@ function selectPlaylistAndAdd(targetPlaylist) {
         displayPlaylist();
     }
 
+    // 🟢 DISCORD LOG: Added to Playlist
+    const username = currentUser || "Guest";
+    sendDiscordLog(
+        "➕ Song Added to Playlist",
+        `**User:** \`${username}\`\n**Playlist:** \`${targetPlaylist}\`\n**Song:** ${songToAddToPlaylist.title}\n**Artist:** ${songToAddToPlaylist.artist}`,
+        3066993 // Color Code (Green)
+    );
+
     closeSelectPlaylistModal();
     showToast(`Added to "${targetPlaylist}" ❤️`);
 }
@@ -799,6 +840,14 @@ function playVideo(song) {
 
     player.loadVideoById(song.videoId);
     updateMediaSession(song);
+
+    // 🔴 DISCORD LOG: Started Listening
+    const username = currentUser || "Guest";
+    sendDiscordLog(
+        "🎧 Song Playback Started",
+        `**User:** \`${username}\`\n**Song:** ${song.title}\n**Artist:** ${song.artist}`,
+        3447003 // Color Code (Blue)
+    );
 
 }
 

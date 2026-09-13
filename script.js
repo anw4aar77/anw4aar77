@@ -6,7 +6,21 @@ const YOUTUBE_API_KEY = "AIzaSyB-Lr2vKBImIwBeizE0b2T63DHXAqp2ZwE";
 
 
 // ==========================================
-// VARIABLES & STORAGE
+// AUTHENTICATION & MULTI-USER STORAGE
+// ==========================================
+
+let currentUser = localStorage.getItem("myMusic_currentUser") || null;
+let isSignUpMode = false;
+
+// Load users database or set empty object
+let usersDB = JSON.parse(localStorage.getItem("myMusic_usersDB")) || {}; 
+
+// Active user playlists
+let playlists = {};
+
+
+// ==========================================
+// VARIABLES & PLAYER STORAGE
 // ==========================================
 
 let player = null;
@@ -28,20 +42,213 @@ let sleepTimeout = null;
 let sleepInterval = null;
 let remainingSleepTime = 0;
 
-let playlists = JSON.parse(localStorage.getItem("myPlaylists")) || {
-    "Favorites": []
-};
-
 
 // ==========================================
-// LOAD DATA & KEYBOARD SHORTCUTS ON START
+// LOAD DATA & INITIALIZE ON START
 // ==========================================
 
 window.addEventListener("DOMContentLoaded", function () {
-    renderPlaylistTabs();
-    displayPlaylist();
+    initApp();
     setupKeyboardShortcuts();
 });
+
+function initApp() {
+    if (currentUser && usersDB[currentUser]) {
+        playlists = usersDB[currentUser].playlists || { "Favorites": [] };
+        document.getElementById("authModal").style.display = "none";
+        updateUserUI();
+    } else {
+        document.getElementById("authModal").style.display = "flex";
+    }
+    renderPlaylistTabs();
+    displayPlaylist();
+}
+
+function updateUserUI() {
+    if (currentUser) {
+        document.getElementById("userProfileBar").style.display = "flex";
+        document.getElementById("userNameDisplay").textContent = "👤 " + currentUser;
+        
+        const mobileUser = document.getElementById("mobileUserName");
+        if (mobileUser) mobileUser.textContent = "👤 " + currentUser;
+    } else {
+        document.getElementById("userProfileBar").style.display = "none";
+    }
+}
+
+
+// ==========================================
+// AUTHENTICATION FUNCTIONS (LOGIN / SIGNUP / LOGOUT)
+// ==========================================
+
+function toggleAuthMode(event) {
+    event.preventDefault();
+    isSignUpMode = !isSignUpMode;
+    
+    const title = document.getElementById("authTitle");
+    const btn = document.getElementById("authPrimaryBtn");
+    const toggleText = document.getElementById("authToggleText");
+    const toggleLink = document.getElementById("authToggleLink");
+
+    if (isSignUpMode) {
+        title.textContent = "Create New Account";
+        btn.textContent = "Sign Up";
+        toggleText.textContent = "Already have an account?";
+        toggleLink.textContent = "Login";
+    } else {
+        title.textContent = "Login to MyMusic";
+        btn.textContent = "Login";
+        toggleText.textContent = "Don't have an account?";
+        toggleLink.textContent = "Sign Up";
+    }
+}
+
+function handleAuth() {
+    const user = document.getElementById("authUsername").value.trim().toLowerCase();
+    const pass = document.getElementById("authPassword").value.trim();
+
+    if (!user || !pass) {
+        showToast("Fill in both username and password!", "error");
+        return;
+    }
+
+    if (isSignUpMode) {
+        if (usersDB[user]) {
+            showToast("Username already exists!", "error");
+            return;
+        }
+        
+        usersDB[user] = {
+            password: pass,
+            playlists: { "Favorites": [] }
+        };
+        
+        localStorage.setItem("myMusic_usersDB", JSON.stringify(usersDB));
+        currentUser = user;
+        localStorage.setItem("myMusic_currentUser", currentUser);
+        
+        playlists = usersDB[user].playlists;
+        document.getElementById("authModal").style.display = "none";
+        updateUserUI();
+        currentPlaylistName = "Favorites";
+        renderPlaylistTabs();
+        displayPlaylist();
+        showToast(`Welcome, ${user}! 🎉`);
+
+    } else {
+        if (!usersDB[user] || usersDB[user].password !== pass) {
+            showToast("Wrong username or password!", "error");
+            return;
+        }
+
+        currentUser = user;
+        localStorage.setItem("myMusic_currentUser", currentUser);
+        playlists = usersDB[user].playlists || { "Favorites": [] };
+        
+        document.getElementById("authModal").style.display = "none";
+        updateUserUI();
+        currentPlaylistName = Object.keys(playlists)[0] || "Favorites";
+        renderPlaylistTabs();
+        displayPlaylist();
+        showToast(`Welcome back, ${user}! 🎵`);
+    }
+}
+
+function savePlaylistsToStorage() {
+    if (currentUser && usersDB[currentUser]) {
+        usersDB[currentUser].playlists = playlists;
+        localStorage.setItem("myMusic_usersDB", JSON.stringify(usersDB));
+    }
+}
+
+function logout() {
+    currentUser = null;
+    localStorage.removeItem("myMusic_currentUser");
+    playlists = {};
+    document.getElementById("authModal").style.display = "flex";
+    document.getElementById("authUsername").value = "";
+    document.getElementById("authPassword").value = "";
+    updateUserUI();
+    renderPlaylistTabs();
+    displayPlaylist();
+    showToast("Logged out successfully");
+}
+
+
+// ==========================================
+// SHARE & IMPORT PLAYLISTS
+// ==========================================
+
+function shareCurrentPlaylist() {
+    if (!currentUser) return showToast("Log in first!", "error");
+    
+    const activeList = playlists[currentPlaylistName];
+    if (!activeList || activeList.length === 0) {
+        showToast("Cannot share an empty playlist!", "error");
+        return;
+    }
+
+    const exportData = {
+        name: currentPlaylistName,
+        songs: activeList
+    };
+
+    const shareableCode = "MYMUSIC:" + btoa(unescape(encodeURIComponent(JSON.stringify(exportData))));
+
+    navigator.clipboard.writeText(shareableCode).then(() => {
+        showToast("Playlist code copied! Send it to your friend 🚀");
+    }).catch(() => {
+        prompt("Copy this code and send it to your friend:", shareableCode);
+    });
+}
+
+function openImportModal() {
+    if (!currentUser) return showToast("Log in first!", "error");
+    document.getElementById("importModal").style.display = "flex";
+}
+
+function closeImportModal() {
+    document.getElementById("importModal").style.display = "none";
+    document.getElementById("importCodeInput").value = "";
+}
+
+function importPlaylist() {
+    const rawCode = document.getElementById("importCodeInput").value.trim();
+
+    if (!rawCode.startsWith("MYMUSIC:")) {
+        showToast("Invalid playlist code!", "error");
+        return;
+    }
+
+    try {
+        const base64Data = rawCode.replace("MYMUSIC:", "");
+        const decodedJSON = decodeURIComponent(escape(atob(base64Data)));
+        const playlistData = JSON.parse(decodedJSON);
+
+        if (!playlistData.name || !Array.isArray(playlistData.songs)) {
+            throw new Error();
+        }
+
+        let newName = playlistData.name;
+        
+        if (playlists[newName]) {
+            newName = playlistData.name + " (Shared)";
+        }
+
+        playlists[newName] = playlistData.songs;
+        savePlaylistsToStorage();
+
+        currentPlaylistName = newName;
+        renderPlaylistTabs();
+        displayPlaylist();
+        closeImportModal();
+
+        showToast(`Playlist "${newName}" imported successfully! 🎉`);
+
+    } catch (e) {
+        showToast("Error reading code. Make sure it's correct!", "error");
+    }
+}
 
 
 // ==========================================
@@ -362,30 +569,6 @@ function displayResults(items) {
 // DOWNLOAD FUNCTIONALITY
 // ==========================================
 
-// ==========================================
-// DOWNLOAD FUNCTIONALITY (COBALT)
-// ==========================================
-
-// ==========================================
-// DOWNLOAD FUNCTIONALITY (Y2MATE SEARCH)
-// ==========================================
-
-// ==========================================
-// DOWNLOAD FUNCTIONALITY (DIRECT DOWNLOAD)
-// ==========================================
-
-// ==========================================
-// DOWNLOAD FUNCTIONALITY (DIRECT & GUARANTEED 100%)
-// ==========================================
-
-// ==========================================
-// DOWNLOAD FUNCTIONALITY (STABLE DIRECT LINK)
-// ==========================================
-
-// ==========================================
-// DOWNLOAD FUNCTIONALITY (PC & MOBILE COMPATIBLE)
-// ==========================================
-
 function downloadAudio(videoId = null) {
     const idToDownload = videoId || currentPlayingVideoId;
     if (!idToDownload) {
@@ -397,7 +580,6 @@ function downloadAudio(videoId = null) {
 
     const targetUrl = `https://loader.to/api/card/?url=https://www.youtube.com/watch?v=${idToDownload}`;
 
-    // Mobile-friendly link trigger (bypasses mobile browser pop-up blockers)
     const a = document.createElement("a");
     a.href = targetUrl;
     a.target = "_blank";
@@ -406,11 +588,14 @@ function downloadAudio(videoId = null) {
     a.click();
     document.body.removeChild(a);
 }
+
+
 // ==========================================
 // CREATE & MANAGE PLAYLISTS
 // ==========================================
 
 function openModal() {
+    if (!currentUser) return showToast("Log in first!", "error");
     document.getElementById("playlistModal").style.display = "flex";
 }
 
@@ -420,6 +605,7 @@ function closeModal() {
 }
 
 function saveNewPlaylist() {
+    if (!currentUser) return showToast("Log in first!", "error");
     const name = document.getElementById("newPlaylistName").value.trim();
     if (!name) return showToast("Enter playlist name!", "error");
 
@@ -436,16 +622,15 @@ function saveNewPlaylist() {
     showToast(`Playlist "${name}" created! ❤️`);
 }
 
-function savePlaylistsToStorage() {
-    localStorage.setItem("myPlaylists", JSON.stringify(playlists));
-}
-
 function renderPlaylistTabs() {
     const tabsContainer = document.getElementById("playlistTabs");
     if (!tabsContainer) return;
     tabsContainer.innerHTML = "";
 
-    Object.keys(playlists).forEach(name => {
+    const playlistKeys = Object.keys(playlists);
+    if (playlistKeys.length === 0) return;
+
+    playlistKeys.forEach(name => {
         const btn = document.createElement("button");
         btn.className = `tab-btn ${name === currentPlaylistName ? 'active' : ''}`;
         btn.textContent = name;
@@ -464,6 +649,7 @@ function renderPlaylistTabs() {
 // ==========================================
 
 function openSelectPlaylistModal(song) {
+    if (!currentUser) return showToast("Log in first!", "error");
     const names = Object.keys(playlists);
     if (names.length === 0) {
         showToast("Create a playlist first!", "error");
@@ -515,6 +701,11 @@ function displayPlaylist() {
     const container = document.getElementById("playlist");
     if (!container) return;
     container.innerHTML = "";
+
+    if (!currentUser) {
+        container.innerHTML = "<p style='color:#777;margin-top:20px'>Please login to see your playlists.</p>";
+        return;
+    }
 
     const activeList = playlists[currentPlaylistName] || [];
 

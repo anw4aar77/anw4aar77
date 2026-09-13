@@ -303,6 +303,29 @@ body {
 }
 
 
+/* SHARE & IMPORT BUTTONS */
+
+.share-btn, .import-btn {
+    background: #282828;
+    color: #1ed760;
+    border: 1px solid #1ed760;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s, color 0.2s;
+}
+
+.share-btn:hover, .import-btn:hover {
+    background: #1ed760;
+    color: black;
+}
+
+
 /* MODAL STYLES */
 
 .modal {
@@ -662,6 +685,57 @@ body {
 }
 
 
+/* AUTH & PROFILE STYLES */
+
+.user-profile-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #282828;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #333;
+}
+
+#userNameDisplay {
+    font-weight: bold;
+    color: #1ed760;
+    font-size: 14px;
+    word-break: break-all;
+}
+
+.logout-btn, .mobile-logout-btn {
+    background: transparent;
+    border: none;
+    color: #e74c3c;
+    cursor: pointer;
+    font-size: 16px;
+    transition: transform 0.2s;
+}
+
+.logout-btn:hover {
+    transform: scale(1.2);
+}
+
+.auth-box {
+    width: 340px !important;
+}
+
+.auth-box input {
+    margin: 8px 0 !important;
+}
+
+.mobile-user-profile {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: #1ed760;
+    font-weight: bold;
+}
+
+
 /* MOBILE SPECIFIC STYLES */
 
 @media (max-width: 700px) {
@@ -704,6 +778,10 @@ body {
         background: #1ed760;
         color: black;
         font-weight: bold;
+    }
+
+    .mobile-user-profile {
+        display: flex;
     }
 
     .main {

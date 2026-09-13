@@ -17,6 +17,14 @@
     <!-- DESKTOP SIDEBAR -->
     <aside class="sidebar">
 
+        <!-- USER PROFILE BAR -->
+        <div id="userProfileBar" class="user-profile-bar" style="display: none;">
+            <span id="userNameDisplay"></span>
+            <button onclick="logout()" class="logout-btn" title="Log Out">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </button>
+        </div>
+
         <h1 class="logo"><i class="fa-solid fa-compact-disc"></i> MyMusic</h1>
 
         <button class="nav-btn active" id="navHome" onclick="showHome()">
@@ -36,7 +44,7 @@
 
     <main class="main">
 
-        <!-- MOBILE NAVIGATION BAR (Kaban ghir f téléphone) -->
+        <!-- MOBILE NAVIGATION BAR -->
         <div class="mobile-nav">
             <button class="mobile-nav-btn active" onclick="showHome()">
                 <i class="fa-solid fa-house"></i> Home
@@ -47,6 +55,10 @@
             <button class="mobile-nav-btn create-btn" onclick="openModal()">
                 <i class="fa-solid fa-plus"></i> New
             </button>
+            <div id="mobileUserProfile" class="mobile-user-profile">
+                <span id="mobileUserName"></span>
+                <button onclick="logout()" class="mobile-logout-btn" title="Log Out"><i class="fa-solid fa-right-from-bracket"></i></button>
+            </div>
         </div>
 
         <header class="topbar">
@@ -94,12 +106,41 @@
             <!-- PLAYLIST TABS / SELECTOR -->
             <div id="playlistTabs" class="playlist-tabs"></div>
 
+            <!-- SHARE & IMPORT BUTTONS -->
+            <div class="playlist-share-controls" style="margin-bottom: 15px; display: flex; gap: 10px;">
+                <button onclick="shareCurrentPlaylist()" class="share-btn">
+                    <i class="fa-solid fa-share-nodes"></i> Share Current Playlist
+                </button>
+                <button onclick="openImportModal()" class="import-btn">
+                    <i class="fa-solid fa-file-import"></i> Import Playlist
+                </button>
+            </div>
+
             <!-- SONGS IN SELECTED PLAYLIST -->
             <div id="playlist"></div>
 
         </section>
 
     </main>
+
+
+    <!-- AUTH MODAL (LOGIN / SIGNUP) -->
+    <div id="authModal" class="modal" style="display: flex;">
+        <div class="modal-content auth-box">
+            <h3 id="authTitle">Login to MyMusic</h3>
+            
+            <input type="text" id="authUsername" placeholder="Username (e.g. hamoda11)" required>
+            <input type="password" id="authPassword" placeholder="Password" required>
+            
+            <div class="modal-buttons" style="flex-direction: column;">
+                <button id="authPrimaryBtn" onclick="handleAuth()">Login</button>
+                <p style="color:#aaa; font-size:12px; margin-top:10px;">
+                    <span id="authToggleText">Don't have an account?</span> 
+                    <a href="#" id="authToggleLink" onclick="toggleAuthMode(event)" style="color:#1ed760;">Sign Up</a>
+                </p>
+            </div>
+        </div>
+    </div>
 
 
     <!-- CREATE PLAYLIST MODAL -->
@@ -110,6 +151,19 @@
             <div class="modal-buttons">
                 <button onclick="saveNewPlaylist()">Create</button>
                 <button class="cancel-btn" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- IMPORT PLAYLIST MODAL -->
+    <div id="importModal" class="modal">
+        <div class="modal-content">
+            <h3>Import Shared Playlist</h3>
+            <input type="text" id="importCodeInput" placeholder="Paste playlist code here...">
+            <div class="modal-buttons">
+                <button onclick="importPlaylist()">Add to My Account</button>
+                <button class="cancel-btn" onclick="closeImportModal()">Cancel</button>
             </div>
         </div>
     </div>

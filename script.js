@@ -170,8 +170,8 @@ function handleAuth() {
 
         // 🟢 DISCORD LOG: Sign Up
         sendDiscordLog(
-            "🆕 New User Sign Up",
-            `**Username:** \`${user}\` registered a new account.`,
+            "<a:wlcazaml:1548613318795722802> New User Sign Up",
+            `** <:11pm_members:1548613361720369192> Username:** \`${user}\` registered a new account.`,
             3066993 // Green
         );
 
@@ -195,8 +195,8 @@ function handleAuth() {
 
         // 🔵 DISCORD LOG: Login
         sendDiscordLog(
-            "🔑 User Logged In",
-            `**Username:** \`${currentUser}\``,
+            "<a:emoji_12:1546152192254279851> User Logged In",
+            `** <:11pm_members:1548613361720369192> Username:** \`${currentUser}\``,
             3447003 // Blue
         );
 
@@ -216,8 +216,8 @@ function logout() {
 
     // 🟡 DISCORD LOG: Log Out
     sendDiscordLog(
-        "🚪 User Logged Out",
-        `**Username:** \`${loggedOutUser}\``,
+        "<a:11pm_red:1548619078355124284> User Logged Out",
+        `** <:11pm_members:1548613361720369192> Username:** \`${loggedOutUser}\``,
         15105570 // Orange
     );
 
@@ -265,8 +265,8 @@ function shareCurrentPlaylist() {
 
     // 📤 DISCORD LOG: Share Playlist
     sendDiscordLog(
-        "🔗 Playlist Shared",
-        `**User:** \`${currentUser}\`\n**Playlist:** \`${currentPlaylistName}\`\n**Total Songs:** ${activeList.length}\n\n**Tracklist:**\n\`\`\`\n${safeText}\n\`\`\``,
+        "<a:ar_egls:1546216286911209543> Playlist Shared",
+        `** <:11pm_members:1548613361720369192> User:** \`${currentUser}\`\n** <:Spotify:1548619976078921810> Playlist:** \`${currentPlaylistName}\`\n** <a:tcopalikbinaja7:1546157163058303020> Total Songs:** ${activeList.length}\n\n**Tracklist:**\n\`\`\`\n${safeText}\n\`\`\``,
         15844367 // Gold/Yellow
     );
 
@@ -330,8 +330,8 @@ function importPlaylist() {
         // 📥 DISCORD LOG: Import Playlist
         const username = currentUser || "Guest";
         sendDiscordLog(
-            "📥 Playlist Imported",
-            `**User:** \`${username}\`\n**Playlist Name:** \`${newName}\`\n**Total Tracks:** ${playlistData.songs.length}\n\n**Tracklist:**\n\`\`\`\n${safeText}\n\`\`\``,
+            "<:copy:1548621466625380383> Playlist Imported",
+            `**<:11pm_members:1548613361720369192> User:** \`${username}\`\n** <:Spotify:1548619976078921810> Playlist Name:** \`${newName}\`\n** <a:tcopalikbinaja7:1546157163058303020> Total Tracks:** ${playlistData.songs.length}\n\n**Tracklist:**\n\`\`\`\n${safeText}\n\`\`\``,
             1752220 // Teal
         );
 
@@ -1069,8 +1069,8 @@ function playVideo(song) {
     // 🔴 DISCORD LOG: Started Listening
     const username = currentUser || "Guest";
     sendDiscordLog(
-        "🎧 Song Playback Started",
-        `**User:** \`${username}\`\n**Song:** ${song.title}\n**Artist:** ${song.artist}`,
+        "<a:sbrtmhwa:1548623307941879886> Song Playback Started",
+        `** <:11pm_members:1548613361720369192> User:** \`${username}\`\n** <:4321voiceg:1548623823941795871> Song:** ${song.title}\n** <a:heartsss:1548624042431348807> Artist:** ${song.artist}`,
         3447003 // Color Code (Blue)
     );
 

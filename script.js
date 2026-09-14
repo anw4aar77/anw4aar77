@@ -33,6 +33,8 @@ let currentPlayingVideoId = null;
 let playlistToRename = "";
 
 let isShuffle = false;
+let shuffledQueue = []; // Ghadi nkhzno fiha l-playlist mkhllta
+let currentQueueIndex = 0; // Inna song wslna liha f l-queue
 let isRepeat = false;
 let isMuted = false;
 let previousVolume = 100;
@@ -104,6 +106,23 @@ function updateDynamicBackground(imageUrl) {
             console.log("CORS awla error f extraction dyal l-color:", e);
         }
     };
+}
+
+// Function bach t-khllt array b-chakl 3ashwa'i (Fisher-Yates)
+function generateShuffledQueue() {
+    const currentList = playlists[currentPlaylistName] || [];
+    if (currentList.length === 0) return;
+
+    // Diir nuskha (copy) mn l-playlist
+    shuffledQueue = [...currentList];
+
+    // Khllt l-array
+    for (let i = shuffledQueue.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledQueue[i], shuffledQueue[j]] = [shuffledQueue[j], shuffledQueue[i]];
+    }
+
+    currentQueueIndex = 0;
 }
 
 // ==========================================
@@ -1056,8 +1075,15 @@ function removeFromPlaylist(index) {
 function toggleShuffle() {
     isShuffle = !isShuffle;
     const btn = document.getElementById("shuffleBtn");
-    if (btn) btn.classList.toggle("active-control", isShuffle);
-    showToast(isShuffle ? "Shuffle ON" : "Shuffle OFF");
+
+    if (isShuffle) {
+        btn.classList.add("active");
+        generateShuffledQueue(); // Mli t-sh3l Shuffle, khllt l-playlist mnn daba!
+        showToast("Shuffle Enabled");
+    } else {
+        btn.classList.remove("active");
+        showToast("Shuffle Disabled");
+    }
 }
 
 function toggleRepeat() {
@@ -1126,29 +1152,37 @@ function togglePlay() {
 }
 
 function nextSong() {
-    const activeList = playlists[currentPlaylistName] || [];
-    if (activeList.length === 0) return;
-
-    let next = currentIndex;
+    const currentList = playlists[currentPlaylistName] || [];
+    if (currentList.length === 0) return;
 
     if (isShuffle) {
-        next = Math.floor(Math.random() * activeList.length);
+        // Ila salat l-queue l-mkhllta, 3awd khlltha mn jdid
+        if (currentQueueIndex >= shuffledQueue.length - 1) {
+            generateShuffledQueue();
+        } else {
+            currentQueueIndex++;
+        }
+        playVideo(shuffledQueue[currentQueueIndex]);
     } else {
-        next = currentIndex + 1;
-        if (next >= activeList.length) next = 0;
+        // Normal sequential playing
+        currentIndex = (currentIndex + 1) % currentList.length;
+        playVideo(currentList[currentIndex]);
     }
-
-    playPlaylistSong(next);
 }
 
 function previousSong() {
-    const activeList = playlists[currentPlaylistName] || [];
-    if (activeList.length === 0) return;
+    const currentList = playlists[currentPlaylistName] || [];
+    if (currentList.length === 0) return;
 
-    let previous = currentIndex - 1;
-    if (previous < 0) previous = activeList.length - 1;
-
-    playPlaylistSong(previous);
+    if (isShuffle) {
+        if (currentQueueIndex > 0) {
+            currentQueueIndex--;
+            playVideo(shuffledQueue[currentQueueIndex]);
+        }
+    } else {
+        currentIndex = (currentIndex - 1 + currentList.length) % currentList.length;
+        playVideo(currentList[currentIndex]);
+    }
 }
 
 function skip(seconds) {

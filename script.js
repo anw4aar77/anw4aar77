@@ -1002,8 +1002,8 @@ function selectPlaylistAndAdd(targetPlaylist) {
     // 🟢 DISCORD LOG: Added to Playlist
     const username = currentUser || "Guest";
     sendDiscordLog(
-        "➕ Song Added to Playlist",
-        `**User:** \`${username}\`\n**Playlist:** \`${targetPlaylist}\`\n**Song:** ${songToAddToPlaylist.title}\n**Artist:** ${songToAddToPlaylist.artist}`,
+        "<:4173ttsaddgreen:1548997943313432656> Song Added to Playlist",
+        `**<:11pm_members:1548613361720369192> User:** \`${username}\`\n**<:Spotify:1548619976078921810> Playlist:** \`${targetPlaylist}\`\n**<:4321voiceg:1548623823941795871> Song:** ${songToAddToPlaylist.title}\n**<a:heartsss:1548624042431348807> Artist:** ${songToAddToPlaylist.artist}`,
         3066993 // Color Code (Green)
     );
 

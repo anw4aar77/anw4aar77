@@ -16,6 +16,12 @@ body {
     padding-bottom: 105px;
 }
 
+/* Zid shuffleBtn m3a repeatBtn ila kan active */
+#shuffleBtn.active, 
+#repeatBtn.active {
+    color: #1ed760 !important; /* L-khder dyal Spotify */
+}
+
 
 /* SIDEBAR (DESKTOP) */
 

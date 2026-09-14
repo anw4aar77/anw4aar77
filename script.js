@@ -1077,11 +1077,11 @@ function toggleShuffle() {
     const btn = document.getElementById("shuffleBtn");
 
     if (isShuffle) {
-        btn.classList.add("active");
-        generateShuffledQueue(); // Mli t-sh3l Shuffle, khllt l-playlist mnn daba!
+        btn.classList.add("active"); // Zid class active
+        generateShuffledQueue();
         showToast("Shuffle Enabled");
     } else {
-        btn.classList.remove("active");
+        btn.classList.remove("active"); // 7yd class active
         showToast("Shuffle Disabled");
     }
 }

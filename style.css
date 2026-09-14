@@ -853,21 +853,25 @@ body {
     }
 
     body {
-        padding-bottom: 130px;
-    }
+    padding-bottom: 130px;
+    min-height: 100vh;
+    margin: 0;
+    transition: background 0.8s ease-in-out;
+    background-attachment: fixed;
+}
 
-    .song img {
-        width: 55px;
-        height: 55px;
-    }
+.song img {
+    width: 55px;
+    height: 55px;
+}
 
-    .song-info {
-        font-size: 13px;
-    }
+.song-info {
+    font-size: 13px;
+}
 
-    .toast-container {
-        bottom: 140px;
-        right: 15px;
-        left: 15px;
-    }
+.toast-container {
+    bottom: 140px;
+    right: 15px;
+    left: 15px;
+}
 }

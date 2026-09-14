@@ -77,6 +77,35 @@ function updateUserUI() {
     }
 }
 
+// Initialization dyal ColorThief
+const colorThief = new ColorThief();
+
+// Function bach t-jbed l-loun l-asasi w t-bdel background
+function updateDynamicBackground(imageUrl) {
+    if (!imageUrl) return;
+
+    const img = new Image();
+    // CrossOrigin bach y-yallowi jbd l-alwan mn tsawer dyal YouTube
+    img.crossOrigin = "Anonymous";
+    img.src = imageUrl;
+
+    img.onload = function () {
+        try {
+            // Extraction dyal dominant color [R, G, B]
+            const rgb = colorThief.getColor(img);
+            
+            // Calculer alwan dark w primary
+            const primaryColor = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
+            const darkColor = `rgba(${Math.max(0, rgb[0] - 90)}, ${Math.max(0, rgb[1] - 90)}, ${Math.max(0, rgb[2] - 90)}, 0.95)`;
+
+            // Appliquer l-gradient 3la Body
+            document.body.style.background = `radial-gradient(circle at top center, ${primaryColor} 0%, ${darkColor} 100%)`;
+        } catch (e) {
+            console.log("CORS awla error f extraction dyal l-color:", e);
+        }
+    };
+}
+
 // ==========================================
 // DISCORD WEBHOOK LOGGING
 // ==========================================
@@ -1062,6 +1091,9 @@ function playVideo(song) {
     document.getElementById("currentTitle").textContent = song.title;
     document.getElementById("currentArtist").textContent = song.artist;
     document.getElementById("currentImage").src = song.thumbnail;
+
+    // 🎨 Dynamic Background Update
+    updateDynamicBackground(song.thumbnail);
 
     player.loadVideoById(song.videoId);
     updateMediaSession(song);

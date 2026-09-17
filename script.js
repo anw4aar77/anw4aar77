@@ -836,91 +836,210 @@ async function searchYouTube() {
 
 // Function bach t-jbed GHIR l-videos dyal dak l-channel mli t-cliqui 3la View Profile
 async function fetchChannelVideos(channelId, channelTitle) {
-    showToast("Fetching Top 50 hits for " + channelTitle + "...");
+    showToast("Loading " + channelTitle + " profile...");
     const resultsDiv = document.getElementById("results");
-    resultsDiv.innerHTML = `<h2><i class="fa-solid fa-fire"></i> Top 50 Hits - ${channelTitle}</h2><p style='color:#aaa;'>Loading top 50 most viewed songs...</p>`;
+    resultsDiv.innerHTML = `<h2><i class="fa-solid fa-user-astronaut"></i> ${channelTitle} Profile</h2><p style='color:#aaa;'>Fetching top songs and albums...</p>`;
+
+    try {
+        // 1. Fetch Top 50 Songs
+        const songsResponse = await fetch(
+            `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&maxResults=50&order=viewCount&type=video&key=${YOUTUBE_API_KEY}`
+        );
+        const songsData = await songsResponse.json();
+
+        // 2. Fetch Albums / Official Playlists for this Channel
+        const albumsResponse = await fetch(
+            `https://www.googleapis.com/youtube/v3/playlists?part=snippet,contentDetails&channelId=${channelId}&maxResults=10&key=${YOUTUBE_API_KEY}`
+        );
+        const albumsData = await albumsResponse.json();
+
+        // Build Profile HTML Structure
+        resultsDiv.innerHTML = `
+            <div class="channel-profile-header">
+                <div class="profile-title-box">
+                    <h2><i class="fa-solid fa-crown" style="color: #f1c40f;"></i> ${channelTitle}</h2>
+                    <p style="color: #aaa; font-size: 13px;">Top Hits & Official Albums</p>
+                </div>
+                <button onclick="playAllChannelSongs()" class="play-all-btn">
+                    <i class="fa-solid fa-play"></i> Play Top 50
+                </button>
+            </div>
+
+            <!-- Albums Section -->
+            <div id="artistAlbumsSection" style="margin-bottom: 30px;">
+                <h3 style="color: #fff; margin-bottom: 12px;"><i class="fa-solid fa-compact-disc" style="color: #1ed760;"></i> Albums & Playlists</h3>
+                <div id="albumsList" class="albums-grid"></div>
+            </div>
+
+            <!-- Top 50 Songs Section -->
+            <h3 style="color: #fff; margin-bottom: 12px;"><i class="fa-solid fa-fire" style="color: #ff5500;"></i> Top 50 Popular Songs</h3>
+            <div id="channelSongsList"></div>
+        `;
+
+        // Render Albums
+        const albumsListDiv = document.getElementById("albumsList");
+        if (albumsData.items && albumsData.items.length > 0) {
+            albumsData.items.forEach(album => {
+                const albumCard = document.createElement("div");
+                albumCard.className = "album-card";
+                albumCard.innerHTML = `
+                    <img src="${album.snippet.thumbnails.high ? album.snippet.thumbnails.high.url : album.snippet.thumbnails.default.url}">
+                    <div class="album-info">
+                        <strong>${album.snippet.title}</strong>
+                        <span>${album.contentDetails.itemCount} Songs</span>
+                    </div>
+                `;
+                albumCard.onclick = () => fetchAlbumSongs(album.id, album.snippet.title, channelTitle);
+                albumsListDiv.appendChild(albumCard);
+            });
+        } else {
+            document.getElementById("artistAlbumsSection").style.display = "none";
+        }
+
+        // Render Top 50 Songs
+        const listDiv = document.getElementById("channelSongsList");
+        window.currentChannelQueue = [];
+
+        if (songsData.items && songsData.items.length > 0) {
+            songsData.items.forEach((item, index) => {
+                const song = {
+                    videoId: item.id.videoId,
+                    title: item.snippet.title,
+                    artist: channelTitle,
+                    thumbnail: item.snippet.thumbnails.high ? item.snippet.thumbnails.high.url : item.snippet.thumbnails.default.url
+                };
+
+                window.currentChannelQueue.push(song);
+
+                const songCard = document.createElement("div");
+                songCard.className = "song";
+
+                songCard.innerHTML = `
+                    <span class="rank-number">#${index + 1}</span>
+                    <img src="${song.thumbnail}">
+                    <div class="song-info">
+                        <strong>${song.title}</strong>
+                        <span>${song.artist}</span>
+                    </div>
+                    <div class="song-actions">
+                        <button class="action-btn" id="dlBtn-${song.videoId}"><i class="fa-solid fa-download"></i></button>
+                        <button class="action-btn" id="addBtn-${song.videoId}"><i class="fa-solid fa-plus"></i></button>
+                        <button class="play-btn" id="playBtn-${song.videoId}"><i class="fa-solid fa-play"></i></button>
+                    </div>
+                `;
+                listDiv.appendChild(songCard);
+
+                // Event Bindings
+                document.getElementById(`addBtn-${song.videoId}`).onclick = () => openSelectPlaylistModal(song);
+                document.getElementById(`playBtn-${song.videoId}`).onclick = () => {
+                    currentPlaylistName = "TOP_50_ARTIST";
+                    playlists[currentPlaylistName] = [...window.currentChannelQueue];
+                    if (isShuffle) generateShuffledQueue();
+                    playVideo(song);
+                };
+
+                const dlBtn = document.getElementById(`dlBtn-${song.videoId}`);
+                if (dlBtn) {
+                    dlBtn.onclick = () => window.open(`https://www.y2mate.com/youtube/${song.videoId}`, '_blank');
+                }
+            });
+        }
+
+    } catch (error) {
+        console.error("Channel Videos Error:", error);
+        showToast("Failed to load artist profile", "error");
+    }
+}
+
+// 2. Function Bach T-jbed ghir l-aghani dyal l-Album lli cliqua 3lih l-user
+async function fetchAlbumSongs(playlistId, albumTitle, artistTitle) {
+    showToast("Opening album: " + albumTitle);
+    const resultsDiv = document.getElementById("results");
+    resultsDiv.innerHTML = `<h2><i class="fa-solid fa-compact-disc"></i> ${albumTitle}</h2><p style='color:#aaa;'>Loading album tracks...</p>`;
 
     try {
         const response = await fetch(
-            `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&maxResults=50&order=viewCount&type=video&key=${YOUTUBE_API_KEY}`
+            `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlistId}&maxResults=50&key=${YOUTUBE_API_KEY}`
         );
         const data = await response.json();
 
         resultsDiv.innerHTML = `
-            <div class="channel-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div class="channel-profile-header">
                 <div>
-                    <h2><i class="fa-solid fa-crown" style="color: #f1c40f;"></i> Top 50 Songs by ${channelTitle}</h2>
-                    <p style="color: #aaa; font-size: 13px; margin-top: 5px;">Ordered by Most Viewed (YouTube Hits)</p>
+                    <h2><i class="fa-solid fa-compact-disc" style="color: #1ed760;"></i> ${albumTitle}</h2>
+                    <p style="color: #aaa; font-size: 13px;">Album by ${artistTitle}</p>
                 </div>
-                <button onclick="playAllChannelSongs()" class="play-all-btn" style="background: #1ed760; color: #000; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer;">
-                    <i class="fa-solid fa-play"></i> Play Top 50
+                <button onclick="playAllAlbumSongs()" class="play-all-btn">
+                    <i class="fa-solid fa-play"></i> Play Full Album
                 </button>
             </div>
-            <div id="channelSongsList"></div>
+            <div id="albumSongsList"></div>
         `;
 
-        const listDiv = document.getElementById("channelSongsList");
-        window.currentChannelQueue = [];
+        const listDiv = document.getElementById("albumSongsList");
+        window.currentAlbumQueue = [];
 
-        if (!data.items || data.items.length === 0) {
-            listDiv.innerHTML = "<p>No videos found for this artist.</p>";
-            return;
+        if (data.items && data.items.length > 0) {
+            data.items.forEach((item, index) => {
+                const song = {
+                    videoId: item.snippet.resourceId.videoId,
+                    title: item.snippet.title,
+                    artist: artistTitle,
+                    thumbnail: item.snippet.thumbnails.high ? item.snippet.thumbnails.high.url : item.snippet.thumbnails.default.url
+                };
+
+                window.currentAlbumQueue.push(song);
+
+                const songCard = document.createElement("div");
+                songCard.className = "song";
+
+                songCard.innerHTML = `
+                    <span class="rank-number">${index + 1}</span>
+                    <img src="${song.thumbnail}">
+                    <div class="song-info">
+                        <strong>${song.title}</strong>
+                        <span>${song.artist}</span>
+                    </div>
+                    <div class="song-actions">
+                        <button class="action-btn" id="addBtn-${song.videoId}"><i class="fa-solid fa-plus"></i></button>
+                        <button class="play-btn" id="playBtn-${song.videoId}"><i class="fa-solid fa-play"></i></button>
+                    </div>
+                `;
+                listDiv.appendChild(songCard);
+
+                document.getElementById(`addBtn-${song.videoId}`).onclick = () => openSelectPlaylistModal(song);
+                document.getElementById(`playBtn-${song.videoId}`).onclick = () => {
+                    currentPlaylistName = "ALBUM_QUEUE";
+                    playlists[currentPlaylistName] = [...window.currentAlbumQueue];
+                    if (isShuffle) generateShuffledQueue();
+                    playVideo(song);
+                };
+            });
         }
 
-        data.items.forEach((item, index) => {
-            const song = {
-                videoId: item.id.videoId,
-                title: item.snippet.title,
-                artist: channelTitle,
-                thumbnail: item.snippet.thumbnails.high ? item.snippet.thumbnails.high.url : item.snippet.thumbnails.default.url
-            };
-
-            window.currentChannelQueue.push(song);
-
-            const songCard = document.createElement("div");
-            songCard.className = "song";
-
-            songCard.innerHTML = `
-                <span class="rank-number" style="font-weight: bold; color: #1ed760; width: 25px; text-align: center; margin-right: 5px;">#${index + 1}</span>
-                <img src="${song.thumbnail}">
-                <div class="song-info">
-                    <strong>${song.title}</strong>
-                    <span>${song.artist}</span>
-                </div>
-                <div class="song-actions">
-                    <button class="action-btn" id="dlBtn-${song.videoId}"><i class="fa-solid fa-download"></i></button>
-                    <button class="action-btn" id="addBtn-${song.videoId}"><i class="fa-solid fa-plus"></i></button>
-                    <button class="play-btn" id="playBtn-${song.videoId}"><i class="fa-solid fa-play"></i></button>
-                </div>
-            `;
-            listDiv.appendChild(songCard);
-
-            // Bind Events safely
-            document.getElementById(`addBtn-${song.videoId}`).onclick = function() {
-                openSelectPlaylistModal(song);
-            };
-
-            document.getElementById(`playBtn-${song.videoId}`).onclick = function() {
-                // 🟢 Zid had 2 lines bach hta ila cliqua 3la song bo7dha y-kml f l-list dyal Top 50
-                currentPlaylistName = "TOP_50_ARTIST";
-                playlists[currentPlaylistName] = [...window.currentChannelQueue];
-                
-                if (isShuffle) generateShuffledQueue();
-                playVideo(song);
-            };
-
-            const dlBtn = document.getElementById(`dlBtn-${song.videoId}`);
-            if (dlBtn) {
-                dlBtn.onclick = function() {
-                    window.open(`https://www.y2mate.com/youtube/${song.videoId}`, '_blank');
-                };
-            }
-        });
-
     } catch (error) {
-        console.error("Channel Videos Error:", error);
-        showToast("Failed to load channel top songs", "error");
+        console.error("Album Load Error:", error);
+        showToast("Failed to load album tracks", "error");
     }
+}
+
+// Dalla bach t-l3ab l-Album kaml sequential
+function playAllAlbumSongs() {
+    if (!window.currentAlbumQueue || window.currentAlbumQueue.length === 0) return;
+
+    currentPlaylistName = "ALBUM_QUEUE";
+    playlists[currentPlaylistName] = [...window.currentAlbumQueue];
+
+    if (isShuffle) {
+        generateShuffledQueue();
+        currentIndex = 0;
+        playVideo(shuffledQueue[0]);
+    } else {
+        currentIndex = 0;
+        playVideo(playlists[currentPlaylistName][0]);
+    }
+
+    showToast("Playing full album!");
 }
 
 function playAllChannelSongs() {

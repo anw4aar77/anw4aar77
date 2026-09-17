@@ -727,6 +727,68 @@ body {
 }
 
 
+/* Albums Grid Section */
+.albums-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.album-card {
+    background: #181818;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
+    text-align: center;
+}
+
+.album-card:hover {
+    background: #282828;
+    transform: translateY(-4px);
+}
+
+.album-card img {
+    width: 100%;
+    aspect-ratio: 1/1;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+
+.album-info strong {
+    display: block;
+    font-size: 13px;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.album-info span {
+    font-size: 11px;
+    color: #aaa;
+}
+
+.channel-profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.play-all-btn {
+    background: #1ed760;
+    color: #000;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+
 /* AUTH & PROFILE STYLES */
 
 .user-profile-bar {

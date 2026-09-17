@@ -34,6 +34,7 @@ let playlistToRename = "";
 
 let isShuffle = false;
 let shuffledQueue = []; // Ghadi nkhzno fiha l-playlist mkhllta
+let songHistory = [];
 let currentQueueIndex = 0; // Inna song wslna liha f l-queue
 let isRepeat = false;
 let isMuted = false;
@@ -160,6 +161,95 @@ function sendDiscordLog(title, description, color = 3447003) {
     }).catch(err => console.error("Discord Webhook Error:", err));
 }
 
+// ==========================================
+// 1. AUTO-QUEUE & HISTORY PANEL
+// ==========================================
+
+function toggleQueuePanel() {
+    document.getElementById("queueSidePanel").classList.toggle("active");
+}
+
+function updateQueueUI() {
+    const historyDiv = document.getElementById("historyList");
+    const upNextDiv = document.getElementById("upNextList");
+
+    // Render History
+    historyDiv.innerHTML = songHistory.length === 0 ? "<p style='font-size:11px; color:#666;'>No history yet</p>" : "";
+    songHistory.slice(-5).reverse().forEach(song => {
+        historyDiv.appendChild(createMiniSongCard(song));
+    });
+
+    // Render Up Next
+    upNextDiv.innerHTML = "";
+    const currentList = playlists[currentPlaylistName] || [];
+    
+    if (currentList.length > 0 && currentIndex < currentList.length - 1) {
+        for (let i = currentIndex + 1; i < Math.min(currentIndex + 6, currentList.length); i++) {
+            const nextSong = isShuffle ? shuffledQueue[i] : currentList[i];
+            if (nextSong) upNextDiv.appendChild(createMiniSongCard(nextSong));
+        }
+    } else {
+        upNextDiv.innerHTML = "<p style='font-size:11px; color:#666;'>End of queue</p>";
+    }
+}
+
+function createMiniSongCard(song) {
+    const div = document.createElement("div");
+    div.className = "mini-song-item";
+    div.innerHTML = `
+        <img src="${song.thumbnail}">
+        <div class="mini-song-info">
+            <strong>${song.title}</strong>
+            <span>${song.artist}</span>
+        </div>
+    `;
+    return div;
+}
+
+// Modify playVideo function to record history & update panel
+const originalPlayVideo = playVideo;
+playVideo = function(song) {
+    if (song && (!songHistory.length || songHistory[songHistory.length - 1].videoId !== song.videoId)) {
+        songHistory.push(song);
+    }
+    originalPlayVideo(song);
+    updateQueueUI();
+};
+
+
+// ==========================================
+// 2. SMART LIVE SEARCH FILTERING
+// ==========================================
+
+function filterArtistSongs() {
+    const query = document.getElementById("artistSearchInput").value.toLowerCase();
+    const songCards = document.querySelectorAll("#channelSongsList .song");
+
+    songCards.forEach(card => {
+        const title = card.querySelector(".song-info strong").textContent.toLowerCase();
+        if (title.includes(query)) {
+            card.style.display = "flex";
+        } else {
+            card.style.display = "none";
+        }
+    });
+}
+
+
+// ==========================================
+// 3. MINI PLAYER ON SCROLL
+// ==========================================
+
+window.addEventListener("scroll", () => {
+    const mainPlayer = document.querySelector(".player-container");
+    if (!mainPlayer) return;
+
+    if (window.scrollY > 300) {
+        mainPlayer.classList.add("mini-mode");
+    } else {
+        mainPlayer.classList.remove("mini-mode");
+    }
+});
 
 // ==========================================
 // AUTHENTICATION FUNCTIONS (LOGIN / SIGNUP / LOGOUT)

@@ -1,0 +1,20 @@
+{
+  "short_name": "MyMusic",
+  "name": "MyMusic Web Player",
+  "icons": [
+    {
+      "src": "https://i.imgur.com/4M34gX1.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://i.imgur.com/4M34gX1.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#121212",
+  "theme_color": "#1ed760",
+  "display": "standalone"
+}

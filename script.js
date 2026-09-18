@@ -35,6 +35,7 @@ let playlistToRename = "";
 let isShuffle = false;
 let shuffledQueue = []; // Ghadi nkhzno fiha l-playlist mkhllta
 let songHistory = [];
+let localAudioPlayer = new Audio();
 let currentQueueIndex = 0; // Inna song wslna liha f l-queue
 let isRepeat = false;
 let isMuted = false;
@@ -55,6 +56,15 @@ window.addEventListener("DOMContentLoaded", function () {
     initApp();
     setupKeyboardShortcuts();
 });
+
+// Register Service Worker for Offline access
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(() => console.log("Offline PWA Ready!"))
+            .catch((err) => console.log("SW Registration Failed:", err));
+    });
+}
 
 function initApp() {
     if (currentUser && usersDB[currentUser]) {
@@ -80,7 +90,25 @@ function updateUserUI() {
     }
 }
 
+// Function to play local audio file
+function playLocalFile(fileInput) {
+    const file = fileInput.files[0];
+    if (file) {
+        // Stop YouTube player if playing
+        if (typeof player !== 'undefined' && player.pauseVideo) {
+            player.pauseVideo();
+        }
 
+        const objectURL = URL.createObjectURL(file);
+        localAudioPlayer.src = objectURL;
+        localAudioPlayer.play();
+
+        // Update UI
+        document.getElementById("currentTitle").textContent = file.name;
+        document.getElementById("currentArtist").textContent = "Local Offline Audio";
+        document.getElementById("mainPlay").innerHTML = '<i class="fa-solid fa-pause"></i>';
+    }
+}
 
 // Initialization dyal ColorThief
 const colorThief = new ColorThief();

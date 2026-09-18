@@ -38,6 +38,12 @@
             <i class="fa-solid fa-heart"></i> My Playlists
         </button>
 
+        <!-- OFFLINE LOCAL MP3 BUTTON (DESKTOP) -->
+        <label class="nav-btn" style="cursor: pointer; display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-file-audio"></i> Play Local Song
+            <input type="file" id="localFileInputDesktop" accept="audio/*" onchange="playLocalFile(this)" style="display: none;">
+        </label>
+
         <button class="create-playlist-btn" onclick="openModal()">
             <i class="fa-solid fa-plus"></i> Create Playlist
         </button>
@@ -55,6 +61,13 @@
             <button class="mobile-nav-btn" onclick="showPlaylist()">
                 <i class="fa-solid fa-heart"></i> Playlists
             </button>
+            
+            <!-- OFFLINE LOCAL MP3 BUTTON (MOBILE) -->
+            <label class="mobile-nav-btn" style="cursor: pointer;">
+                <i class="fa-solid fa-file-audio"></i> Local
+                <input type="file" id="localFileInputMobile" accept="audio/*" onchange="playLocalFile(this)" style="display: none;">
+            </label>
+
             <button class="mobile-nav-btn create-btn" onclick="openModal()">
                 <i class="fa-solid fa-plus"></i> New
             </button>
@@ -372,6 +385,17 @@
 
     <script src="https://www.youtube.com/iframe_api"></script>
     <script src="script.js"></script>
+
+    <!-- REGISTER SERVICE WORKER FOR OFFLINE MODE -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(() => console.log('Offline PWA Service Worker Registered!'))
+                    .catch(err => console.log('SW Registration failed:', err));
+            });
+        }
+    </script>
 
 </body>
 

@@ -189,6 +189,93 @@ function sendDiscordLog(title, description, color = 3447003) {
     }).catch(err => console.error("Discord Webhook Error:", err));
 }
 
+
+// --- INDEXEDDB FOR OFFLINE SONGS ---
+let db;
+const request = indexedDB.open("MyMusicOfflineDB", 1);
+
+request.onupgradeneeded = (e) => {
+    db = e.target.result;
+    if (!db.objectStoreNames.contains("offlineSongs")) {
+        db.createObjectStore("offlineSongs", { keyPath: "id" });
+    }
+};
+
+request.onsuccess = (e) => {
+    db = e.target.result;
+    loadLocalSongsList(); // Automatic load saved offline songs
+};
+
+// FUNCTION TO SAVE SONG FOR OFFLINE
+async function saveSongOffline(song) {
+    showToast("Downloading for Offline mode...");
+    try {
+        // Fetch audio stream/blob (works for direct media URLs or converted streams)
+        const response = await fetch(song.audioUrl || song.url);
+        const blob = await response.blob();
+
+        const tx = db.transaction("offlineSongs", "readwrite");
+        const store = tx.objectStore("offlineSongs");
+        
+        const songData = {
+            id: song.id,
+            title: song.title,
+            artist: song.artist,
+            image: song.image,
+            audioBlob: blob
+        };
+
+        store.put(songData);
+        tx.oncomplete = () => {
+            showToast("Saved Offline Successfully! 🎉");
+            loadLocalSongsList();
+        };
+    } catch (err) {
+        showToast("Error saving song offline!");
+        console.error(err);
+    }
+}
+
+// LOAD SAVED SONGS INTO "PLAY LOCAL SONG"
+function loadLocalSongsList() {
+    if (!db) return;
+    const tx = db.transaction("offlineSongs", "readonly");
+    const store = tx.objectStore("offlineSongs");
+    const request = store.getAll();
+
+    request.onsuccess = () => {
+        const savedSongs = request.result;
+        console.log("Saved Offline Songs:", savedSongs);
+        // You can render these inside your Local / Playlist section
+    };
+}
+
+// PLAY OFFLINE SAVED SONG
+function playOfflineSavedSong(songId) {
+    const tx = db.transaction("offlineSongs", "readonly");
+    const store = tx.objectStore("offlineSongs");
+    const request = store.get(songId);
+
+    request.onsuccess = () => {
+        const song = request.result;
+        if (song) {
+            const audioUrl = URL.createObjectURL(song.audioBlob);
+            const audioPlayer = document.getElementById("localAudioPlayer") || new Audio();
+            audioPlayer.src = audioUrl;
+            audioPlayer.play();
+            
+            // Update Player UI
+            document.getElementById("currentTitle").innerText = song.title;
+            document.getElementById("currentArtist").innerText = song.artist;
+            document.getElementById("currentImage").src = song.image;
+        }
+    };
+}
+
+
+
+
+
 // ==========================================
 // 1. AUTO-QUEUE & HISTORY PANEL
 // ==========================================
@@ -878,6 +965,7 @@ function searchEnter(event) {
 }
 
 // Function dyal Search lli kat-jbed l-Channel w l-Videos
+// Function dyal Search lli kat-jbed l-Channel w l-Videos (FIXED)
 async function searchYouTube() {
     const query = document.getElementById("searchInput").value.trim();
     if (!query) return;
@@ -914,11 +1002,16 @@ async function searchYouTube() {
                         <h3>${item.snippet.title}</h3>
                         <p>${item.snippet.description.substring(0, 70)}...</p>
                     </div>
-                    <button class="view-channel-btn" onclick="fetchChannelVideos('${item.id.channelId}', '${item.snippet.title.replace(/'/g, "\\'")}')">
+                    <button class="view-channel-btn" id="viewBtn-${item.id.channelId}">
                         <i class="fa-solid fa-user"></i> View Profile & Songs
                     </button>
                 `;
                 resultsDiv.appendChild(channelCard);
+
+                // Safe JS Click Listener for Channel View
+                document.getElementById(`viewBtn-${item.id.channelId}`).onclick = () => {
+                    fetchChannelVideos(item.id.channelId, item.snippet.title);
+                };
             } 
             // Ila kan Video normal
             else if (item.id.kind === "youtube#video") {
@@ -935,14 +1028,31 @@ async function searchYouTube() {
                     <img src="${song.thumbnail}">
                     <div class="song-info">
                         <strong>${song.title}</strong>
-                        <span onclick="searchArtistDirect('${song.artist.replace(/'/g, "\\'")}')" class="clickable-artist">${song.artist}</span>
+                        <span id="artistBtn-${song.videoId}" class="clickable-artist">${song.artist}</span>
                     </div>
                     <div class="song-actions">
-                        <button class="action-btn" onclick="openAddToPlaylistModal('${song.videoId}', '${song.title.replace(/'/g, "\\'")}', '${song.artist.replace(/'/g, "\\'")}', '${song.thumbnail}')"><i class="fa-solid fa-plus"></i></button>
-                        <button class="play-btn" onclick='playVideo(${JSON.stringify(song)})'><i class="fa-solid fa-play"></i></button>
+                        <button class="action-btn" id="searchAddBtn-${song.videoId}"><i class="fa-solid fa-plus"></i></button>
+                        <button class="play-btn" id="searchPlayBtn-${song.videoId}"><i class="fa-solid fa-play"></i></button>
                     </div>
                 `;
                 resultsDiv.appendChild(songCard);
+
+                // Event Bindings b-nafs l-tariqa lli khddama f l-profile!
+                document.getElementById(`searchAddBtn-${song.videoId}`).onclick = () => {
+                    if (typeof openSelectPlaylistModal === "function") {
+                        openSelectPlaylistModal(song);
+                    } else if (typeof openAddToPlaylistModal === "function") {
+                        openAddToPlaylistModal(song);
+                    }
+                };
+
+                document.getElementById(`searchPlayBtn-${song.videoId}`).onclick = () => {
+                    playVideo(song);
+                };
+
+                document.getElementById(`artistBtn-${song.videoId}`).onclick = () => {
+                    searchArtistDirect(song.artist);
+                };
             }
         });
 
@@ -1185,63 +1295,95 @@ function searchArtistDirect(artistName) {
     searchYouTube();
 }
 
-function displayResults(items) {
+// FUNCTION TO RENDER SEARCH RESULTS WITH SAVE OFFLINE BUTTON
+function displayResults(songs) {
+    const resultsContainer = document.getElementById("results");
+    resultsContainer.innerHTML = "";
 
-    const results = document.getElementById("results");
-    results.innerHTML = "";
-
-    if (!items || items.length === 0) {
-        results.innerHTML = "<p style='color:#888;margin-top:20px'>No results found.</p>";
+    if (!songs || songs.length === 0) {
+        resultsContainer.innerHTML = "<p>No results found.</p>";
         return;
     }
 
-    items.forEach(item => {
+    songs.forEach((song) => {
+        const songCard = document.createElement("div");
+        songCard.className = "song-card";
 
-        const videoId = item.id.videoId;
-        const title = item.snippet.title;
-        const channel = item.snippet.channelTitle;
-        const thumbnail = item.snippet.thumbnails.medium.url;
+        // Escaping title & artist to avoid syntax errors in inline onclick
+        const cleanTitle = song.title.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const cleanArtist = song.artist ? song.artist.replace(/'/g, "\\'").replace(/"/g, '&quot;') : 'Unknown';
+        const songImage = song.image || song.thumbnail || 'https://via.placeholder.com/150';
+        const songId = song.id || song.videoId;
 
-        const song = document.createElement("div");
-        song.className = "song";
-
-        song.innerHTML = `
-            <img src="${thumbnail}">
-
+        songCard.innerHTML = `
+            <img src="${songImage}" alt="${cleanTitle}">
             <div class="song-info">
-                <strong>${cleanText(title)}</strong>
-                <span>${cleanText(channel)}</span>
+                <h4>${song.title}</h4>
+                <p>${song.artist || ''}</p>
             </div>
+            <div class="song-actions" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
+                <!-- PLAY BUTTON -->
+                <button onclick="playSong('${songId}', '${cleanTitle}', '${cleanArtist}', '${songImage}')" class="action-btn">
+                    <i class="fa-solid fa-play"></i> Play
+                </button>
 
-            <button class="add-btn" onclick='downloadAudio("${videoId}")' title="Download MP3">
-                <i class="fa-solid fa-download"></i>
-            </button>
+                <!-- ADD TO PLAYLIST BUTTON (FIXED) -->
+                <button onclick="openSelectPlaylistModal({videoId: '${songId}', title: '${cleanTitle}', artist: '${cleanArtist}', thumbnail: '${songImage}'})" class="action-btn">
+                    <i class="fa-solid fa-plus"></i> Add
+                </button>
 
-            <button class="add-btn" onclick='openSelectPlaylistModal(${JSON.stringify({
-                videoId: videoId,
-                title: title,
-                artist: channel,
-                thumbnail: thumbnail
-            })})'>
-                <i class="fa-solid fa-plus"></i>
-            </button>
-
-            <button class="play-btn" onclick='playVideo(${JSON.stringify({
-                videoId: videoId,
-                title: title,
-                artist: channel,
-                thumbnail: thumbnail
-            })})'>
-                <i class="fa-solid fa-play"></i>
-            </button>
+                <!-- SAVE OFFLINE BUTTON -->
+                <button onclick="saveSongOffline({id: '${songId}', title: '${cleanTitle}', artist: '${cleanArtist}', image: '${songImage}'})" class="action-btn" title="Save for Offline">
+                    <i class="fa-solid fa-download"></i> Save Offline
+                </button>
+            </div>
         `;
 
-        results.appendChild(song);
-
+        resultsContainer.appendChild(songCard);
     });
-
 }
 
+// FUNCTION TO DISPLAY SAVED OFFLINE SONGS WHEN CLICKING "PLAY LOCAL SONG"
+function showOfflineSavedSongs() {
+    if (!db) return;
+    const tx = db.transaction("offlineSongs", "readonly");
+    const store = tx.objectStore("offlineSongs");
+    const request = store.getAll();
+
+    request.onsuccess = () => {
+        const savedSongs = request.result;
+        const resultsContainer = document.getElementById("results");
+        
+        // Switch view to Home section to display offline songs
+        showHome();
+        document.querySelector("#homeSection h2").innerText = "💾 Downloaded Offline Songs";
+        resultsContainer.innerHTML = "";
+
+        if (savedSongs.length === 0) {
+            resultsContainer.innerHTML = "<p style='color:#aaa;'>No offline songs saved yet. Connect to Wi-Fi and click 'Save Offline' on any song!</p>";
+            return;
+        }
+
+        savedSongs.forEach((song) => {
+            const songCard = document.createElement("div");
+            songCard.className = "song-card";
+
+            songCard.innerHTML = `
+                <img src="${song.image}" alt="${song.title}">
+                <div class="song-info">
+                    <h4>${song.title}</h4>
+                    <p>${song.artist}</p>
+                </div>
+                <div class="song-actions" style="margin-top: 10px;">
+                    <button onclick="playOfflineSavedSong('${song.id}')" class="action-btn" style="background:#1ed760; color:#000;">
+                        <i class="fa-solid fa-play"></i> Play Offline
+                    </button>
+                </div>
+            `;
+            resultsContainer.appendChild(songCard);
+        });
+    };
+}
 
 // ==========================================
 // DOWNLOAD FUNCTIONALITY
@@ -1447,7 +1589,86 @@ function removeFromPlaylist(index) {
     showToast("Removed from playlist");
 }
 
+// 1. HELPER TO ESCAPE QUOTES SAFELY FOR INLINE ONCLICK
+function escapeQuotes(str) {
+    if (!str) return '';
+    return str
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '&quot;')
+        .replace(/\n/g, ' ');
+}
 
+// 1. RENDER SEARCH RESULTS (NO INLINE ONCLICK = NO QUOTE ERRORS)
+function renderSearchResults(items) {
+    const resultsContainer = document.getElementById("results");
+    if (!resultsContainer) return;
+    resultsContainer.innerHTML = "";
+
+    if (!items || items.length === 0) {
+        resultsContainer.innerHTML = "<p style='color:#aaa;'>No results found.</p>";
+        return;
+    }
+
+    items.forEach((item) => {
+        const songId = item.id?.videoId || item.id || item.videoId;
+        const songTitle = item.snippet?.title || item.title || "Unknown Title";
+        const songArtist = item.snippet?.channelTitle || item.artist || "Unknown Artist";
+        const songImage = item.snippet?.thumbnails?.medium?.url || item.image || item.thumbnail || 'https://via.placeholder.com/150';
+
+        const songCard = document.createElement("div");
+        songCard.className = "song-card";
+
+        songCard.innerHTML = `
+            <img src="${songImage}" alt="cover">
+            <div class="song-info">
+                <h4>${songTitle}</h4>
+                <p>${songArtist}</p>
+            </div>
+            <div class="song-actions" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
+                <!-- SAVE OFFLINE BUTTON -->
+                <button class="action-btn btn-save-offline" title="Save Offline">
+                    <i class="fa-solid fa-download"></i>
+                </button>
+
+                <!-- ADD TO PLAYLIST BUTTON (+) -->
+                <button class="action-btn btn-add-playlist" title="Add to Playlist">
+                    <i class="fa-solid fa-plus"></i> Add
+                </button>
+
+                <!-- PLAY BUTTON -->
+                <button class="action-btn btn-play-song">
+                    <i class="fa-solid fa-play"></i> Play
+                </button>
+            </div>
+        `;
+
+        // Store the clean song object directly on the DOM element using JavaScript
+        const songObject = {
+            videoId: songId,
+            id: songId,
+            title: songTitle,
+            artist: songArtist,
+            thumbnail: songImage,
+            image: songImage
+        };
+
+        // Attach event listeners safely
+        songCard.querySelector('.btn-add-playlist').addEventListener('click', () => {
+            openSelectPlaylistModal(songObject);
+        });
+
+        songCard.querySelector('.btn-save-offline').addEventListener('click', () => {
+            saveSongOffline(songObject);
+        });
+
+        songCard.querySelector('.btn-play-song').addEventListener('click', () => {
+            playSong(songId, songTitle, songArtist, songImage);
+        });
+
+        resultsContainer.appendChild(songCard);
+    });
+}
 // ==========================================
 // PLAYBACK CONTROLS
 // ==========================================

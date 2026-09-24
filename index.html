@@ -37,6 +37,11 @@
             <i class="fa-solid fa-house"></i> Home
         </button>
 
+        <!-- NEW TRENDING TAB BUTTON (DESKTOP) -->
+        <button class="nav-btn" id="navTrending" onclick="showTrending()">
+            <i class="fa-solid fa-fire"></i> Trending
+        </button>
+
         <button class="nav-btn" id="navPlaylist" onclick="showPlaylist()">
             <i class="fa-solid fa-heart"></i> My Playlists
         </button>
@@ -58,10 +63,14 @@
 
         <!-- MOBILE NAVIGATION BAR -->
         <div class="mobile-nav">
-            <button class="mobile-nav-btn active" onclick="showHome()">
+            <button class="mobile-nav-btn active" id="mobileNavHome" onclick="showHome()">
                 <i class="fa-solid fa-house"></i> Home
             </button>
-            <button class="mobile-nav-btn" onclick="showPlaylist()">
+            <!-- NEW TRENDING TAB BUTTON (MOBILE) -->
+            <button class="mobile-nav-btn" id="mobileNavTrending" onclick="showTrending()">
+                <i class="fa-solid fa-fire"></i> Trending
+            </button>
+            <button class="mobile-nav-btn" id="mobileNavPlaylist" onclick="showPlaylist()">
                 <i class="fa-solid fa-heart"></i> Playlists
             </button>
             
@@ -120,6 +129,14 @@
 
             <div id="results"></div>
 
+        </section>
+
+        <!-- NEW TRENDING SECTION -->
+        <section id="trendingSection" style="display: none;">
+            <h2><i class="fa-solid fa-fire" style="color: #ff4757;"></i> Trending in Morocco & Global Hits</h2>
+            <div id="trendingResults" class="songs-grid">
+                <!-- Trending songs will be loaded here via JS -->
+            </div>
         </section>
 
 

@@ -756,6 +756,134 @@ function confirmDeleteCurrentPlaylist() {
 }
 
 
+async function loadTrendingSongs() {
+    const apiKey = 'AIzaSyB-Lr2vKBImIwBeizE0b2T63DHXAqp2ZwE'; // ضع مفتاح الـ API الخاص بك هنا
+    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&regionCode=MA&type=video&videoCategoryId=10&key=${apiKey}`;
+
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        const trendingList = document.getElementById('trending-list');
+        trendingList.innerHTML = '';
+
+        data.items.forEach(item => {
+            const videoId = item.id.videoId;
+            const title = item.snippet.title;
+            const thumbnail = item.snippet.thumbnails.medium.url;
+
+            // إنشاء عنصر لكل أغنية
+            const songCard = document.createElement('div');
+            songCard.classList.add('song-card');
+            songCard.innerHTML = `
+                <img src="${thumbnail}" alt="${title}">
+                <p>${title}</p>
+                <button onclick="playSong('${videoId}')">تشغيل</button>
+            `;
+            trendingList.appendChild(songCard);
+        });
+    } catch (error) {
+        console.error('خطأ في جلب الأغاني الرائجة:', error);
+    }
+}
+
+let audioPlayer1 = document.getElementById('audio-player-1');
+let audioPlayer2 = document.getElementById('audio-player-2');
+let activePlayer = audioPlayer1;
+let nextPlayer = audioPlayer2;
+
+// دالة لتطبيق Crossfade عند قرب انتهاء الأغنية
+function setupCrossfade(currentAudio, nextAudio, durationBeforeEnd = 4) {
+    const checkInterval = setInterval(() => {
+        // إذا بقي على نهاية الأغنية عدد الثواني المحدد
+        if (currentAudio.duration - currentAudio.currentTime <= durationBeforeEnd) {
+            clearInterval(checkInterval);
+            executeCrossfade(currentAudio, nextAudio);
+        }
+    }, 1000);
+}
+
+function executeCrossfade(fadeOutAudio, fadeInAudio) {
+    fadeInAudio.volume = 0;
+    fadeInAudio.play();
+
+    let fadeSteps = 20; // عدد خطوات التدرج
+    let stepTime = 4000 / fadeSteps; // الوقت موزع على 4 ثواني
+    let volumeStep = 1 / fadeSteps;
+
+    let fadeInterval = setInterval(() => {
+        // خفض صوت الأغنية الأولى
+        if (fadeOutAudio.volume > volumeStep) {
+            fadeOutAudio.volume -= volumeStep;
+        } else {
+            fadeOutAudio.volume = 0;
+            fadeOutAudio.pause();
+        }
+
+        // رفع صوت الأغنية الثانية
+        if (fadeInAudio.volume < 1 - volumeStep) {
+            fadeInAudio.volume += volumeStep;
+        } else {
+            fadeInAudio.volume = 1;
+            clearInterval(fadeInterval);
+            
+            // تبديل الأدوار بين المشغلين للأغنية الموالية
+            let temp = activePlayer;
+            activePlayer = nextPlayer;
+            nextPlayer = temp;
+        }
+    }, stepTime);
+}
+
+// دالة لإظهار قسم الأغاني الرائجة وإخفاء باقي الأقسام
+function showTrending() {
+    document.getElementById('homeSection').style.display = 'none';
+    document.getElementById('playlistSection').style.display = 'none';
+    document.getElementById('trendingSection').style.display = 'block';
+
+    // تحديث الأزرار النشطة في القائمة
+    document.querySelectorAll('.sidebar .nav-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('navTrending').classList.add('active');
+
+    document.querySelectorAll('.mobile-nav-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('mobileNavTrending').classList.add('active');
+
+    // استدعاء جلب الأغاني الرائجة (يمكنك ربطها مع دالة الـ API السابقة)
+    loadTrendingSongs();
+}
+
+// تعديل دالة showHome لإخفاء قسم Trending
+function showHome() {
+    document.getElementById('homeSection').style.display = 'block';
+    document.getElementById('trendingSection').style.display = 'none';
+    document.getElementById('playlistSection').style.display = 'none';
+
+    document.querySelectorAll('.sidebar .nav-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('navHome').classList.add('active');
+
+    document.querySelectorAll('.mobile-nav-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('mobileNavHome').classList.add('active');
+}
+
+// تعديل دالة showPlaylist لإخفاء قسم Trending
+function showPlaylist() {
+    document.getElementById('homeSection').style.display = 'none';
+    document.getElementById('trendingSection').style.display = 'none';
+    document.getElementById('playlistSection').style.display = 'block';
+
+    document.querySelectorAll('.sidebar .nav-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('navPlaylist').classList.add('active');
+
+    document.querySelectorAll('.mobile-nav-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('mobileNavPlaylist').classList.add('active');
+}
+
+// تفعيل الزر لعرض التبويب
+document.getElementById('trending-tab-btn').addEventListener('click', () => {
+    document.getElementById('trending-section').style.display = 'block';
+    loadTrendingSongs();
+});
+
+
 // ==========================================
 // SLEEP TIMER FUNCTIONS
 // ==========================================

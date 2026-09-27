@@ -834,55 +834,6 @@ function executeCrossfade(fadeOutAudio, fadeInAudio) {
     }, stepTime);
 }
 
-// دالة لإظهار قسم الأغاني الرائجة وإخفاء باقي الأقسام
-function showTrending() {
-    document.getElementById('homeSection').style.display = 'none';
-    document.getElementById('playlistSection').style.display = 'none';
-    document.getElementById('trendingSection').style.display = 'block';
-
-    // تحديث الأزرار النشطة في القائمة
-    document.querySelectorAll('.sidebar .nav-btn').forEach(btn => btn.classList.remove('active'));
-    document.getElementById('navTrending').classList.add('active');
-
-    document.querySelectorAll('.mobile-nav-btn').forEach(btn => btn.classList.remove('active'));
-    document.getElementById('mobileNavTrending').classList.add('active');
-
-    // استدعاء جلب الأغاني الرائجة (يمكنك ربطها مع دالة الـ API السابقة)
-    loadTrendingSongs();
-}
-
-// تعديل دالة showHome لإخفاء قسم Trending
-function showHome() {
-    document.getElementById('homeSection').style.display = 'block';
-    document.getElementById('trendingSection').style.display = 'none';
-    document.getElementById('playlistSection').style.display = 'none';
-
-    document.querySelectorAll('.sidebar .nav-btn').forEach(btn => btn.classList.remove('active'));
-    document.getElementById('navHome').classList.add('active');
-
-    document.querySelectorAll('.mobile-nav-btn').forEach(btn => btn.classList.remove('active'));
-    document.getElementById('mobileNavHome').classList.add('active');
-}
-
-// تعديل دالة showPlaylist لإخفاء قسم Trending
-function showPlaylist() {
-    document.getElementById('homeSection').style.display = 'none';
-    document.getElementById('trendingSection').style.display = 'none';
-    document.getElementById('playlistSection').style.display = 'block';
-
-    document.querySelectorAll('.sidebar .nav-btn').forEach(btn => btn.classList.remove('active'));
-    document.getElementById('navPlaylist').classList.add('active');
-
-    document.querySelectorAll('.mobile-nav-btn').forEach(btn => btn.classList.remove('active'));
-    document.getElementById('mobileNavPlaylist').classList.add('active');
-}
-
-// تفعيل الزر لعرض التبويب
-document.getElementById('trending-tab-btn').addEventListener('click', () => {
-    document.getElementById('trending-section').style.display = 'block';
-    loadTrendingSongs();
-});
-
 
 // ==========================================
 // SLEEP TIMER FUNCTIONS

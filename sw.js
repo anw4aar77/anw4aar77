@@ -16,14 +16,16 @@ self.addEventListener('install', (e) => {
     );
 });
 
-// Fetch Event (Offline First Strategy)
-self.addEventListener('fetch', (e) => {
-    e.respondWith(
-        caches.match(e.request).then((cachedResponse) => {
-            if (cachedResponse) {
-                return cachedResponse;
-            }
-            return fetch(e.request);
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cache) => {
+          if (cache !== 'my-music-cache-v2') { // bddl l'ism l'jdid hna
+            return caches.delete(cache);
+          }
         })
-    );
+      );
+    })
+  );
 });

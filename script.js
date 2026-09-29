@@ -490,7 +490,7 @@ function logout() {
 
 
 // ==========================================
-// SHARE & IMPORT PLAYLISTS
+// SHARE & IMPORT PLAYLISTS (WITH QR CODE)
 // ==========================================
 
 function shareCurrentPlaylist() {
@@ -525,10 +525,29 @@ function shareCurrentPlaylist() {
         15844367 // Gold/Yellow
     );
 
-    navigator.clipboard.writeText(shareableCode).then(() => {
+    // Show Share Modal with Code & QR Code
+    document.getElementById("shareCodeInput").value = shareableCode;
+    
+    // Generate QR Code using free API
+    const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(shareableCode)}`;
+    document.getElementById("shareQrImg").src = qrApiUrl;
+    
+    document.getElementById("shareModal").style.display = "flex";
+}
+
+function closeShareModal() {
+    document.getElementById("shareModal").style.display = "none";
+    document.getElementById("shareCodeInput").value = "";
+    document.getElementById("shareQrImg").src = "";
+}
+
+function copyShareCode() {
+    const codeInput = document.getElementById("shareCodeInput");
+    codeInput.select();
+    navigator.clipboard.writeText(codeInput.value).then(() => {
         showToast("Playlist code copied! Send it to your friend 🚀");
     }).catch(() => {
-        prompt("Copy this code and send it to your friend:", shareableCode);
+        prompt("Copy this code and send it to your friend:", codeInput.value);
     });
 }
 

@@ -42,11 +42,7 @@
             <i class="fa-solid fa-heart"></i> My Playlists
         </button>
 
-        <!-- OFFLINE LOCAL MP3 BUTTON (DESKTOP) -->
-        <label class="nav-btn" style="cursor: pointer; display: flex; align-items: center; gap: 10px;">
-            <i class="fa-solid fa-file-audio"></i> Play Local Song
-            <input type="file" id="localFileInputDesktop" accept="audio/*" onchange="playLocalFile(this)" style="display: none;">
-        </label>
+       
 
         <button class="create-playlist-btn" onclick="openModal()">
             <i class="fa-solid fa-plus"></i> Create Playlist
@@ -134,7 +130,7 @@
             <!-- PLAYLIST TABS / SELECTOR -->
             <div id="playlistTabs" class="playlist-tabs"></div>
             
-            <!-- PLAYLIST ACTION BUTTONS -->
+          <!-- PLAYLIST ACTION BUTTONS -->
             <div class="playlist-share-controls" style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
                 <button onclick="shareCurrentPlaylist()" class="share-btn">
                     <i class="fa-solid fa-share-nodes"></i> Share Current Playlist
@@ -227,17 +223,37 @@
     </div>
 
 
-    <!-- IMPORT PLAYLIST MODAL -->
-    <div id="importModal" class="modal">
-        <div class="modal-content">
-            <h3>Import Shared Playlist</h3>
-            <input type="text" id="importCodeInput" placeholder="Paste playlist code here...">
-            <div class="modal-buttons">
-                <button onclick="importPlaylist()">Add to My Account</button>
-                <button class="cancel-btn" onclick="closeImportModal()">Cancel</button>
-            </div>
+<!-- SHARE PLAYLIST MODAL (WITH QR CODE) -->
+<div id="shareModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>Share Playlist</h3>
+        <p style="color: #b3b3b3; font-size: 13px; margin-bottom: 10px;">Scan QR code or copy code below:</p>
+        
+        <!-- QR Code Display Area -->
+        <div style="background: white; padding: 10px; display: inline-block; border-radius: 8px; margin-bottom: 15px;">
+            <img id="shareQrImg" src="" alt="QR Code" style="width: 160px; height: 160px; display: block;" />
+        </div>
+
+        <input type="text" id="shareCodeInput" readonly style="width: 100%; margin-bottom: 10px;">
+        
+        <div class="modal-buttons">
+            <button onclick="copyShareCode()">Copy Code</button>
+            <button class="cancel-btn" onclick="closeShareModal()">Close</button>
         </div>
     </div>
+</div>
+
+<!-- IMPORT PLAYLIST MODAL -->
+<div id="importModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>Import Shared Playlist</h3>
+        <input type="text" id="importCodeInput" placeholder="Paste playlist code here...">
+        <div class="modal-buttons">
+            <button onclick="importPlaylist()">Add to My Account</button>
+            <button class="cancel-btn" onclick="closeImportModal()">Cancel</button>
+        </div>
+    </div>
+</div>
 
 
     <!-- ADD TO PLAYLIST MODAL WITH BUTTONS -->

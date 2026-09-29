@@ -345,7 +345,7 @@ body {
 }
 
 
-/* SHARE & IMPORT BUTTONS */
+/* SHARE & IMPORT BUTTONS & MODALS */
 
 .share-btn, .import-btn {
     background: #282828;
@@ -367,6 +367,78 @@ body {
     color: black;
 }
 
+/* Modal General Styling (Dark Theme) */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #121212;
+    border: 1px solid #282828;
+    padding: 25px;
+    border-radius: 12px;
+    width: 320px;
+    max-width: 90%;
+    text-align: center;
+    color: white;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+
+.modal-content h3 {
+    margin-bottom: 10px;
+    color: #1ed760;
+}
+
+.modal-content input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    background: #242424;
+    border: 1px solid #333;
+    color: white;
+    border-radius: 6px;
+    outline: none;
+    font-size: 13px;
+    margin-bottom: 15px;
+}
+
+.modal-content input[type="text"]:focus {
+    border-color: #1ed760;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.modal-buttons button {
+    background: #1ed760;
+    color: black;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.modal-buttons button:hover {
+    transform: scale(1.05);
+}
+
+.modal-buttons button.cancel-btn {
+    background: #333;
+    color: white;
+}
 
 /* MODAL STYLES */
 

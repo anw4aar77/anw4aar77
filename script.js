@@ -490,7 +490,7 @@ function logout() {
 
 
 // ==========================================
-// SHARE & IMPORT PLAYLISTS (STABLE QR & SCANNER)
+// SHARE & IMPORT PLAYLISTS (STABLE QR & SCANNER & FILE UPLOAD)
 // ==========================================
 
 let html5QrCode = null;
@@ -554,7 +554,7 @@ function copyShareCode() {
 function openImportModal() {
     if (!currentUser) return showToast("Log in first!", "error");
     document.getElementById("importModal").style.display = "flex";
-    switchImportTab('code'); // Default tab
+    switchImportTab('code'); // Default to code tab
 }
 
 function closeImportModal() {
@@ -563,7 +563,7 @@ function closeImportModal() {
     stopScanner();
 }
 
-// Switch between Code, Camera Scan, and Upload Image
+// Switch between Code Input, Camera Scanner, and File Upload Tabs
 function switchImportTab(mode) {
     const codeSec = document.getElementById("importCodeSection");
     const scanSec = document.getElementById("importScanSection");
@@ -573,34 +573,35 @@ function switchImportTab(mode) {
     const scanBtn = document.getElementById("tabScanBtn");
     const uploadBtn = document.getElementById("tabUploadBtn");
 
-    // Reset all tabs background
-    [codeBtn, scanBtn, uploadBtn].forEach(b => { b.style.background = "#282828"; b.style.color = "white"; });
-    [codeSec, scanSec, uploadSec].forEach(s => s.style.display = "none");
+    // Reset styles for all tabs
+    [codeBtn, scanBtn, uploadBtn].forEach(b => {
+        if(b) { b.style.background = "#282828"; b.style.color = "white"; }
+    });
+    [codeSec, scanSec, uploadSec].forEach(s => {
+        if(s) s.style.display = "none";
+    });
 
     stopScanner();
 
     if (mode === 'code') {
-        codeSec.style.display = "block";
-        codeBtn.style.background = "#1ed760";
-        codeBtn.style.color = "black";
+        if(codeSec) codeSec.style.display = "block";
+        if(codeBtn) { codeBtn.style.background = "#1ed760"; codeBtn.style.color = "black"; }
     } else if (mode === 'scan') {
-        scanSec.style.display = "block";
-        scanBtn.style.background = "#1ed760";
-        scanBtn.style.color = "black";
+        if(scanSec) scanSec.style.display = "block";
+        if(scanBtn) { scanBtn.style.background = "#1ed760"; scanBtn.style.color = "black"; }
         startScanner();
     } else if (mode === 'upload') {
-        uploadSec.style.display = "block";
-        uploadBtn.style.background = "#1ed760";
-        uploadBtn.style.color = "black";
+        if(uploadSec) uploadSec.style.display = "block";
+        if(uploadBtn) { uploadBtn.style.background = "#1ed760"; uploadBtn.style.color = "black"; }
     }
 }
 
 function startScanner() {
     if (html5QrCode) return;
     
-    // Check if running on non-secure origin (other than localhost or https)
+    // Check if running on secure environment or localhost
     if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-        showToast("Camera requires HTTPS or Localhost! Use 'Upload QR' instead.", "error");
+        showToast("Camera requires HTTPS or Localhost! Use 'Upload QR' tab instead.", "error");
         return;
     }
 
@@ -617,7 +618,7 @@ function startScanner() {
             // Scanning frames error (safe to ignore)
         }
     ).catch(err => {
-        showToast("Camera access failed or blocked!", "error");
+        showToast("Camera access denied or unavailable!", "error");
     });
 }
 
@@ -632,21 +633,89 @@ function stopScanner() {
     }
 }
 
-// NEW: Scan QR Code directly from an uploaded image file (Bypass camera blocks!)
+// Scan QR Code from uploaded image using a reliable online decoder API (Bypass browser canvas limits)
 function scanQrFromFile(input) {
     if (input.files && input.files[0]) {
         const file = input.files[0];
-        
-        const html5QrCodeFile = new Html5Qrcode("reader"); // temporary instance
-        html5QrCodeFile.scanFile(file, true)
-            .then(decodedText => {
-                document.getElementById("importCodeInput").value = decodedText;
-                showToast("QR Code read successfully from image! 🎯");
-                importPlaylist();
-            })
-            .catch(err => {
-                showToast("Could not find QR code in this image!", "error");
-            });
+        const formData = new FormData();
+        formData.append('file', file);
+
+        showToast("Reading QR code from image...", "info");
+
+        fetch('https://api.qrserver.com/v1/read-qr-code/', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            try {
+                const qrResult = data[0].symbol[0].data;
+                if (qrResult && qrResult.startsWith("MYMUSIC:")) {
+                    document.getElementById("importCodeInput").value = qrResult;
+                    showToast("QR Code read successfully! 🎯");
+                    importPlaylist();
+                } else {
+                    showToast("No valid MyMusic QR code found in this image!", "error");
+                }
+            } catch (err) {
+                showToast("Could not detect QR code in this image. Try another image or Paste Code!", "error");
+            }
+        })
+        .catch(error => {
+            showToast("Error scanning image file!", "error");
+        });
+    }
+}
+function importPlaylist() {
+    const rawCode = document.getElementById("importCodeInput").value.trim();
+
+    if (!rawCode.startsWith("MYMUSIC:")) {
+        showToast("Invalid playlist code or QR!", "error");
+        return;
+    }
+
+    try {
+        const base64Data = rawCode.replace("MYMUSIC:", "");
+        const decodedJSON = decodeURIComponent(escape(atob(base64Data)));
+        const playlistData = JSON.parse(decodedJSON);
+
+        if (!playlistData.name || !Array.isArray(playlistData.songs)) {
+            throw new Error();
+        }
+
+        let newName = playlistData.name;
+        if (playlists[newName]) {
+            newName = playlistData.name + " (Shared)";
+        }
+
+        playlists[newName] = playlistData.songs;
+        savePlaylistsToStorage();
+
+        currentPlaylistName = newName;
+        renderPlaylistTabs();
+        displayPlaylist();
+        closeImportModal();
+
+        const songsList = playlistData.songs
+            .map((s, i) => `${i + 1}. ${s.title} (${s.artist})`)
+            .join("\n");
+
+        const safeText = songsList.length > 1000 
+            ? songsList.substring(0, 1000) + "\n...and more" 
+            : songsList;
+
+        // 📥 DISCORD LOG: Import
+        const username = currentUser || "Guest";
+        sendDiscordLog(
+            "<:copy:1548621466625380383> Playlist Imported",
+            `**<:11pm_members:1548613361720369192> User:** \`${username}\`\n** <:Spotify:1548619976078921810> Playlist Name:** \`${newName}\`\n** <a:tcopalikbinaja7:1546157163058303020> Total Tracks:** ${playlistData.songs.length}\n\n**Tracklist:**\n\`\`\`\n${safeText}\n\`\`\``,
+            1752220
+        );
+
+        showToast(`Playlist "${newName}" imported successfully! 🎉`);
+
+    } catch (e) {
+        showToast("Error reading playlist data!", "error");
     }
 }
 //

@@ -15,6 +15,9 @@
     <!-- ColorThief Library for Dynamic Background colors -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
 
+    <!-- HTML5 QR Code Scanner Library -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -223,7 +226,7 @@
     </div>
 
 
-<!-- SHARE PLAYLIST MODAL (WITH QR CODE) -->
+<!-- SHARE PLAYLIST MODAL (WITH STABLE QR CODE) -->
 <div id="shareModal" class="modal" style="display: none;">
     <div class="modal-content">
         <h3>Share Playlist</h3>
@@ -243,14 +246,33 @@
     </div>
 </div>
 
-<!-- IMPORT PLAYLIST MODAL -->
+<!-- IMPORT PLAYLIST MODAL (WITH PASTE CODE & CAMERA SCANNER TABS) -->
 <div id="importModal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <h3>Import Shared Playlist</h3>
-        <input type="text" id="importCodeInput" placeholder="Paste playlist code here...">
-        <div class="modal-buttons">
-            <button onclick="importPlaylist()">Add to My Account</button>
-            <button class="cancel-btn" onclick="closeImportModal()">Cancel</button>
+    <div class="modal-content" style="width: 380px;">
+        <h3>Import Playlist</h3>
+        
+        <!-- Tabs for Paste Code or Scan QR -->
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <button onclick="switchImportTab('code')" id="tabCodeBtn" style="flex:1; background: #1ed760; color: black; border:none; padding:6px; border-radius:4px; font-weight:bold; cursor:pointer;">Paste Code</button>
+            <button onclick="switchImportTab('scan')" id="tabScanBtn" style="flex:1; background: #282828; color: white; border:none; padding:6px; border-radius:4px; font-weight:bold; cursor:pointer;">Scan QR Code</button>
+        </div>
+
+        <!-- Option 1: Paste Code -->
+        <div id="importCodeSection">
+            <input type="text" id="importCodeInput" placeholder="Paste MYMUSIC:... code here...">
+            <div class="modal-buttons" style="margin-top: 10px;">
+                <button onclick="importPlaylist()">Import Now</button>
+                <button class="cancel-btn" onclick="closeImportModal()">Cancel</button>
+            </div>
+        </div>
+
+        <!-- Option 2: Camera Scanner -->
+        <div id="importScanSection" style="display: none;">
+            <div id="reader" style="width: 100%; border-radius: 8px; overflow: hidden; background: #000;"></div>
+            <p style="color: #b3b3b3; font-size: 11px; margin-top: 8px;">Point your camera at a friend's playlist QR code.</p>
+            <div class="modal-buttons" style="margin-top: 10px;">
+                <button class="cancel-btn" onclick="closeImportModal()">Close</button>
+            </div>
         </div>
     </div>
 </div>

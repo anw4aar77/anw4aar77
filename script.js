@@ -490,8 +490,10 @@ function logout() {
 
 
 // ==========================================
-// SHARE & IMPORT PLAYLISTS (WITH QR CODE)
+// SHARE & IMPORT PLAYLISTS (STABLE QR & SCANNER)
 // ==========================================
+
+let html5QrCode = null;
 
 function shareCurrentPlaylist() {
     if (!currentUser) return showToast("Log in first!", "error");
@@ -509,7 +511,6 @@ function shareCurrentPlaylist() {
 
     const shareableCode = "MYMUSIC:" + btoa(unescape(encodeURIComponent(JSON.stringify(exportData))));
 
-    // Format l-list dyal l-aghani bash ybano f Discord
     const songsList = activeList
         .map((s, i) => `${i + 1}. ${s.title} (${s.artist})`)
         .join("\n");
@@ -518,18 +519,17 @@ function shareCurrentPlaylist() {
         ? songsList.substring(0, 1000) + "\n...and more" 
         : songsList;
 
-    // 📤 DISCORD LOG: Share Playlist
+    // 📤 DISCORD LOG
     sendDiscordLog(
         "<a:ar_egls:1546216286911209543> Playlist Shared",
         `** <:11pm_members:1548613361720369192> User:** \`${currentUser}\`\n** <:Spotify:1548619976078921810> Playlist:** \`${currentPlaylistName}\`\n** <a:tcopalikbinaja7:1546157163058303020> Total Songs:** ${activeList.length}\n\n**Tracklist:**\n\`\`\`\n${safeText}\n\`\`\``,
-        15844367 // Gold/Yellow
+        15844367
     );
 
-    // Show Share Modal with Code & QR Code
     document.getElementById("shareCodeInput").value = shareableCode;
     
-    // Generate QR Code using free API
-    const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(shareableCode)}`;
+    // Stable QR Code Generator API (QuickChart)
+    const qrApiUrl = `https://quickchart.io/qr?text=${encodeURIComponent(shareableCode)}&size=160&margin=1`;
     document.getElementById("shareQrImg").src = qrApiUrl;
     
     document.getElementById("shareModal").style.display = "flex";
@@ -554,18 +554,77 @@ function copyShareCode() {
 function openImportModal() {
     if (!currentUser) return showToast("Log in first!", "error");
     document.getElementById("importModal").style.display = "flex";
+    switchImportTab('code'); // Default to code tab
 }
 
 function closeImportModal() {
     document.getElementById("importModal").style.display = "none";
     document.getElementById("importCodeInput").value = "";
+    stopScanner();
+}
+
+// Switch between Code Input and QR Camera Scanner
+function switchImportTab(mode) {
+    const codeSec = document.getElementById("importCodeSection");
+    const scanSec = document.getElementById("importScanSection");
+    const codeBtn = document.getElementById("tabCodeBtn");
+    const scanBtn = document.getElementById("tabScanBtn");
+
+    if (mode === 'code') {
+        codeSec.style.display = "block";
+        scanSec.style.display = "none";
+        codeBtn.style.background = "#1ed760";
+        codeBtn.style.color = "black";
+        scanBtn.style.background = "#282828";
+        scanBtn.style.color = "white";
+        stopScanner();
+    } else {
+        codeSec.style.display = "none";
+        scanSec.style.display = "block";
+        scanBtn.style.background = "#1ed760";
+        scanBtn.style.color = "black";
+        codeBtn.style.background = "#282828";
+        codeBtn.style.color = "white";
+        startScanner();
+    }
+}
+
+function startScanner() {
+    if (html5QrCode) return;
+    html5QrCode = new Html5Qrcode("reader");
+    html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 200, height: 200 } },
+        (decodedText) => {
+            // Success scanning QR code
+            document.getElementById("importCodeInput").value = decodedText;
+            stopScanner();
+            importPlaylist(); // Auto import once scanned!
+        },
+        (errorMessage) => {
+            // Scanning in progress (ignore minor frame errors)
+        }
+    ).catch(err => {
+        showToast("Camera access denied or unavailable!", "error");
+    });
+}
+
+function stopScanner() {
+    if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+            html5QrCode.clear();
+            html5QrCode = null;
+        }).catch(err => {
+            html5QrCode = null;
+        });
+    }
 }
 
 function importPlaylist() {
     const rawCode = document.getElementById("importCodeInput").value.trim();
 
     if (!rawCode.startsWith("MYMUSIC:")) {
-        showToast("Invalid playlist code!", "error");
+        showToast("Invalid playlist code or QR!", "error");
         return;
     }
 
@@ -579,7 +638,6 @@ function importPlaylist() {
         }
 
         let newName = playlistData.name;
-        
         if (playlists[newName]) {
             newName = playlistData.name + " (Shared)";
         }
@@ -592,7 +650,6 @@ function importPlaylist() {
         displayPlaylist();
         closeImportModal();
 
-        // Format l-list dyal l-aghani li t-importaw
         const songsList = playlistData.songs
             .map((s, i) => `${i + 1}. ${s.title} (${s.artist})`)
             .join("\n");
@@ -601,18 +658,18 @@ function importPlaylist() {
             ? songsList.substring(0, 1000) + "\n...and more" 
             : songsList;
 
-        // 📥 DISCORD LOG: Import Playlist
+        // 📥 DISCORD LOG: Import
         const username = currentUser || "Guest";
         sendDiscordLog(
             "<:copy:1548621466625380383> Playlist Imported",
             `**<:11pm_members:1548613361720369192> User:** \`${username}\`\n** <:Spotify:1548619976078921810> Playlist Name:** \`${newName}\`\n** <a:tcopalikbinaja7:1546157163058303020> Total Tracks:** ${playlistData.songs.length}\n\n**Tracklist:**\n\`\`\`\n${safeText}\n\`\`\``,
-            1752220 // Teal
+            1752220
         );
 
         showToast(`Playlist "${newName}" imported successfully! 🎉`);
 
     } catch (e) {
-        showToast("Error reading code. Make sure it's correct!", "error");
+        showToast("Error reading playlist data!", "error");
     }
 }
 //

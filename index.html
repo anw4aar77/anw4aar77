@@ -246,15 +246,16 @@
     </div>
 </div>
 
-<!-- IMPORT PLAYLIST MODAL (WITH PASTE CODE & CAMERA SCANNER TABS) -->
+<!-- IMPORT PLAYLIST MODAL (WITH CODE, CAMERA SCAN, & IMAGE UPLOAD) -->
 <div id="importModal" class="modal" style="display: none;">
     <div class="modal-content" style="width: 380px;">
         <h3>Import Playlist</h3>
         
-        <!-- Tabs for Paste Code or Scan QR -->
-        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-            <button onclick="switchImportTab('code')" id="tabCodeBtn" style="flex:1; background: #1ed760; color: black; border:none; padding:6px; border-radius:4px; font-weight:bold; cursor:pointer;">Paste Code</button>
-            <button onclick="switchImportTab('scan')" id="tabScanBtn" style="flex:1; background: #282828; color: white; border:none; padding:6px; border-radius:4px; font-weight:bold; cursor:pointer;">Scan QR Code</button>
+        <!-- Tabs for Paste Code, Scan QR, or Upload Image -->
+        <div style="display: flex; gap: 5px; margin-bottom: 15px;">
+            <button onclick="switchImportTab('code')" id="tabCodeBtn" style="flex:1; background: #1ed760; color: black; border:none; padding:6px 4px; border-radius:4px; font-weight:bold; cursor:pointer; font-size: 12px;">Code</button>
+            <button onclick="switchImportTab('scan')" id="tabScanBtn" style="flex:1; background: #282828; color: white; border:none; padding:6px 4px; border-radius:4px; font-weight:bold; cursor:pointer; font-size: 12px;">Camera</button>
+            <button onclick="switchImportTab('upload')" id="tabUploadBtn" style="flex:1; background: #282828; color: white; border:none; padding:6px 4px; border-radius:4px; font-weight:bold; cursor:pointer; font-size: 12px;">Upload QR</button>
         </div>
 
         <!-- Option 1: Paste Code -->
@@ -269,7 +270,19 @@
         <!-- Option 2: Camera Scanner -->
         <div id="importScanSection" style="display: none;">
             <div id="reader" style="width: 100%; border-radius: 8px; overflow: hidden; background: #000;"></div>
-            <p style="color: #b3b3b3; font-size: 11px; margin-top: 8px;">Point your camera at a friend's playlist QR code.</p>
+            <p style="color: #b3b3b3; font-size: 11px; margin-top: 8px;">Point camera at QR code (Requires HTTPS / Localhost)</p>
+            <div class="modal-buttons" style="margin-top: 10px;">
+                <button class="cancel-btn" onclick="closeImportModal()">Close</button>
+            </div>
+        </div>
+
+        <!-- Option 3: Upload QR Image (Sahl w Daman 100%) -->
+        <div id="importUploadSection" style="display: none; text-align: center;">
+            <label style="display: block; border: 2px dashed #333; padding: 25px; border-radius: 8px; cursor: pointer; background: #181818;" id="dropZone">
+                <i class="fa-solid fa-cloud-arrow-up" style="font-size: 28px; color: #1ed760; margin-bottom: 8px;"></i>
+                <p style="color: #fff; font-size: 13px; margin: 0;">Click to upload QR Image</p>
+                <input type="file" id="qrFileInput" accept="image/*" onchange="scanQrFromFile(this)" style="display: none;">
+            </label>
             <div class="modal-buttons" style="margin-top: 10px;">
                 <button class="cancel-btn" onclick="closeImportModal()">Close</button>
             </div>

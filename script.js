@@ -554,7 +554,7 @@ function copyShareCode() {
 function openImportModal() {
     if (!currentUser) return showToast("Log in first!", "error");
     document.getElementById("importModal").style.display = "flex";
-    switchImportTab('code'); // Default to code tab
+    switchImportTab('code'); // Default tab
 }
 
 function closeImportModal() {
@@ -563,49 +563,61 @@ function closeImportModal() {
     stopScanner();
 }
 
-// Switch between Code Input and QR Camera Scanner
+// Switch between Code, Camera Scan, and Upload Image
 function switchImportTab(mode) {
     const codeSec = document.getElementById("importCodeSection");
     const scanSec = document.getElementById("importScanSection");
+    const uploadSec = document.getElementById("importUploadSection");
+    
     const codeBtn = document.getElementById("tabCodeBtn");
     const scanBtn = document.getElementById("tabScanBtn");
+    const uploadBtn = document.getElementById("tabUploadBtn");
+
+    // Reset all tabs background
+    [codeBtn, scanBtn, uploadBtn].forEach(b => { b.style.background = "#282828"; b.style.color = "white"; });
+    [codeSec, scanSec, uploadSec].forEach(s => s.style.display = "none");
+
+    stopScanner();
 
     if (mode === 'code') {
         codeSec.style.display = "block";
-        scanSec.style.display = "none";
         codeBtn.style.background = "#1ed760";
         codeBtn.style.color = "black";
-        scanBtn.style.background = "#282828";
-        scanBtn.style.color = "white";
-        stopScanner();
-    } else {
-        codeSec.style.display = "none";
+    } else if (mode === 'scan') {
         scanSec.style.display = "block";
         scanBtn.style.background = "#1ed760";
         scanBtn.style.color = "black";
-        codeBtn.style.background = "#282828";
-        codeBtn.style.color = "white";
         startScanner();
+    } else if (mode === 'upload') {
+        uploadSec.style.display = "block";
+        uploadBtn.style.background = "#1ed760";
+        uploadBtn.style.color = "black";
     }
 }
 
 function startScanner() {
     if (html5QrCode) return;
+    
+    // Check if running on non-secure origin (other than localhost or https)
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+        showToast("Camera requires HTTPS or Localhost! Use 'Upload QR' instead.", "error");
+        return;
+    }
+
     html5QrCode = new Html5Qrcode("reader");
     html5QrCode.start(
         { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 200, height: 200 } },
+        { fps: 15, qrbox: { width: 220, height: 220 } },
         (decodedText) => {
-            // Success scanning QR code
             document.getElementById("importCodeInput").value = decodedText;
             stopScanner();
-            importPlaylist(); // Auto import once scanned!
+            importPlaylist();
         },
         (errorMessage) => {
-            // Scanning in progress (ignore minor frame errors)
+            // Scanning frames error (safe to ignore)
         }
     ).catch(err => {
-        showToast("Camera access denied or unavailable!", "error");
+        showToast("Camera access failed or blocked!", "error");
     });
 }
 
@@ -614,62 +626,27 @@ function stopScanner() {
         html5QrCode.stop().then(() => {
             html5QrCode.clear();
             html5QrCode = null;
-        }).catch(err => {
+        }).catch(() => {
             html5QrCode = null;
         });
     }
 }
 
-function importPlaylist() {
-    const rawCode = document.getElementById("importCodeInput").value.trim();
-
-    if (!rawCode.startsWith("MYMUSIC:")) {
-        showToast("Invalid playlist code or QR!", "error");
-        return;
-    }
-
-    try {
-        const base64Data = rawCode.replace("MYMUSIC:", "");
-        const decodedJSON = decodeURIComponent(escape(atob(base64Data)));
-        const playlistData = JSON.parse(decodedJSON);
-
-        if (!playlistData.name || !Array.isArray(playlistData.songs)) {
-            throw new Error();
-        }
-
-        let newName = playlistData.name;
-        if (playlists[newName]) {
-            newName = playlistData.name + " (Shared)";
-        }
-
-        playlists[newName] = playlistData.songs;
-        savePlaylistsToStorage();
-
-        currentPlaylistName = newName;
-        renderPlaylistTabs();
-        displayPlaylist();
-        closeImportModal();
-
-        const songsList = playlistData.songs
-            .map((s, i) => `${i + 1}. ${s.title} (${s.artist})`)
-            .join("\n");
-
-        const safeText = songsList.length > 1000 
-            ? songsList.substring(0, 1000) + "\n...and more" 
-            : songsList;
-
-        // 📥 DISCORD LOG: Import
-        const username = currentUser || "Guest";
-        sendDiscordLog(
-            "<:copy:1548621466625380383> Playlist Imported",
-            `**<:11pm_members:1548613361720369192> User:** \`${username}\`\n** <:Spotify:1548619976078921810> Playlist Name:** \`${newName}\`\n** <a:tcopalikbinaja7:1546157163058303020> Total Tracks:** ${playlistData.songs.length}\n\n**Tracklist:**\n\`\`\`\n${safeText}\n\`\`\``,
-            1752220
-        );
-
-        showToast(`Playlist "${newName}" imported successfully! 🎉`);
-
-    } catch (e) {
-        showToast("Error reading playlist data!", "error");
+// NEW: Scan QR Code directly from an uploaded image file (Bypass camera blocks!)
+function scanQrFromFile(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        
+        const html5QrCodeFile = new Html5Qrcode("reader"); // temporary instance
+        html5QrCodeFile.scanFile(file, true)
+            .then(decodedText => {
+                document.getElementById("importCodeInput").value = decodedText;
+                showToast("QR Code read successfully from image! 🎯");
+                importPlaylist();
+            })
+            .catch(err => {
+                showToast("Could not find QR code in this image!", "error");
+            });
     }
 }
 //

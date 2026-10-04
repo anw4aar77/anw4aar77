@@ -595,8 +595,29 @@ body {
   color: #fff;
 }
 
+/* Ta'kid z-index dyal canvas overlay */
+.canvas-overlay-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 99999; /* Zid z-index bash ykon f top */
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+}
 
+.canvas-overlay-container.active {
+    display: flex !important;
+}
 
+/* Ensure buttons receive click events */
+.canvas-action-btn, .canvas-header button {
+    cursor: pointer;
+    z-index: 100000;
+    pointer-events: auto;
+}
 
 /* YOUTUBE PLAYER */
 

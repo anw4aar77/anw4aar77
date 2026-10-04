@@ -767,8 +767,38 @@ function onYouTubeIframeAPIReady() {
   });
 }
 
+
 function onPlayerReady(event) {
   event.target.playVideo();
+}
+//wwww
+function toggleCanvasView() {
+    const canvasOverlay = document.getElementById('canvasOverlayContainer');
+    const ytPlayerDiv = document.getElementById('youtubePlayer');
+    const canvasBtn = document.getElementById('canvasToggleBtn');
+
+    if (!canvasOverlay || !ytPlayerDiv) return;
+
+    // Check if Canvas is currently active
+    const isCurrentlyActive = canvasOverlay.classList.contains('active');
+
+    if (isCurrentlyActive) {
+        // MINIMIZE CANVAS
+        canvasOverlay.classList.remove('active');
+        ytPlayerDiv.classList.remove('canvas-mode');
+        if (canvasBtn) canvasBtn.classList.remove('canvas-btn-active');
+    } else {
+        // OPEN / MAXIMIZE CANVAS
+        const title = document.getElementById('currentTitle')?.innerText || "Song Title";
+        const artist = document.getElementById('currentArtist')?.innerText || "Artist";
+
+        document.getElementById('canvasTitle').innerText = title;
+        document.getElementById('canvasArtist').innerText = artist;
+
+        canvasOverlay.classList.add('active');
+        ytPlayerDiv.classList.add('canvas-mode');
+        if (canvasBtn) canvasBtn.classList.add('canvas-btn-active');
+    }
 }
 //
 function renamePlaylist(oldName, newName) {

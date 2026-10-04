@@ -17,14 +17,154 @@
 
     <!-- HTML5 QR Code Scanner Library -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-    
+
     <!-- jsQR Library for robust image QR scanning -->
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 
     <link rel="stylesheet" href="style.css">
+
+    <!-- SPOTIFY CANVAS STYLES -->
+    <style>
+        /* CANVAS FULLSCREEN OVERLAY */
+        .canvas-overlay-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #000;
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .canvas-overlay-container.active {
+            display: flex;
+        }
+
+        /* YouTube Background Wrapper */
+        .canvas-video-wrapper {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100vw;
+            height: 100vh;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        .canvas-video-wrapper iframe {
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            transform: scale(1.3); /* For background crop effect */
+        }
+
+        /* Dark Gradient for text readability */
+        .canvas-dark-gradient {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.85) 100%);
+            z-index: 2;
+        }
+
+        /* Canvas Top Header Controls */
+        .canvas-header {
+            position: relative;
+            z-index: 3;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #fff;
+        }
+
+        .canvas-header button {
+            background: rgba(0, 0, 0, 0.5);
+            border: none;
+            color: #fff;
+            font-size: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+        }
+
+        /* Canvas Bottom Track Info */
+        .canvas-bottom-info {
+            position: relative;
+            z-index: 3;
+            padding: 30px 20px 40px 20px;
+            color: #fff;
+        }
+
+        .canvas-track-title {
+            font-size: 28px;
+            font-weight: 800;
+            margin: 0 0 5px 0;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+        }
+
+        .canvas-track-artist {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.8);
+            margin: 0 0 20px 0;
+        }
+
+        .canvas-action-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-size: 14px;
+            backdrop-filter: blur(8px);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Active Canvas Button State */
+        .canvas-btn-active {
+            color: #1ed760 !important;
+        }
+    </style>
 </head>
 
 <body>
+
+    <!-- SPOTIFY-STYLE FULLSCREEN CANVAS VIEW -->
+    <div id="canvasOverlayContainer" class="canvas-overlay-container">
+        <div class="canvas-dark-gradient"></div>
+
+        <!-- Canvas Top Bar -->
+        <div class="canvas-header">
+            <button onclick="toggleCanvasView()" title="Close Canvas">
+                <i class="fa-solid fa-chevron-down"></i>
+            </button>
+            <span style="font-size: 12px; letter-spacing: 1px; font-weight: bold; text-transform: uppercase;">Playing from Playlist</span>
+            <button onclick="toggleQueuePanel()" title="Queue">
+                <i class="fa-solid fa-list-ul"></i>
+            </button>
+        </div>
+
+        <!-- Canvas Track Details (Bottom) -->
+        <div class="canvas-bottom-info">
+            <h2 id="canvasTitle" class="canvas-track-title">Calimero</h2>
+            <p id="canvasArtist" class="canvas-track-artist">Bo9al</p>
+            <button class="canvas-action-btn" onclick="toggleCanvasView()">
+                <i class="fa-solid fa-compress"></i> Minimize Canvas
+            </button>
+        </div>
+    </div>
 
     <!-- DESKTOP SIDEBAR -->
     <aside class="sidebar">
@@ -43,12 +183,9 @@
             <i class="fa-solid fa-house"></i> Home
         </button>
 
-    
         <button class="nav-btn" id="navPlaylist" onclick="showPlaylist()">
             <i class="fa-solid fa-heart"></i> My Playlists
         </button>
-
-       
 
         <button class="create-playlist-btn" onclick="openModal()">
             <i class="fa-solid fa-plus"></i> Create Playlist
@@ -63,8 +200,6 @@
         <div class="mobile-nav">
             <button class="mobile-nav-btn active" id="mobileNavHome" onclick="showHome()">
                 <i class="fa-solid fa-house"></i> Home
-            </button>
-           
             </button>
             <button class="mobile-nav-btn" id="mobileNavPlaylist" onclick="showPlaylist()">
                 <i class="fa-solid fa-heart"></i> Playlists
@@ -136,7 +271,7 @@
             <!-- PLAYLIST TABS / SELECTOR -->
             <div id="playlistTabs" class="playlist-tabs"></div>
             
-          <!-- PLAYLIST ACTION BUTTONS -->
+            <!-- PLAYLIST ACTION BUTTONS -->
             <div class="playlist-share-controls" style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
                 <button onclick="shareCurrentPlaylist()" class="share-btn">
                     <i class="fa-solid fa-share-nodes"></i> Share Current Playlist
@@ -279,7 +414,7 @@
             </div>
         </div>
 
-        <!-- Option 3: Upload QR Image (Sahl w Daman 100%) -->
+        <!-- Option 3: Upload QR Image -->
         <div id="importUploadSection" style="display: none; text-align: center;">
             <label style="display: block; border: 2px dashed #333; padding: 25px; border-radius: 8px; cursor: pointer; background: #181818;" id="dropZone">
                 <i class="fa-solid fa-cloud-arrow-up" style="font-size: 28px; color: #1ed760; margin-bottom: 8px;"></i>
@@ -290,9 +425,11 @@
                 <button class="cancel-btn" onclick="closeImportModal()">Close</button>
             </div>
         </div>
+
+        <!-- Hidden temp div required for scanning image files -->
+        <div id="temp-qr-scanner-div-xyz" style="display: none;"></div>
     </div>
 </div>
-
 
     <!-- ADD TO PLAYLIST MODAL WITH BUTTONS -->
     <div id="addToPlaylistModal" class="modal">
@@ -308,7 +445,7 @@
     <div id="toastContainer" class="toast-container"></div>
 
 
-    <!-- YOUTUBE PLAYER -->
+    <!-- YOUTUBE PLAYER CONTAINER -->
     <div id="youtubePlayer"></div>
 
 
@@ -411,6 +548,11 @@
 
         <div class="volume">
 
+            <!-- SPOTIFY CANVAS VIEW TOGGLE BUTTON -->
+            <button id="canvasToggleBtn" onclick="toggleCanvasView()" title="Toggle Canvas Video" style="background: none; border: none; color: #b3b3b3; font-size: 16px; cursor: pointer; margin-right: 8px;">
+                <i class="fa-solid fa-expand"></i>
+            </button>
+
             <!-- SLEEP TIMER MENU -->
             <div class="sleep-timer-wrapper">
                 <button id="sleepTimerBtn" onclick="toggleSleepMenu()" title="Sleep Timer">
@@ -455,6 +597,37 @@
                     .then(() => console.log('Offline PWA Service Worker Registered!'))
                     .catch(err => console.log('SW Registration failed:', err));
             });
+        }
+
+        // CANVAS TOGGLE FUNCTIONALITY FOR JS
+        function toggleCanvasView() {
+            const canvasOverlay = document.getElementById('canvasOverlayContainer');
+            const ytPlayerDiv = document.getElementById('youtubePlayer');
+            const canvasBtn = document.getElementById('canvasToggleBtn');
+            const title = document.getElementById('currentTitle')?.innerText || "Song Title";
+            const artist = document.getElementById('currentArtist')?.innerText || "Artist";
+
+            if (!canvasOverlay) return;
+
+            const isActive = canvasOverlay.classList.toggle('active');
+
+            if (isActive) {
+                // Move YouTube iframe inside Canvas overlay
+                document.querySelector('.canvas-dark-gradient').before(ytPlayerDiv);
+                ytPlayerDiv.classList.add('canvas-video-wrapper');
+                
+                // Sync Track info
+                document.getElementById('canvasTitle').innerText = title;
+                document.getElementById('canvasArtist').innerText = artist;
+
+                if (canvasBtn) canvasBtn.classList.add('canvas-btn-active');
+            } else {
+                // Move YouTube iframe back to main body
+                document.body.appendChild(ytPlayerDiv);
+                ytPlayerDiv.classList.remove('canvas-video-wrapper');
+
+                if (canvasBtn) canvasBtn.classList.remove('canvas-btn-active');
+            }
         }
     </script>
 

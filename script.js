@@ -749,23 +749,16 @@ function importPlaylist() {
     }
 }
 // ==========================================
-// 6. RADIO MODE (Smart Recommendations)
+// 6. SPOTIFY-STYLE RADIO MODE (ONLY FOR SEARCH RESULTS)
 // ==========================================
 
-async function playRadioMode() {
-    const currentList = playlists[currentPlaylistName] || [];
-    const lastSong = currentList[currentList.length - 1] || songHistory[songHistory.length - 1];
-    
-    if (!lastSong || !lastSong.title) {
-        showToast("No track available for Radio Mode!", "error");
-        return;
-    }
+async function playRadioModeForSearch(song) {
+    if (!song || !song.title) return;
 
-    showToast("Radio Mode: Finding similar songs... 📻");
+    showToast("Radio Mode: Playing similar songs... 📻");
 
     try {
-        // البحث عن أغاني مشابهة بناءً على عنوان آخر أغنية أو الفنان
-        const query = encodeURIComponent(lastSong.artist || lastSong.title);
+        const query = encodeURIComponent(song.artist || song.title);
         const response = await fetch(
             `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${query}&type=video&videoCategoryId=10&key=${YOUTUBE_API_KEY}`
         );
@@ -779,22 +772,35 @@ async function playRadioMode() {
                 thumbnail: item.snippet.thumbnails.high ? item.snippet.thumbnails.high.url : item.snippet.thumbnails.default.url
             }));
 
-            // إنشاء قائمة مؤقتة للراديو وتشغيلها
-            currentPlaylistName = "RADIO_MODE";
+            // حط الأغاني فـ Playlist مؤقتة خاصة بالبحث وتشغيل الأولى
+            currentPlaylistName = "RADIO_SEARCH_MODE";
             playlists[currentPlaylistName] = radioQueue;
             currentIndex = 0;
             playVideo(radioQueue[0]);
             
             if (typeof renderPlaylistTabs === "function") renderPlaylistTabs();
-            showToast("Radio Mode Activated! 🎶");
-        } else {
-            showToast("Could not load radio songs.", "error");
         }
     } catch (err) {
         console.error("Radio Mode Error:", err);
-        showToast("Error starting Radio Mode.", "error");
     }
 }
+// التأكد من أن أي أغنية من البحث كتعرف بلي راها منفردة باش يلا سالات يبدا الراديو
+const oldPlayVideo = playVideo;
+playVideo = function(song) {
+    // إذا كانت الأغنية مشغلة مباشرة وليست جزءاً من playlist مدبرة (بحال Favorites أو شي playlist أخرى)
+    const isInPlaylist = Object.keys(playlists).some(name => 
+        name !== "RADIO_SEARCH_MODE" && playlists[name].some(item => item.videoId === song.videoId)
+    );
+
+    if (!isInPlaylist && currentPlaylistName !== "TOP_50_ARTIST" && currentPlaylistName !== "ALBUM_QUEUE") {
+        // حفظ الأغنية وتشغيلها، وإذا سالات يبدا الراديو دياله
+        currentPlaylistName = "RADIO_SEARCH_MODE";
+        playlists[currentPlaylistName] = [song];
+        currentIndex = 0;
+    }
+    
+    oldPlayVideo(song);
+};
 //www
 function onYouTubeIframeAPIReady() {
   player = new YT.Player('youtube-player', {
@@ -2047,12 +2053,24 @@ function handleSongEnded() {
 
     const currentList = playlists[currentPlaylistName] || [];
     
-    // إذا وصلنا لنهاية الـ Playlist الحالية ولم تكن قائمة مؤقتة
-    if (currentIndex >= currentList.length - 1) {
-        // تشغيل Radio Mode تلقائياً
-        playRadioMode();
+    // واش حنا في Playlist عادية ولا مشيرين أغنية من البحث؟
+    if (currentPlaylistName === "RADIO_SEARCH_MODE" || (!playlists[currentPlaylistName] && currentPlayingVideoId)) {
+        // إذا سالات الأغنية اللي جاية من البحث، كمل في الراديو تلقائياً بحال Spotify
+        if (currentIndex < currentList.length - 1) {
+            currentIndex++;
+            playVideo(currentList[currentIndex]);
+        } else {
+            // جيب أغاني جديدة مشابهة إذا سالات القائمة المؤقتة
+            const lastPlayed = currentList[currentList.length - 1];
+            if (lastPlayed) playRadioModeForSearch(lastPlayed);
+        }
     } else {
-        nextSong();
+        // الـ Playlists العادية كيمشيو بالترتيب العادي وماكيخدمش فيهم الراديو
+        if (currentIndex >= currentList.length - 1) {
+            showToast("End of playlist");
+        } else {
+            nextSong();
+        }
     }
 }
 

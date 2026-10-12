@@ -748,6 +748,53 @@ function importPlaylist() {
         showToast("Error reading playlist data!", "error");
     }
 }
+// ==========================================
+// 6. RADIO MODE (Smart Recommendations)
+// ==========================================
+
+async function playRadioMode() {
+    const currentList = playlists[currentPlaylistName] || [];
+    const lastSong = currentList[currentList.length - 1] || songHistory[songHistory.length - 1];
+    
+    if (!lastSong || !lastSong.title) {
+        showToast("No track available for Radio Mode!", "error");
+        return;
+    }
+
+    showToast("Radio Mode: Finding similar songs... 📻");
+
+    try {
+        // البحث عن أغاني مشابهة بناءً على عنوان آخر أغنية أو الفنان
+        const query = encodeURIComponent(lastSong.artist || lastSong.title);
+        const response = await fetch(
+            `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${query}&type=video&videoCategoryId=10&key=${YOUTUBE_API_KEY}`
+        );
+        const data = await response.json();
+
+        if (data.items && data.items.length > 0) {
+            const radioQueue = data.items.map(item => ({
+                videoId: item.id.videoId,
+                title: item.snippet.title,
+                artist: item.snippet.channelTitle,
+                thumbnail: item.snippet.thumbnails.high ? item.snippet.thumbnails.high.url : item.snippet.thumbnails.default.url
+            }));
+
+            // إنشاء قائمة مؤقتة للراديو وتشغيلها
+            currentPlaylistName = "RADIO_MODE";
+            playlists[currentPlaylistName] = radioQueue;
+            currentIndex = 0;
+            playVideo(radioQueue[0]);
+            
+            if (typeof renderPlaylistTabs === "function") renderPlaylistTabs();
+            showToast("Radio Mode Activated! 🎶");
+        } else {
+            showToast("Could not load radio songs.", "error");
+        }
+    } catch (err) {
+        console.error("Radio Mode Error:", err);
+        showToast("Error starting Radio Mode.", "error");
+    }
+}
 //www
 function onYouTubeIframeAPIReady() {
   player = new YT.Player('youtube-player', {
@@ -799,6 +846,19 @@ function toggleCanvasView() {
         ytPlayerDiv.classList.add('canvas-mode');
         if (canvasBtn) canvasBtn.classList.add('canvas-btn-active');
     }
+}
+//refresh function
+function hardRefresh() {
+    // Kat-dir Hard Reload w kat-msḥ Cache dyal l-page (kima Ctrl + Shift + R)
+    if ('caches' in window) {
+        caches.keys().then((names) => {
+            names.forEach((name) => {
+                caches.delete(name);
+            });
+        });
+    }
+    // Reload l-page bla cache
+    window.location.reload(true);
 }
 //
 function renamePlaylist(oldName, newName) {
@@ -1984,7 +2044,16 @@ function handleSongEnded() {
         }
         return;
     }
-    nextSong();
+
+    const currentList = playlists[currentPlaylistName] || [];
+    
+    // إذا وصلنا لنهاية الـ Playlist الحالية ولم تكن قائمة مؤقتة
+    if (currentIndex >= currentList.length - 1) {
+        // تشغيل Radio Mode تلقائياً
+        playRadioMode();
+    } else {
+        nextSong();
+    }
 }
 
 function playVideo(song) {

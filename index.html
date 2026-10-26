@@ -39,8 +39,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- jsmediatags for ID3 Metadata parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
-    <!-- lz-string for compressing share codes -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
 
     <style>
         body {
@@ -144,9 +142,16 @@
 
             <!-- Header Actions -->
             <div class="flex items-center space-x-2">
-                <button onclick="openShareModal()" class="p-2.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 border border-indigo-500/30 transition flex items-center justify-center text-xs font-semibold shadow-md active:scale-95" title="Share or Import Library">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                <!-- Share File Button -->
+                <button onclick="exportLibraryFile()" class="p-2.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 border border-indigo-500/30 transition flex items-center justify-center text-xs font-semibold shadow-md active:scale-95" title="Export Library File">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                 </button>
+                <!-- Import File Button -->
+                <label for="import-file-input" class="p-2.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-500/30 cursor-pointer transition flex items-center justify-center text-xs font-semibold shadow-md active:scale-95" title="Import Library File">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                </label>
+                <input type="file" id="import-file-input" accept=".soundpulse,.json" onchange="importLibraryFile(event)" class="hidden">
+
                 <button onclick="window.location.reload()" class="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition flex items-center justify-center text-xs font-semibold shadow-md border border-white/10 active:scale-95" title="Refresh Page">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                 </button>
@@ -296,38 +301,6 @@
 
     </div>
 
-    <!-- Modal Share Library (Compressed Share Code) -->
-    <div id="share-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-        <div class="glass-panel w-full max-w-sm rounded-2xl p-5 border border-white/10 space-y-4">
-            <div class="flex items-center justify-between pb-2 border-b border-white/5">
-                <h3 class="font-bold text-sm text-white flex items-center gap-2">
-                    <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg> Compressed Share & Import
-                </h3>
-                <button onclick="closeShareModal()" class="text-slate-400 hover:text-white text-sm">&times;</button>
-            </div>
-
-            <!-- Get Share Code -->
-            <div class="space-y-1.5">
-                <label class="text-xs font-medium text-slate-300">Your Share Code (Max 30-40 tracks):</label>
-                <div class="flex gap-2">
-                    <input type="text" id="share-code-output" readonly class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-1.5 text-xs font-mono text-indigo-300 focus:outline-none truncate">
-                    <button onclick="copyShareCode()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-xl font-medium transition active:scale-95">Copy</button>
-                </div>
-            </div>
-
-            <hr class="border-white/5">
-
-            <!-- Import Share Code -->
-            <div class="space-y-1.5">
-                <label class="text-xs font-medium text-slate-300">Import Code from Friend:</label>
-                <div class="flex gap-2">
-                    <input type="text" id="share-code-input" placeholder="#O1bh3k..." class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-1.5 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
-                    <button onclick="importShareCode()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-xl font-medium transition active:scale-95">Import</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Toast Notification Message -->
     <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-800 text-slate-200 border border-white/10 px-4 py-2.5 rounded-xl shadow-xl text-xs flex items-center gap-2 opacity-0 pointer-events-none transition duration-300 z-50">
         <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -452,7 +425,7 @@
             audio.volume = volumeSlider.value;
         });
 
-        /* --- LZ-STRING COMPRESSED SHARE & IMPORT SYSTEM --- */
+        /* --- EXPORT & IMPORT LIBRARY FILE SYSTEM --- */
         async function blobToBase64(blob) {
             return new Promise((resolve, _) => {
                 const reader = new FileReader();
@@ -471,16 +444,15 @@
             return new Blob([ab], { type: mime });
         }
 
-        async function openShareModal() {
-            const modal = document.getElementById('share-modal');
-            const output = document.getElementById('share-code-output');
-            
+        async function exportLibraryFile() {
             if (playlist.length === 0) {
-                output.value = "#EMPTY";
-            } else {
-                showToast("Compressing tracks for sharing...");
-                const exportData = [];
+                showToast("Your library is empty!");
+                return;
+            }
 
+            showToast("Preparing library file for export...");
+            try {
+                const exportData = [];
                 for (const t of playlist) {
                     let b64 = "";
                     if (t.fileBlob) {
@@ -496,83 +468,72 @@
                     });
                 }
 
-                try {
-                    const jsonStr = JSON.stringify(exportData);
-                    // Use LZString to compress JSON significantly smaller
-                    const compressed = LZString.compressToEncodedURIComponent(jsonStr);
-                    output.value = "#" + compressed;
-                    showToast("Compressed Share Code ready!");
-                } catch (e) {
-                    showToast("Error: Library too large!");
-                    output.value = "#ERROR";
-                }
-            }
-            modal.classList.remove('hidden');
-        }
+                const jsonStr = JSON.stringify(exportData);
+                const blob = new Blob([jsonStr], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = "my_library.soundpulse";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
 
-        function closeShareModal() {
-            document.getElementById('share-modal').classList.add('hidden');
-        }
-
-        function copyShareCode() {
-            const output = document.getElementById('share-code-output');
-            if (output.value === "#EMPTY" || output.value === "#ERROR") {
-                showToast("Invalid code to copy!");
-                return;
-            }
-            navigator.clipboard.writeText(output.value);
-            showToast("Share Code copied!");
-        }
-
-        async function importShareCode() {
-            const input = document.getElementById('share-code-input').value.trim();
-            if (!input.startsWith("#")) {
-                showToast("Invalid share code format!");
-                return;
-            }
-
-            try {
-                showToast("Decompressing and importing songs...");
-                const compressedData = input.substring(1);
-                const jsonStr = LZString.decompressFromEncodedURIComponent(compressedData);
-                const importedTracks = JSON.parse(jsonStr);
-
-                if (!Array.isArray(importedTracks) || importedTracks.length === 0) {
-                    showToast("No tracks found in code!");
-                    return;
-                }
-
-                let added = 0;
-                for (const t of importedTracks) {
-                    if (!t.audioData) continue;
-                    const blob = base64ToBlob(t.audioData, "audio/mp3");
-                    const trackId = 'track_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-                    const trackData = {
-                        id: trackId,
-                        title: t.title || "Imported Track",
-                        artist: t.artist || "Unknown Artist",
-                        album: t.album || "Shared Album",
-                        cover: t.cover || null,
-                        fileBlob: blob,
-                        fileName: t.fileName || "imported.mp3"
-                    };
-
-                    playlist.push(trackData);
-                    await saveTrackToDB(trackData);
-                    added++;
-                }
-
-                renderPlaylist();
-                closeShareModal();
-                showToast(`Successfully imported ${added} songs!`);
-
-                if (currentTrackIndex === -1 && playlist.length > 0) {
-                    selectTrack(0);
-                }
+                showToast("Library file downloaded successfully!");
             } catch (e) {
                 console.error(e);
-                showToast("Failed to parse or decompress code!");
+                showToast("Failed to export library file!");
             }
+        }
+
+        async function importLibraryFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            showToast("Importing library file...");
+            const reader = new FileReader();
+            reader.onload = async function(event) {
+                try {
+                    const importedTracks = JSON.parse(event.target.result);
+                    if (!Array.isArray(importedTracks) || importedTracks.length === 0) {
+                        showToast("Invalid file or empty library!");
+                        return;
+                    }
+
+                    let added = 0;
+                    for (const t of importedTracks) {
+                        if (!t.audioData) continue;
+                        const blob = base64ToBlob(t.audioData, "audio/mp3");
+                        const trackId = 'track_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+                        const trackData = {
+                            id: trackId,
+                            title: t.title || "Imported Track",
+                            artist: t.artist || "Unknown Artist",
+                            album: t.album || "Shared Album",
+                            cover: t.cover || null,
+                            fileBlob: blob,
+                            fileName: t.fileName || "imported.mp3"
+                        };
+
+                        playlist.push(trackData);
+                        await saveTrackToDB(trackData);
+                        added++;
+                    }
+
+                    renderPlaylist();
+                    showToast(`Successfully imported ${added} songs!`);
+                    e.target.value = ''; // reset file input
+
+                    if (currentTrackIndex === -1 && playlist.length > 0) {
+                        selectTrack(0);
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast("Failed to read library file!");
+                }
+            };
+            reader.readAsText(file);
         }
 
         /* --- AUDIO VISUALIZER SETUP --- */

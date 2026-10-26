@@ -39,6 +39,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- jsmediatags for ID3 Metadata parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
+    <!-- lz-string for compressing share codes -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
 
     <style>
         body {
@@ -294,19 +296,19 @@
 
     </div>
 
-    <!-- Modal Share Library (Max 50 Songs Limit) -->
+    <!-- Modal Share Library (Compressed Share Code) -->
     <div id="share-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
         <div class="glass-panel w-full max-w-sm rounded-2xl p-5 border border-white/10 space-y-4">
             <div class="flex items-center justify-between pb-2 border-b border-white/5">
                 <h3 class="font-bold text-sm text-white flex items-center gap-2">
-                    <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg> Share / Import (Max 50 Songs)
+                    <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg> Compressed Share & Import
                 </h3>
                 <button onclick="closeShareModal()" class="text-slate-400 hover:text-white text-sm">&times;</button>
             </div>
 
             <!-- Get Share Code -->
             <div class="space-y-1.5">
-                <label class="text-xs font-medium text-slate-300">Your Share Code (Max 50 tracks):</label>
+                <label class="text-xs font-medium text-slate-300">Your Share Code (Max 30-40 tracks):</label>
                 <div class="flex gap-2">
                     <input type="text" id="share-code-output" readonly class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-1.5 text-xs font-mono text-indigo-300 focus:outline-none truncate">
                     <button onclick="copyShareCode()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-xl font-medium transition active:scale-95">Copy</button>
@@ -450,7 +452,7 @@
             audio.volume = volumeSlider.value;
         });
 
-        /* --- SHARE & IMPORT CODE SYSTEM (MAX 50 SONGS) --- */
+        /* --- LZ-STRING COMPRESSED SHARE & IMPORT SYSTEM --- */
         async function blobToBase64(blob) {
             return new Promise((resolve, _) => {
                 const reader = new FileReader();
@@ -476,12 +478,10 @@
             if (playlist.length === 0) {
                 output.value = "#EMPTY";
             } else {
-                showToast("Generating share code (Max 50 tracks)...");
-                // Limit max 50 songs
-                const limitedTracks = playlist.slice(0, 50);
+                showToast("Compressing tracks for sharing...");
                 const exportData = [];
 
-                for (const t of limitedTracks) {
+                for (const t of playlist) {
                     let b64 = "";
                     if (t.fileBlob) {
                         b64 = await blobToBase64(t.fileBlob);
@@ -498,11 +498,12 @@
 
                 try {
                     const jsonStr = JSON.stringify(exportData);
-                    const codeStr = btoa(unescape(encodeURIComponent(jsonStr)));
-                    output.value = "#" + codeStr;
-                    showToast("Share Code ready!");
+                    // Use LZString to compress JSON significantly smaller
+                    const compressed = LZString.compressToEncodedURIComponent(jsonStr);
+                    output.value = "#" + compressed;
+                    showToast("Compressed Share Code ready!");
                 } catch (e) {
-                    showToast("Error: Library too large for code sharing!");
+                    showToast("Error: Library too large!");
                     output.value = "#ERROR";
                 }
             }
@@ -531,9 +532,9 @@
             }
 
             try {
-                showToast("Importing songs from code...");
-                const base64Clean = input.substring(1);
-                const jsonStr = decodeURIComponent(escape(atob(base64Clean)));
+                showToast("Decompressing and importing songs...");
+                const compressedData = input.substring(1);
+                const jsonStr = LZString.decompressFromEncodedURIComponent(compressedData);
                 const importedTracks = JSON.parse(jsonStr);
 
                 if (!Array.isArray(importedTracks) || importedTracks.length === 0) {
@@ -542,10 +543,10 @@
                 }
 
                 let added = 0;
-                for (const t of importedTracks.slice(0, 50)) {
+                for (const t of importedTracks) {
                     if (!t.audioData) continue;
                     const blob = base64ToBlob(t.audioData, "audio/mp3");
-                    const trackId = 'track_' + Date.now + '_' + Math.random().toString(36).substr(2, 5);
+                    const trackId = 'track_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
                     const trackData = {
                         id: trackId,
                         title: t.title || "Imported Track",
@@ -570,7 +571,7 @@
                 }
             } catch (e) {
                 console.error(e);
-                showToast("Failed to parse share code!");
+                showToast("Failed to parse or decompress code!");
             }
         }
 
@@ -637,11 +638,6 @@
             showToast(`Loading ${files.length} audio file(s)...`);
 
             for (const file of files) {
-                if (playlist.length >= 50) {
-                    showToast("Library limit reached (Max 50 songs)");
-                    break;
-                }
-
                 if (!file.type.startsWith('audio/') && !file.name.match(/\.(mp3|wav|ogg|m4a|flac)$/i)) {
                     continue;
                 }

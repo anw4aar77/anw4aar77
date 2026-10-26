@@ -294,19 +294,19 @@
 
     </div>
 
-    <!-- Modal Share Library -->
+    <!-- Modal Share Library (Max 50 Songs Limit) -->
     <div id="share-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
         <div class="glass-panel w-full max-w-sm rounded-2xl p-5 border border-white/10 space-y-4">
             <div class="flex items-center justify-between pb-2 border-b border-white/5">
                 <h3 class="font-bold text-sm text-white flex items-center gap-2">
-                    <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg> Share / Import Library
+                    <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg> Share / Import (Max 50 Songs)
                 </h3>
                 <button onclick="closeShareModal()" class="text-slate-400 hover:text-white text-sm">&times;</button>
             </div>
 
             <!-- Get Share Code -->
             <div class="space-y-1.5">
-                <label class="text-xs font-medium text-slate-300">Your Share Code:</label>
+                <label class="text-xs font-medium text-slate-300">Your Share Code (Max 50 tracks):</label>
                 <div class="flex gap-2">
                     <input type="text" id="share-code-output" readonly class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-1.5 text-xs font-mono text-indigo-300 focus:outline-none truncate">
                     <button onclick="copyShareCode()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-xl font-medium transition active:scale-95">Copy</button>
@@ -319,7 +319,7 @@
             <div class="space-y-1.5">
                 <label class="text-xs font-medium text-slate-300">Import Code from Friend:</label>
                 <div class="flex gap-2">
-                    <input type="text" id="share-code-input" placeholder="#O1bh3kM8w2..." class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-1.5 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
+                    <input type="text" id="share-code-input" placeholder="#O1bh3k..." class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-1.5 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
                     <button onclick="importShareCode()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-xl font-medium transition active:scale-95">Import</button>
                 </div>
             </div>
@@ -450,21 +450,62 @@
             audio.volume = volumeSlider.value;
         });
 
-        /* --- SHARE & IMPORT CODE SYSTEM --- */
-        function openShareModal() {
+        /* --- SHARE & IMPORT CODE SYSTEM (MAX 50 SONGS) --- */
+        async function blobToBase64(blob) {
+            return new Promise((resolve, _) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        function base64ToBlob(base64, mime) {
+            const byteString = atob(base64.split(',')[1]);
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            for (let i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
+            }
+            return new Blob([ab], { type: mime });
+        }
+
+        async function openShareModal() {
             const modal = document.getElementById('share-modal');
             const output = document.getElementById('share-code-output');
             
-            // Generate Code based on playlist titles and metadata
             if (playlist.length === 0) {
                 output.value = "#EMPTY";
             } else {
-                const meta = playlist.map(t => ({ t: t.title, a: t.artist }));
-                const codeStr = btoa(unescape(encodeURIComponent(JSON.stringify(meta))));
-                output.value = "#" + codeStr.substring(0, 24);
-                output.dataset.fullCode = codeStr;
+                showToast("Generating share code (Max 50 tracks)...");
+                // Limit max 50 songs
+                const limitedTracks = playlist.slice(0, 50);
+                const exportData = [];
+
+                for (const t of limitedTracks) {
+                    let b64 = "";
+                    if (t.fileBlob) {
+                        b64 = await blobToBase64(t.fileBlob);
+                    }
+                    exportData.push({
+                        title: t.title,
+                        artist: t.artist,
+                        album: t.album,
+                        cover: t.cover,
+                        audioData: b64,
+                        fileName: t.fileName || "track.mp3"
+                    });
+                }
+
+                try {
+                    const jsonStr = JSON.stringify(exportData);
+                    const codeStr = btoa(unescape(encodeURIComponent(jsonStr)));
+                    output.value = "#" + codeStr;
+                    showToast("Share Code ready!");
+                } catch (e) {
+                    showToast("Error: Library too large for code sharing!");
+                    output.value = "#ERROR";
+                }
             }
-            
             modal.classList.remove('hidden');
         }
 
@@ -474,23 +515,63 @@
 
         function copyShareCode() {
             const output = document.getElementById('share-code-output');
-            if (output.value === "#EMPTY") {
-                showToast("Library is empty!");
+            if (output.value === "#EMPTY" || output.value === "#ERROR") {
+                showToast("Invalid code to copy!");
                 return;
             }
             navigator.clipboard.writeText(output.value);
-            showToast("Share Code copied to clipboard!");
+            showToast("Share Code copied!");
         }
 
-        function importShareCode() {
+        async function importShareCode() {
             const input = document.getElementById('share-code-input').value.trim();
-            if (!input) {
-                showToast("Please enter a valid code!");
+            if (!input.startsWith("#")) {
+                showToast("Invalid share code format!");
                 return;
             }
 
-            showToast("Library metadata loaded successfully!");
-            closeShareModal();
+            try {
+                showToast("Importing songs from code...");
+                const base64Clean = input.substring(1);
+                const jsonStr = decodeURIComponent(escape(atob(base64Clean)));
+                const importedTracks = JSON.parse(jsonStr);
+
+                if (!Array.isArray(importedTracks) || importedTracks.length === 0) {
+                    showToast("No tracks found in code!");
+                    return;
+                }
+
+                let added = 0;
+                for (const t of importedTracks.slice(0, 50)) {
+                    if (!t.audioData) continue;
+                    const blob = base64ToBlob(t.audioData, "audio/mp3");
+                    const trackId = 'track_' + Date.now + '_' + Math.random().toString(36).substr(2, 5);
+                    const trackData = {
+                        id: trackId,
+                        title: t.title || "Imported Track",
+                        artist: t.artist || "Unknown Artist",
+                        album: t.album || "Shared Album",
+                        cover: t.cover || null,
+                        fileBlob: blob,
+                        fileName: t.fileName || "imported.mp3"
+                    };
+
+                    playlist.push(trackData);
+                    await saveTrackToDB(trackData);
+                    added++;
+                }
+
+                renderPlaylist();
+                closeShareModal();
+                showToast(`Successfully imported ${added} songs!`);
+
+                if (currentTrackIndex === -1 && playlist.length > 0) {
+                    selectTrack(0);
+                }
+            } catch (e) {
+                console.error(e);
+                showToast("Failed to parse share code!");
+            }
         }
 
         /* --- AUDIO VISUALIZER SETUP --- */
@@ -556,6 +637,11 @@
             showToast(`Loading ${files.length} audio file(s)...`);
 
             for (const file of files) {
+                if (playlist.length >= 50) {
+                    showToast("Library limit reached (Max 50 songs)");
+                    break;
+                }
+
                 if (!file.type.startsWith('audio/') && !file.name.match(/\.(mp3|wav|ogg|m4a|flac)$/i)) {
                     continue;
                 }
@@ -929,71 +1015,6 @@
                 toast.classList.remove('opacity-100');
                 toast.classList.add('opacity-0', 'pointer-events-none');
             }, 2500);
-        }
-    </script>
-
-    <!-- AUTOMATIC OFFLINE SERVICE WORKER REGISTRATION (PWA) -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                const swCode = `
-                    const CACHE_NAME = 'soundpulse-cache-v2';
-                    const urlsToCache = [
-                        self.location.href,
-                        'https://cdn.tailwindcss.com',
-                        'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap',
-                        'https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js'
-                    ];
-
-                    self.addEventListener('install', (event) => {
-                        event.waitUntil(
-                            caches.open(CACHE_NAME).then((cache) => {
-                                return cache.addAll(urlsToCache).catch(() => Promise.resolve());
-                            })
-                        );
-                        self.skipWaiting();
-                    });
-
-                    self.addEventListener('activate', (event) => {
-                        event.waitUntil(self.clients.claim());
-                    });
-
-                    self.addEventListener('fetch', (event) => {
-                        event.respondWith(
-                            caches.match(event.request).then((cachedResponse) => {
-                                if (cachedResponse) {
-                                    return cachedResponse;
-                                }
-                                return fetch(event.request).then((response) => {
-                                    if (!response || response.status !== 200 || response.type !== 'basic') {
-                                        return response;
-                                    }
-                                    const responseToCache = response.clone();
-                                    caches.open(CACHE_NAME).then((cache) => {
-                                        cache.put(event.request, responseToCache);
-                                    });
-                                    return response;
-                                }).catch(() => {
-                                    return caches.match(event.request);
-                                });
-                            })
-                        );
-                    });
-                `;
-
-                const blob = new Blob([swCode], { type: 'application/javascript' });
-                const swUrl = URL.createObjectURL(blob);
-
-                navigator.serviceWorker.register('/sw.js').then((reg) => {
-                    console.log('Service Worker registered via sw.js!', reg);
-                }).catch(() => {
-                    navigator.serviceWorker.register(swUrl).then((reg) => {
-                        console.log('Inline Service Worker registered successfully!', reg);
-                    }).catch((err) => {
-                        console.error('Service Worker registration failed:', err);
-                    });
-                });
-            });
         }
     </script>
 </body>

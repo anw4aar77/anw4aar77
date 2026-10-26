@@ -163,13 +163,16 @@
             </div>
         </header>
 
-        <!-- View Switcher Tabs (Player / Playlist) -->
+        <!-- View Switcher Tabs (Player / Queue / Playlist) -->
         <div class="flex border-b border-white/5 bg-slate-900/40 text-xs font-medium text-slate-400">
-            <button id="tab-player-btn" onclick="switchTab('player')" class="flex-1 py-2.5 text-center transition flex items-center justify-center gap-2 border-b-2 border-indigo-500 text-indigo-400">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg> Now Playing
+            <button id="tab-player-btn" onclick="switchTab('player')" class="flex-1 py-2.5 text-center transition flex items-center justify-center gap-1.5 border-b-2 border-indigo-500 text-indigo-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg> Player
             </button>
-            <button id="tab-playlist-btn" onclick="switchTab('playlist')" class="flex-1 py-2.5 text-center transition flex items-center justify-center gap-2 border-b-2 border-transparent hover:text-slate-200">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg> Library (<span id="playlist-count">0</span>)
+            <button id="tab-queue-btn" onclick="switchTab('queue')" class="flex-1 py-2.5 text-center transition flex items-center justify-center gap-1.5 border-b-2 border-transparent hover:text-slate-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg> Queue (<span id="queue-count">0</span>)
+            </button>
+            <button id="tab-playlist-btn" onclick="switchTab('playlist')" class="flex-1 py-2.5 text-center transition flex items-center justify-center gap-1.5 border-b-2 border-transparent hover:text-slate-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg> Library (<span id="playlist-count">0</span>)
             </button>
         </div>
 
@@ -180,18 +183,18 @@
             <div id="view-player" class="h-full flex flex-col justify-between p-6 overflow-y-auto transition-opacity duration-300">
                 
                 <!-- Vinyl / Album Art Container -->
-                <div class="flex-1 flex flex-col items-center justify-center my-4">
+                <div class="flex-1 flex flex-col items-center justify-center my-2">
                     <div class="relative group">
                         <!-- Outer Glow Ring -->
                         <div id="art-glow" class="absolute -inset-2 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full blur-xl opacity-30 transition duration-500"></div>
                         
                         <!-- Rotating Vinyl Disc -->
-                        <div id="vinyl-disc" class="relative w-56 h-56 sm:w-64 sm:h-64 rounded-full bg-slate-900 border-4 border-slate-800 shadow-2xl flex items-center justify-center animate-spin-slow paused-spin overflow-hidden">
+                        <div id="vinyl-disc" class="relative w-48 h-48 sm:w-56 sm:h-56 rounded-full bg-slate-900 border-4 border-slate-800 shadow-2xl flex items-center justify-center animate-spin-slow paused-spin overflow-hidden">
                             <!-- Vinyl Grooves Pattern -->
                             <div class="absolute inset-0 rounded-full opacity-40 bg-[radial-gradient(circle,_transparent_30%,_#000_31%,_#000_32%,_transparent_33%,_transparent_40%,_#000_41%,_#000_42%,_transparent_43%)]"></div>
                             
                             <!-- Cover Art Image / Placeholder -->
-                            <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-slate-900 overflow-hidden relative shadow-inner z-10 flex items-center justify-center bg-indigo-950">
+                            <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-4 border-slate-900 overflow-hidden relative shadow-inner z-10 flex items-center justify-center bg-indigo-950">
                                 <img id="album-art" src="" class="w-full h-full object-cover hidden" alt="Album Cover">
                                 <svg id="album-art-placeholder" class="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
                             </div>
@@ -203,18 +206,18 @@
                 </div>
 
                 <!-- Song Info Header -->
-                <div class="text-center my-2 space-y-1">
-                    <h2 id="current-title" class="text-lg sm:text-xl font-bold text-white truncate px-4">No Track Selected</h2>
-                    <p id="current-artist" class="text-xs sm:text-sm text-slate-400 truncate px-4">Select or import songs to play</p>
+                <div class="text-center my-1 space-y-1">
+                    <h2 id="current-title" class="text-base sm:text-lg font-bold text-white truncate px-4">No Track Selected</h2>
+                    <p id="current-artist" class="text-xs text-slate-400 truncate px-4">Select or import songs to play</p>
                 </div>
 
                 <!-- Waveform / Equalizer Visualizer Bars -->
-                <div class="flex items-end justify-center gap-1 h-8 my-3 px-8" id="visualizer-container">
+                <div class="flex items-end justify-center gap-1 h-6 my-2 px-8" id="visualizer-container">
                     <!-- JS will generate bar lines here -->
                 </div>
 
                 <!-- Progress Bar & Timers -->
-                <div class="space-y-1.5 my-2">
+                <div class="space-y-1 my-1">
                     <div class="relative flex items-center">
                         <input type="range" id="seek-slider" min="0" max="100" value="0" step="0.1" class="w-full">
                     </div>
@@ -237,7 +240,7 @@
                     </button>
 
                     <!-- Play / Pause Button -->
-                    <button id="btn-play-pause" onclick="togglePlayPause()" class="w-14 h-14 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-600/40 transition transform active:scale-95">
+                    <button id="btn-play-pause" onclick="togglePlayPause()" class="w-12 h-12 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-600/40 transition transform active:scale-95">
                         <svg id="icon-play-pause" class="w-6 h-6 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                     </button>
 
@@ -267,7 +270,28 @@
 
             </div>
 
-            <!-- TAB 2: PLAYLIST / LIBRARY VIEW -->
+            <!-- TAB 2: QUEUE / NEXT UP VIEW (Spotify Style Reordering) -->
+            <div id="view-queue" class="h-full flex flex-col p-4 hidden">
+                <div class="mb-3 flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-sm text-white">Playback Queue</h3>
+                        <p class="text-[10px] text-slate-400">Manage and reorder upcoming tracks (Spotify style)</p>
+                    </div>
+                    <button onclick="resetQueueOrder()" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-indigo-300 px-2.5 py-1 rounded-lg border border-white/10 transition">Reset Queue</button>
+                </div>
+
+                <!-- Queue Empty State -->
+                <div id="queue-empty-state" class="flex-1 flex flex-col items-center justify-center text-center p-6 text-slate-400">
+                    <p class="font-medium text-xs text-slate-300">Queue is empty</p>
+                </div>
+
+                <!-- Queue List -->
+                <div id="queue-items" class="flex-1 overflow-y-auto space-y-2 pr-1 hidden">
+                    <!-- Dynamic queue insertion -->
+                </div>
+            </div>
+
+            <!-- TAB 3: PLAYLIST / LIBRARY VIEW -->
             <div id="view-playlist" class="h-full flex flex-col p-4 hidden">
                 
                 <!-- Search & Storage Info -->
@@ -284,7 +308,7 @@
                         <svg class="w-8 h-8 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
                     </div>
                     <p class="font-medium text-sm text-slate-300">Your Offline Library is Empty</p>
-                    <p class="text-xs mt-1 max-w-xs text-slate-500">Click "Add Music" to load local MP3, WAV, or OGG tracks from your device.</p>
+                    <p class="text-xs mt-1 max-w-xs text-slate-500">Click "Add Music" to load local MP3 tracks.</p>
                     <label for="audio-file-input" class="mt-4 px-4 py-2 bg-indigo-600/80 hover:bg-indigo-600 text-white text-xs font-semibold rounded-xl cursor-pointer transition">
                         Select Audio Files
                     </label>
@@ -313,15 +337,13 @@
     <script>
         /* --- GLOBAL STATE MANAGEMENT --- */
         let db = null;
-        let playlist = []; 
-        let currentTrackIndex = -1;
+        let playlist = []; // Master Library
+        let queue = [];    // Current Queue Array (track objects or indices)
+        let currentQueueIndex = -1; // Pointer in queue
+        
         let isPlaying = false;
         let isShuffle = false;
         let repeatMode = 0; 
-        
-        // Spotify Style Shuffle Variables
-        let shuffledIndices = [];
-        let shufflePointer = 0;
 
         let audioCtx = null;
         let analyser = null;
@@ -332,15 +354,17 @@
         const audio = document.getElementById('audio-player');
         const fileInput = document.getElementById('audio-file-input');
         const playlistItems = document.getElementById('playlist-items');
+        const queueItems = document.getElementById('queue-items');
         const emptyState = document.getElementById('empty-state');
+        const queueEmptyState = document.getElementById('queue-empty-state');
         const playlistCount = document.getElementById('playlist-count');
+        const queueCount = document.getElementById('queue-count');
         const currentTitle = document.getElementById('current-title');
         const currentArtist = document.getElementById('current-artist');
         const albumArt = document.getElementById('album-art');
         const albumArtPlaceholder = document.getElementById('album-art-placeholder');
         const vinylDisc = document.getElementById('vinyl-disc');
         const artGlow = document.getElementById('art-glow');
-        const playPauseBtn = document.getElementById('btn-play-pause');
         const iconPlayPause = document.getElementById('icon-play-pause');
         const seekSlider = document.getElementById('seek-slider');
         const volumeSlider = document.getElementById('volume-slider');
@@ -387,7 +411,9 @@
                 const savedTracks = request.result;
                 if (savedTracks && savedTracks.length > 0) {
                     playlist = savedTracks;
+                    resetQueueOrder();
                     renderPlaylist();
+                    renderQueue();
                     showToast(`Restored ${savedTracks.length} tracks from browser memory`);
                 }
             };
@@ -401,11 +427,13 @@
                 store.clear();
             }
             playlist = [];
-            currentTrackIndex = -1;
+            queue = [];
+            currentQueueIndex = -1;
             audio.src = '';
             isPlaying = false;
             updatePlayStateUI();
             renderPlaylist();
+            renderQueue();
             resetPlayerDetails();
             showToast('Library cleared successfully');
         }
@@ -429,6 +457,162 @@
 
             audio.volume = volumeSlider.value;
         });
+
+        /* --- QUEUE MANAGEMENT (Spotify Style) --- */
+        function resetQueueOrder() {
+            queue = [...playlist];
+            currentQueueIndex = queue.length > 0 ? 0 : -1;
+            renderQueue();
+        }
+
+        function playTrackFromLibrary(index) {
+            // Select track from master library and make it active in queue
+            const selectedTrack = playlist[index];
+            // Find if it exists in queue, otherwise add it
+            let qIdx = queue.findIndex(t => t.id === selectedTrack.id);
+            if (qIdx === -1) {
+                queue.push(selectedTrack);
+                qIdx = queue.length - 1;
+            }
+            currentQueueIndex = qIdx;
+            renderQueue();
+            renderPlaylist();
+            playCurrentQueueTrack();
+        }
+
+        function playTrackFromQueue(index) {
+            if (index < 0 || index >= queue.length) return;
+            currentQueueIndex = index;
+            renderQueue();
+            renderPlaylist();
+            playCurrentQueueTrack();
+        }
+
+        function playCurrentQueueTrack() {
+            if (currentQueueIndex < 0 || currentQueueIndex >= queue.length) return;
+            const track = queue[currentQueueIndex];
+
+            if (audio.src) URL.revokeObjectURL(audio.src);
+            const audioUrl = URL.createObjectURL(track.fileBlob);
+            audio.src = audioUrl;
+
+            currentTitle.textContent = track.title;
+            currentArtist.textContent = track.artist;
+
+            if (track.cover) {
+                albumArt.src = track.cover;
+                albumArt.classList.remove('hidden');
+                albumArtPlaceholder.classList.add('hidden');
+            } else {
+                albumArt.src = '';
+                albumArt.classList.add('hidden');
+                albumArtPlaceholder.classList.remove('hidden');
+            }
+
+            renderPlaylist();
+            renderQueue();
+            playAudio();
+        }
+
+        function moveQueueItem(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= queue.length) return;
+
+            // Swap items
+            const temp = queue[index];
+            queue[index] = queue[newIndex];
+            queue[newIndex] = temp;
+
+            // Adjust currentQueueIndex if needed
+            if (currentQueueIndex === index) {
+                currentQueueIndex = newIndex;
+            } else if (currentQueueIndex === newIndex) {
+                currentQueueIndex = index;
+            }
+
+            renderQueue();
+            showToast("Queue reordered");
+        }
+
+        function playNextInQueue(index) {
+            // Move selected track from library/queue to right after current track
+            const track = playlist[index];
+            const existingQIdx = queue.findIndex(t => t.id === track.id);
+            
+            if (existingQIdx !== -1) {
+                queue.splice(existingQIdx, 1);
+            }
+
+            const insertPos = Math.max(0, currentQueueIndex + 1);
+            queue.splice(insertPos, 0, track);
+            
+            if (existingQIdx < currentQueueIndex && existingQIdx !== -1) {
+                currentQueueIndex--;
+            }
+
+            renderQueue();
+            showToast(`"${track.title}" set as next up`);
+        }
+
+        function removeFromQueue(index) {
+            queue.splice(index, 1);
+            if (index < currentQueueIndex) {
+                currentQueueIndex--;
+            } else if (index === currentQueueIndex) {
+                if (queue.length > 0) {
+                    currentQueueIndex = Math.min(index, queue.length - 1);
+                    playCurrentQueueTrack();
+                } else {
+                    currentQueueIndex = -1;
+                    audio.src = '';
+                    isPlaying = false;
+                    resetPlayerDetails();
+                    updatePlayStateUI();
+                }
+            }
+            renderQueue();
+            showToast("Removed from queue");
+        }
+
+        /* --- RENDER QUEUE VIEW --- */
+        function renderQueue() {
+            queueCount.textContent = queue.length;
+
+            if (queue.length === 0) {
+                queueEmptyState.classList.remove('hidden');
+                queueItems.classList.add('hidden');
+                return;
+            }
+
+            queueEmptyState.classList.add('hidden');
+            queueItems.classList.remove('hidden');
+            queueItems.innerHTML = '';
+
+            queue.forEach((track, index) => {
+                const isCurrent = index === currentQueueIndex;
+                const isNext = index === currentQueueIndex + 1;
+                const item = document.createElement('div');
+                item.className = `glass-card p-2.5 rounded-xl flex items-center justify-between transition ${isCurrent ? 'border-indigo-500/60 bg-indigo-950/40' : ''}`;
+
+                item.innerHTML = `
+                    <div class="flex items-center space-x-2.5 overflow-hidden cursor-pointer flex-1" onclick="playTrackFromQueue(${index})">
+                        <div class="w-8 h-8 rounded-lg bg-slate-900 overflow-hidden flex-shrink-0 flex items-center justify-center border border-white/5 text-[10px] text-slate-400">
+                            ${track.cover ? `<img src="${track.cover}" class="w-full h-full object-cover">` : (index + 1)}
+                        </div>
+                        <div class="overflow-hidden">
+                            <h4 class="text-xs font-semibold ${isCurrent ? 'text-indigo-400' : 'text-slate-200'} truncate">${escapeHtml(track.title)}</h4>
+                            <p class="text-[9px] text-slate-400 truncate">${escapeHtml(track.artist)} ${isNext ? '<span class="text-indigo-300 font-medium ml-1">• Next Up</span>' : ''}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                        <button onclick="moveQueueItem(${index}, -1)" class="text-slate-500 hover:text-white p-1" title="Move Up">▲</button>
+                        <button onclick="moveQueueItem(${index}, 1)" class="text-slate-500 hover:text-white p-1" title="Move Down">▼</button>
+                        <button onclick="removeFromQueue(${index})" class="text-slate-500 hover:text-rose-400 p-1" title="Remove">&times;</button>
+                    </div>
+                `;
+                queueItems.appendChild(item);
+            });
+        }
 
         /* --- EXPORT & IMPORT LIBRARY FILE SYSTEM --- */
         async function blobToBase64(blob) {
@@ -526,12 +710,13 @@
                         added++;
                     }
 
+                    resetQueueOrder();
                     renderPlaylist();
                     showToast(`Successfully imported ${added} songs!`);
                     e.target.value = '';
 
-                    if (currentTrackIndex === -1 && playlist.length > 0) {
-                        selectTrack(0);
+                    if (currentQueueIndex === -1 && queue.length > 0) {
+                        playTrackFromQueue(0);
                     }
                 } catch (err) {
                     console.error(err);
@@ -650,11 +835,12 @@
                 addedCount++;
             }
 
+            resetQueueOrder();
             renderPlaylist();
             showToast(`Added ${addedCount} song(s) to library`);
 
-            if (currentTrackIndex === -1 && playlist.length > 0) {
-                selectTrack(0);
+            if (currentQueueIndex === -1 && queue.length > 0) {
+                playTrackFromQueue(0);
             }
 
             fileInput.value = '';
@@ -675,13 +861,14 @@
             playlistItems.innerHTML = '';
 
             playlist.forEach((track, index) => {
-                const isCurrent = index === currentTrackIndex;
+                const currentPlayingTrack = queue[currentQueueIndex];
+                const isCurrent = currentPlayingTrack && currentPlayingTrack.id === track.id;
                 const item = document.createElement('div');
                 item.className = `glass-card p-3 rounded-2xl flex items-center justify-between cursor-pointer transition ${isCurrent ? 'border-indigo-500/60 bg-indigo-950/30' : ''}`;
-                item.onclick = () => selectTrack(index);
+                item.onclick = () => playTrackFromLibrary(index);
 
                 item.innerHTML = `
-                    <div class="flex items-center space-x-3 overflow-hidden">
+                    <div class="flex items-center space-x-3 overflow-hidden flex-1">
                         <div class="w-10 h-10 rounded-xl bg-slate-900 overflow-hidden flex-shrink-0 flex items-center justify-center border border-white/5">
                             ${track.cover 
                                 ? `<img src="${track.cover}" class="w-full h-full object-cover">` 
@@ -692,8 +879,8 @@
                             <p class="text-[10px] text-slate-400 truncate">${escapeHtml(track.artist)}</p>
                         </div>
                     </div>
-                    <div class="flex items-center space-x-2">
-                        ${isCurrent && isPlaying ? '<svg class="w-4 h-4 text-indigo-400 animate-pulse" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14M11 5L6 9H2v6h4l5 4V5z"/></svg>' : ''}
+                    <div class="flex items-center space-x-1" onclick="event.stopPropagation()">
+                        <button onclick="playNextInQueue(${index})" class="text-[10px] bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 px-2 py-1 rounded-lg border border-indigo-500/30 transition" title="Set as Next Song">Play Next</button>
                         <button onclick="deleteTrack(event, ${index})" class="text-slate-500 hover:text-rose-400 p-2 transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                         </button>
@@ -725,53 +912,24 @@
             }
 
             playlist.splice(index, 1);
-
-            if (index === currentTrackIndex) {
-                if (playlist.length > 0) {
-                    selectTrack(Math.min(index, playlist.length - 1));
-                } else {
-                    currentTrackIndex = -1;
-                    audio.src = '';
-                    isPlaying = false;
-                    resetPlayerDetails();
-                    updatePlayStateUI();
-                }
-            } else if (index < currentTrackIndex) {
-                currentTrackIndex--;
+            queue = queue.filter(t => t.id !== trackToDelete.id);
+            
+            if (queue.length > 0) {
+                currentQueueIndex = Math.min(currentQueueIndex, queue.length - 1);
+            } else {
+                currentQueueIndex = -1;
+                audio.src = '';
+                isPlaying = false;
+                resetPlayerDetails();
+                updatePlayStateUI();
             }
 
             renderPlaylist();
+            renderQueue();
             showToast('Track removed');
         }
 
         /* --- PLAYER CONTROLS & PLAYBACK --- */
-        function selectTrack(index) {
-            if (index < 0 || index >= playlist.length) return;
-
-            currentTrackIndex = index;
-            const track = playlist[currentTrackIndex];
-
-            if (audio.src) URL.revokeObjectURL(audio.src);
-            const audioUrl = URL.createObjectURL(track.fileBlob);
-            audio.src = audioUrl;
-
-            currentTitle.textContent = track.title;
-            currentArtist.textContent = track.artist;
-
-            if (track.cover) {
-                albumArt.src = track.cover;
-                albumArt.classList.remove('hidden');
-                albumArtPlaceholder.classList.add('hidden');
-            } else {
-                albumArt.src = '';
-                albumArt.classList.add('hidden');
-                albumArtPlaceholder.classList.remove('hidden');
-            }
-
-            renderPlaylist();
-            playAudio();
-        }
-
         function playAudio() {
             setupAudioContext();
             if (audioCtx && audioCtx.state === 'suspended') {
@@ -794,11 +952,11 @@
         }
 
         function togglePlayPause() {
-            if (currentTrackIndex === -1 && playlist.length > 0) {
-                selectTrack(0);
+            if (currentQueueIndex === -1 && queue.length > 0) {
+                playTrackFromQueue(0);
                 return;
             }
-            if (currentTrackIndex === -1) return;
+            if (currentQueueIndex === -1) return;
 
             if (isPlaying) {
                 pauseAudio();
@@ -819,78 +977,57 @@
             }
         }
 
-        /* --- SPOTIFY STYLE SHUFFLE QUEUE SYSTEM --- */
-        function generateShuffleQueue() {
-            shuffledIndices = [];
-            for (let i = 0; i < playlist.length; i++) {
-                if (i !== currentTrackIndex) {
-                    shuffledIndices.push(i);
-                }
-            }
-            // Fisher-Yates Shuffle Algorithm
-            for (let i = shuffledIndices.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffledIndices[i], shuffledIndices[j]] = [shuffledIndices[j], shuffledIndices[i]];
-            }
-            if (currentTrackIndex !== -1) {
-                shuffledIndices.unshift(currentTrackIndex);
-            }
-            shufflePointer = 0;
-        }
-
         function toggleShuffle() {
             isShuffle = !isShuffle;
             btnShuffle.classList.toggle('text-indigo-400', isShuffle);
             btnShuffle.classList.toggle('text-slate-400', !isShuffle);
             
             if (isShuffle) {
-                generateShuffleQueue();
-                showToast('Shuffle enabled (Spotify style)');
+                // Shuffle queue starting after current track
+                const currentTrack = queue[currentQueueIndex];
+                const restOfQueue = queue.filter((_, idx) => idx !== currentQueueIndex);
+                for (let i = restOfQueue.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [restOfQueue[i], restOfQueue[j]] = [restOfQueue[j], restOfQueue[i]];
+                }
+                queue = currentTrack ? [currentTrack, ...restOfQueue] : restOfQueue;
+                currentQueueIndex = 0;
+                renderQueue();
+                showToast('Shuffle enabled');
             } else {
                 showToast('Shuffle disabled');
             }
         }
 
         function playNextTrack() {
-            if (playlist.length === 0) return;
+            if (queue.length === 0) return;
 
-            if (isShuffle) {
-                if (shuffledIndices.length !== playlist.length || shufflePointer >= shuffledIndices.length - 1) {
-                    generateShuffleQueue();
-                    shufflePointer = 0;
-                }
-                shufflePointer++;
-                const nextIdx = shuffledIndices[shufflePointer];
-                selectTrack(nextIdx);
-            } else {
-                let nextIdx = currentTrackIndex + 1;
-                if (nextIdx >= playlist.length) nextIdx = 0;
-                selectTrack(nextIdx);
+            let nextIdx = currentQueueIndex + 1;
+            if (nextIdx >= queue.length) {
+                nextIdx = 0; // Loop back
             }
+            playTrackFromQueue(nextIdx);
         }
 
         function playPreviousTrack() {
-            if (playlist.length === 0) return;
+            if (queue.length === 0) return;
 
             if (audio.currentTime > 3) {
                 audio.currentTime = 0;
                 return;
             }
 
-            let prevIdx = currentTrackIndex - 1;
-            if (prevIdx < 0) prevIdx = playlist.length - 1;
-            selectTrack(prevIdx);
+            let prevIdx = currentQueueIndex - 1;
+            if (prevIdx < 0) prevIdx = queue.length - 1;
+            playTrackFromQueue(prevIdx);
         }
 
         function handleTrackEnded() {
             if (repeatMode === 2) { 
                 audio.currentTime = 0;
                 playAudio();
-            } else if (repeatMode === 1 || currentTrackIndex < playlist.length - 1 || isShuffle) {
-                playNextTrack();
             } else {
-                isPlaying = false;
-                updatePlayStateUI();
+                playNextTrack();
             }
         }
 
@@ -950,24 +1087,29 @@
 
         function switchTab(tab) {
             const viewPlayer = document.getElementById('view-player');
+            const viewQueue = document.getElementById('view-queue');
             const viewPlaylist = document.getElementById('view-playlist');
+            
             const tabPlayerBtn = document.getElementById('tab-player-btn');
+            const tabQueueBtn = document.getElementById('tab-queue-btn');
             const tabPlaylistBtn = document.getElementById('tab-playlist-btn');
+
+            viewPlayer.classList.add('hidden');
+            viewQueue.classList.add('hidden');
+            viewPlaylist.classList.add('hidden');
+            tabPlayerBtn.classList.remove('border-indigo-500', 'text-indigo-400');
+            tabQueueBtn.classList.remove('border-indigo-500', 'text-indigo-400');
+            tabPlaylistBtn.classList.remove('border-indigo-500', 'text-indigo-400');
 
             if (tab === 'player') {
                 viewPlayer.classList.remove('hidden');
-                viewPlaylist.classList.add('hidden');
                 tabPlayerBtn.classList.add('border-indigo-500', 'text-indigo-400');
-                tabPlayerBtn.classList.remove('border-transparent');
-                tabPlaylistBtn.classList.remove('border-indigo-500', 'text-indigo-400');
-                tabPlaylistBtn.classList.add('border-transparent');
+            } else if (tab === 'queue') {
+                viewQueue.classList.remove('hidden');
+                tabQueueBtn.classList.add('border-indigo-500', 'text-indigo-400');
             } else {
-                viewPlayer.classList.add('hidden');
                 viewPlaylist.classList.remove('hidden');
                 tabPlaylistBtn.classList.add('border-indigo-500', 'text-indigo-400');
-                tabPlaylistBtn.classList.remove('border-transparent');
-                tabPlayerBtn.classList.remove('border-indigo-500', 'text-indigo-400');
-                tabPlayerBtn.classList.add('border-transparent');
             }
         }
 
@@ -1006,5 +1148,5 @@
             }, 2500);
         }
     </script>
-</body> 
+</body>
 </html>

@@ -35,8 +35,6 @@
             }
         }
     </script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- jsmediatags for ID3 Metadata parsing -->
@@ -132,7 +130,7 @@
         <header class="flex items-center justify-between px-6 py-4 border-b border-white/5 z-10">
             <div class="flex items-center space-x-3">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-                    <i class="fa-solid fa-compact-disc text-white text-xl"></i>
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 512 512"><path d="M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8zm0 376c-70.7 0-128-57.3-128-128s57.3-128 128-128 128 57.3 128 128-57.3 128-128 128z"/></svg>
                 </div>
                 <div>
                     <h1 class="text-base font-bold tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-200 to-indigo-400">SoundPulse</h1>
@@ -145,10 +143,10 @@
             <!-- Header Actions -->
             <div class="flex items-center space-x-2">
                 <button onclick="window.location.reload()" class="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition flex items-center justify-center text-xs font-semibold shadow-md border border-white/10 active:scale-95" title="Refresh Page">
-                    <i class="fa-solid fa-rotate-right text-sm"></i>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                 </button>
                 <label for="audio-file-input" class="p-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer transition flex items-center gap-2 text-xs font-semibold shadow-md shadow-indigo-600/30 active:scale-95">
-                    <i class="fa-solid fa-folder-plus text-sm"></i>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
                     <span class="hidden sm:inline">Add Music</span>
                 </label>
                 <input type="file" id="audio-file-input" multiple accept="audio/*" class="hidden">
@@ -158,10 +156,10 @@
         <!-- View Switcher Tabs (Player / Playlist) -->
         <div class="flex border-b border-white/5 bg-slate-900/40 text-xs font-medium text-slate-400">
             <button id="tab-player-btn" onclick="switchTab('player')" class="flex-1 py-2.5 text-center transition flex items-center justify-center gap-2 border-b-2 border-indigo-500 text-indigo-400">
-                <i class="fa-solid fa-music"></i> Now Playing
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg> Now Playing
             </button>
             <button id="tab-playlist-btn" onclick="switchTab('playlist')" class="flex-1 py-2.5 text-center transition flex items-center justify-center gap-2 border-b-2 border-transparent hover:text-slate-200">
-                <i class="fa-solid fa-list-ul"></i> Library (<span id="playlist-count">0</span>)
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg> Library (<span id="playlist-count">0</span>)
             </button>
         </div>
 
@@ -185,7 +183,7 @@
                             <!-- Cover Art Image / Placeholder -->
                             <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-slate-900 overflow-hidden relative shadow-inner z-10 flex items-center justify-center bg-indigo-950">
                                 <img id="album-art" src="" class="w-full h-full object-cover hidden" alt="Album Cover">
-                                <i id="album-art-placeholder" class="fa-solid fa-music text-3xl text-indigo-400"></i>
+                                <svg id="album-art-placeholder" class="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
                             </div>
 
                             <!-- Center Hole -->
@@ -220,27 +218,27 @@
                 <div class="flex items-center justify-between px-4 my-2">
                     <!-- Shuffle Button -->
                     <button id="btn-shuffle" onclick="toggleShuffle()" class="text-slate-400 hover:text-white transition p-2 active:scale-90" title="Shuffle">
-                        <i class="fa-solid fa-shuffle text-base"></i>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 3h5v5M4 20L21 3m0 13v5h-5M15 15l6 6M4 4l5 5"/></svg>
                     </button>
 
                     <!-- Previous Button -->
                     <button id="btn-prev" onclick="playPreviousTrack()" class="text-slate-200 hover:text-white transition p-2 active:scale-90" title="Previous">
-                        <i class="fa-solid fa-backward-step text-xl"></i>
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
                     </button>
 
                     <!-- Play / Pause Button -->
                     <button id="btn-play-pause" onclick="togglePlayPause()" class="w-14 h-14 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-600/40 transition transform active:scale-95">
-                        <i id="icon-play-pause" class="fa-solid fa-play text-xl ml-0.5"></i>
+                        <svg id="icon-play-pause" class="w-6 h-6 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                     </button>
 
                     <!-- Next Button -->
                     <button id="btn-next" onclick="playNextTrack()" class="text-slate-200 hover:text-white transition p-2 active:scale-90" title="Next">
-                        <i class="fa-solid fa-forward-step text-xl"></i>
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
                     </button>
 
                     <!-- Repeat Button -->
                     <button id="btn-repeat" onclick="toggleRepeat()" class="text-slate-400 hover:text-white transition p-2 active:scale-90" title="Repeat">
-                        <i class="fa-solid fa-repeat text-base"></i>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                     </button>
                 </div>
 
@@ -248,12 +246,12 @@
                 <div class="flex items-center justify-between pt-2 border-t border-white/5 text-xs text-slate-400">
                     <div class="flex items-center gap-2 w-1/2">
                         <button id="btn-mute" onclick="toggleMute()" class="hover:text-white">
-                            <i id="icon-volume" class="fa-solid fa-volume-high"></i>
+                            <svg id="icon-volume" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg>
                         </button>
                         <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.8" class="w-full">
                     </div>
                     <button onclick="clearLibrary()" class="hover:text-rose-400 transition flex items-center gap-1">
-                        <i class="fa-regular fa-trash-can"></i> Clear Storage
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg> Clear Storage
                     </button>
                 </div>
 
@@ -265,7 +263,7 @@
                 <!-- Search & Storage Info -->
                 <div class="mb-3 space-y-2">
                     <div class="relative">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                         <input type="text" id="search-input" onkeyup="filterPlaylist()" placeholder="Search library..." class="w-full bg-slate-900/80 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500">
                     </div>
                 </div>
@@ -273,7 +271,7 @@
                 <!-- Empty State Notice -->
                 <div id="empty-state" class="flex-1 flex flex-col items-center justify-center text-center p-6 text-slate-400">
                     <div class="w-16 h-16 rounded-full bg-slate-900 flex items-center justify-center mb-3 text-slate-500">
-                        <i class="fa-solid fa-folder-open text-2xl"></i>
+                        <svg class="w-8 h-8 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
                     </div>
                     <p class="font-medium text-sm text-slate-300">Your Offline Library is Empty</p>
                     <p class="text-xs mt-1 max-w-xs text-slate-500">Click "Add Music" to load local MP3, WAV, or OGG tracks from your device.</p>
@@ -295,7 +293,7 @@
 
     <!-- Toast Notification Message -->
     <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-800 text-slate-200 border border-white/10 px-4 py-2.5 rounded-xl shadow-xl text-xs flex items-center gap-2 opacity-0 pointer-events-none transition duration-300 z-50">
-        <i id="toast-icon" class="fa-solid fa-circle-info text-indigo-400"></i>
+        <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         <span id="toast-message">Notification message</span>
     </div>
 
@@ -305,11 +303,11 @@
     <script>
         /* --- GLOBAL STATE MANAGEMENT --- */
         let db = null;
-        let playlist = []; // Array of track objects stored in memory
+        let playlist = []; 
         let currentTrackIndex = -1;
         let isPlaying = false;
         let isShuffle = false;
-        let repeatMode = 0; // 0 = off, 1 = repeat all, 2 = repeat one
+        let repeatMode = 0; 
         let audioCtx = null;
         let analyser = null;
         let audioSource = null;
@@ -337,7 +335,7 @@
         const btnRepeat = document.getElementById('btn-repeat');
         const visualizerContainer = document.getElementById('visualizer-container');
 
-        /* --- INDEXEDDB SETUP FOR PERISTENT STORAGE --- */
+        /* --- INDEXEDDB SETUP FOR PERSISTENT STORAGE --- */
         function initDB() {
             return new Promise((resolve, reject) => {
                 const request = indexedDB.open('SoundPulseDB', 1);
@@ -352,13 +350,11 @@
                     resolve(db);
                 };
                 request.onerror = (e) => {
-                    console.error('IndexedDB error:', e);
                     reject(e);
                 };
             });
         }
 
-        // Save Track to IndexedDB
         async function saveTrackToDB(track) {
             if (!db) return;
             const tx = db.transaction('tracks', 'readwrite');
@@ -366,7 +362,6 @@
             store.put(track);
         }
 
-        // Load Saved Tracks from IndexedDB
         async function loadStoredTracks() {
             if (!db) return;
             const tx = db.transaction('tracks', 'readonly');
@@ -383,7 +378,6 @@
             };
         }
 
-        // Delete Database Store
         async function clearLibrary() {
             if (!confirm('Are you sure you want to clear all imported tracks from storage?')) return;
             if (db) {
@@ -411,7 +405,6 @@
                 console.warn('Persistent storage fallback mode.');
             }
 
-            // Audio Events
             audio.addEventListener('timeupdate', updateProgress);
             audio.addEventListener('ended', handleTrackEnded);
             audio.addEventListener('loadedmetadata', updateDuration);
@@ -419,7 +412,6 @@
             volumeSlider.addEventListener('input', adjustVolume);
             fileInput.addEventListener('change', handleFileSelect);
 
-            // Set Initial Volume
             audio.volume = volumeSlider.value;
         });
 
@@ -453,7 +445,6 @@
 
         function animateVisualizer() {
             if (!analyser || !isPlaying) {
-                // Dim down visualizer bars when paused
                 const bars = visualizerContainer.children;
                 for (let i = 0; i < bars.length; i++) {
                     bars[i].style.height = '4px';
@@ -493,18 +484,16 @@
 
                 const trackId = 'track_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
                 
-                // Read File Buffer
                 const trackData = {
                     id: trackId,
                     title: file.name.replace(/\.[^/.]+$/, ""),
                     artist: 'Unknown Artist',
                     album: 'Local Track',
                     cover: null,
-                    fileBlob: file, // Store blob directly
+                    fileBlob: file,
                     fileName: file.name
                 };
 
-                // Extract ID3 Metadata using jsmediatags
                 try {
                     await new Promise((resolve) => {
                         window.jsmediatags.read(file, {
@@ -527,7 +516,7 @@
                         });
                     });
                 } catch (err) {
-                    console.log('Metadata extraction skipped for:', file.name);
+                    console.log('Metadata extraction skipped');
                 }
 
                 playlist.push(trackData);
@@ -538,12 +527,10 @@
             renderPlaylist();
             showToast(`Added ${addedCount} song(s) to library`);
 
-            // Auto play if no track is currently playing
             if (currentTrackIndex === -1 && playlist.length > 0) {
                 selectTrack(0);
             }
 
-            // Clear file input value
             fileInput.value = '';
         }
 
@@ -572,7 +559,7 @@
                         <div class="w-10 h-10 rounded-xl bg-slate-900 overflow-hidden flex-shrink-0 flex items-center justify-center border border-white/5">
                             ${track.cover 
                                 ? `<img src="${track.cover}" class="w-full h-full object-cover">` 
-                                : `<i class="fa-solid fa-music text-slate-500 text-sm"></i>`}
+                                : `<svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>`}
                         </div>
                         <div class="overflow-hidden">
                             <h4 class="text-xs font-semibold ${isCurrent ? 'text-indigo-400' : 'text-slate-200'} truncate">${escapeHtml(track.title)}</h4>
@@ -580,9 +567,9 @@
                         </div>
                     </div>
                     <div class="flex items-center space-x-2">
-                        ${isCurrent && isPlaying ? '<i class="fa-solid fa-volume-high text-xs text-indigo-400 animate-pulse"></i>' : ''}
+                        ${isCurrent && isPlaying ? '<svg class="w-4 h-4 text-indigo-400 animate-pulse" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14M11 5L6 9H2v6h4l5 4V5z"/></svg>' : ''}
                         <button onclick="deleteTrack(event, ${index})" class="text-slate-500 hover:text-rose-400 p-2 transition">
-                            <i class="fa-solid fa-trash-can text-xs"></i>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                         </button>
                     </div>
                 `;
@@ -606,7 +593,6 @@
             e.stopPropagation();
             const trackToDelete = playlist[index];
             
-            // Delete from IndexedDB
             if (db) {
                 const tx = db.transaction('tracks', 'readwrite');
                 tx.objectStore('tracks').delete(trackToDelete.id);
@@ -639,12 +625,10 @@
             currentTrackIndex = index;
             const track = playlist[currentTrackIndex];
 
-            // Create Blob URL for Audio
             if (audio.src) URL.revokeObjectURL(audio.src);
             const audioUrl = URL.createObjectURL(track.fileBlob);
             audio.src = audioUrl;
 
-            // Update UI Info
             currentTitle.textContent = track.title;
             currentArtist.textContent = track.artist;
 
@@ -673,7 +657,6 @@
                 updatePlayStateUI();
                 if (isAudioSetup) animateVisualizer();
             }).catch(err => {
-                console.error("Playback error:", err);
                 showToast("Could not play audio file");
             });
         }
@@ -700,11 +683,11 @@
 
         function updatePlayStateUI() {
             if (isPlaying) {
-                iconPlayPause.className = 'fa-solid fa-pause text-xl';
+                iconPlayPause.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
                 vinylDisc.classList.remove('paused-spin');
                 artGlow.classList.add('opacity-60');
             } else {
-                iconPlayPause.className = 'fa-solid fa-play text-xl ml-0.5';
+                iconPlayPause.innerHTML = '<path d="M8 5v14l11-7z"/>';
                 vinylDisc.classList.add('paused-spin');
                 artGlow.classList.remove('opacity-60');
             }
@@ -740,7 +723,7 @@
         }
 
         function handleTrackEnded() {
-            if (repeatMode === 2) { // Repeat one
+            if (repeatMode === 2) { 
                 audio.currentTime = 0;
                 playAudio();
             } else if (repeatMode === 1 || currentTrackIndex < playlist.length - 1 || isShuffle) {
@@ -773,11 +756,9 @@
             audio.volume = volumeSlider.value;
             const icon = document.getElementById('icon-volume');
             if (audio.volume === 0) {
-                icon.className = 'fa-solid fa-volume-xmark';
-            } else if (audio.volume < 0.5) {
-                icon.className = 'fa-solid fa-volume-low';
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>';
             } else {
-                icon.className = 'fa-solid fa-volume-high';
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/>';
             }
         }
 
@@ -804,20 +785,16 @@
             repeatMode = (repeatMode + 1) % 3;
             if (repeatMode === 0) {
                 btnRepeat.className = 'text-slate-400 hover:text-white transition p-2 active:scale-90';
-                btnRepeat.innerHTML = '<i class="fa-solid fa-repeat text-base"></i>';
                 showToast('Repeat off');
             } else if (repeatMode === 1) {
                 btnRepeat.className = 'text-indigo-400 hover:text-indigo-300 transition p-2 active:scale-90';
-                btnRepeat.innerHTML = '<i class="fa-solid fa-repeat text-base"></i>';
                 showToast('Repeat all');
             } else if (repeatMode === 2) {
                 btnRepeat.className = 'text-indigo-400 hover:text-indigo-300 transition p-2 active:scale-90';
-                btnRepeat.innerHTML = '<i class="fa-solid fa-1 text-base"></i>';
                 showToast('Repeat current track');
             }
         }
 
-        /* --- UI TAB NAVIGATION --- */
         function switchTab(tab) {
             const viewPlayer = document.getElementById('view-player');
             const viewPlaylist = document.getElementById('view-playlist');
@@ -841,7 +818,6 @@
             }
         }
 
-        /* --- HELPER FUNCTIONS --- */
         function resetPlayerDetails() {
             currentTitle.textContent = 'No Track Selected';
             currentArtist.textContent = 'Select or import songs to play';
@@ -882,13 +858,11 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                // Inline Service Worker Code to enable offline caching without extra external files
                 const swCode = `
-                    const CACHE_NAME = 'soundpulse-cache-v1';
+                    const CACHE_NAME = 'soundpulse-cache-v2';
                     const urlsToCache = [
                         self.location.href,
                         'https://cdn.tailwindcss.com',
-                        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
                         'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap',
                         'https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js'
                     ];
@@ -922,7 +896,6 @@
                                     });
                                     return response;
                                 }).catch(() => {
-                                    // Fallback for offline fetch errors
                                     return caches.match(event.request);
                                 });
                             })
@@ -930,11 +903,9 @@
                     });
                 `;
 
-                // Create a Blob from the SW string and register it dynamically
                 const blob = new Blob([swCode], { type: 'application/javascript' });
                 const swUrl = URL.createObjectURL(blob);
 
-                // Register standard sw.js if present, otherwise fallback to Inline Blob SW
                 navigator.serviceWorker.register('/sw.js').then((reg) => {
                     console.log('Service Worker registered via sw.js!', reg);
                 }).catch(() => {

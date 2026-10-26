@@ -142,11 +142,11 @@
 
             <!-- Header Actions -->
             <div class="flex items-center space-x-2">
-                <!-- Share File Button -->
+                <!-- Export Library File -->
                 <button onclick="exportLibraryFile()" class="p-2.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 border border-indigo-500/30 transition flex items-center justify-center text-xs font-semibold shadow-md active:scale-95" title="Export Library File">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                 </button>
-                <!-- Import File Button -->
+                <!-- Import Library File -->
                 <label for="import-file-input" class="p-2.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-500/30 cursor-pointer transition flex items-center justify-center text-xs font-semibold shadow-md active:scale-95" title="Import Library File">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                 </label>
@@ -318,6 +318,11 @@
         let isPlaying = false;
         let isShuffle = false;
         let repeatMode = 0; 
+        
+        // Spotify Style Shuffle Variables
+        let shuffledIndices = [];
+        let shufflePointer = 0;
+
         let audioCtx = null;
         let analyser = null;
         let audioSource = null;
@@ -523,7 +528,7 @@
 
                     renderPlaylist();
                     showToast(`Successfully imported ${added} songs!`);
-                    e.target.value = ''; // reset file input
+                    e.target.value = '';
 
                     if (currentTrackIndex === -1 && playlist.length > 0) {
                         selectTrack(0);
@@ -814,14 +819,48 @@
             }
         }
 
+        /* --- SPOTIFY STYLE SHUFFLE QUEUE SYSTEM --- */
+        function generateShuffleQueue() {
+            shuffledIndices = [];
+            for (let i = 0; i < playlist.length; i++) {
+                if (i !== currentTrackIndex) {
+                    shuffledIndices.push(i);
+                }
+            }
+            // Fisher-Yates Shuffle Algorithm
+            for (let i = shuffledIndices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffledIndices[i], shuffledIndices[j]] = [shuffledIndices[j], shuffledIndices[i]];
+            }
+            if (currentTrackIndex !== -1) {
+                shuffledIndices.unshift(currentTrackIndex);
+            }
+            shufflePointer = 0;
+        }
+
+        function toggleShuffle() {
+            isShuffle = !isShuffle;
+            btnShuffle.classList.toggle('text-indigo-400', isShuffle);
+            btnShuffle.classList.toggle('text-slate-400', !isShuffle);
+            
+            if (isShuffle) {
+                generateShuffleQueue();
+                showToast('Shuffle enabled (Spotify style)');
+            } else {
+                showToast('Shuffle disabled');
+            }
+        }
+
         function playNextTrack() {
             if (playlist.length === 0) return;
 
             if (isShuffle) {
-                let nextIdx;
-                do {
-                    nextIdx = Math.floor(Math.random() * playlist.length);
-                } while (playlist.length > 1 && nextIdx === currentTrackIndex);
+                if (shuffledIndices.length !== playlist.length || shufflePointer >= shuffledIndices.length - 1) {
+                    generateShuffleQueue();
+                    shufflePointer = 0;
+                }
+                shufflePointer++;
+                const nextIdx = shuffledIndices[shufflePointer];
                 selectTrack(nextIdx);
             } else {
                 let nextIdx = currentTrackIndex + 1;
@@ -893,13 +932,6 @@
                 volumeSlider.value = audio.volume;
             }
             adjustVolume();
-        }
-
-        function toggleShuffle() {
-            isShuffle = !isShuffle;
-            btnShuffle.classList.toggle('text-indigo-400', isShuffle);
-            btnShuffle.classList.toggle('text-slate-400', !isShuffle);
-            showToast(isShuffle ? 'Shuffle enabled' : 'Shuffle disabled');
         }
 
         function toggleRepeat() {
@@ -974,5 +1006,5 @@
             }, 2500);
         }
     </script>
-</body>
+</body> 
 </html>

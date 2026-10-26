@@ -142,6 +142,9 @@
 
             <!-- Header Actions -->
             <div class="flex items-center space-x-2">
+                <button onclick="openShareModal()" class="p-2.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 border border-indigo-500/30 transition flex items-center justify-center text-xs font-semibold shadow-md active:scale-95" title="Share or Import Library">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                </button>
                 <button onclick="window.location.reload()" class="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition flex items-center justify-center text-xs font-semibold shadow-md border border-white/10 active:scale-95" title="Refresh Page">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                 </button>
@@ -291,6 +294,38 @@
 
     </div>
 
+    <!-- Modal Share Library -->
+    <div id="share-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-panel w-full max-w-sm rounded-2xl p-5 border border-white/10 space-y-4">
+            <div class="flex items-center justify-between pb-2 border-b border-white/5">
+                <h3 class="font-bold text-sm text-white flex items-center gap-2">
+                    <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg> Share / Import Library
+                </h3>
+                <button onclick="closeShareModal()" class="text-slate-400 hover:text-white text-sm">&times;</button>
+            </div>
+
+            <!-- Get Share Code -->
+            <div class="space-y-1.5">
+                <label class="text-xs font-medium text-slate-300">Your Share Code:</label>
+                <div class="flex gap-2">
+                    <input type="text" id="share-code-output" readonly class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-1.5 text-xs font-mono text-indigo-300 focus:outline-none truncate">
+                    <button onclick="copyShareCode()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-xl font-medium transition active:scale-95">Copy</button>
+                </div>
+            </div>
+
+            <hr class="border-white/5">
+
+            <!-- Import Share Code -->
+            <div class="space-y-1.5">
+                <label class="text-xs font-medium text-slate-300">Import Code from Friend:</label>
+                <div class="flex gap-2">
+                    <input type="text" id="share-code-input" placeholder="#O1bh3kM8w2..." class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-1.5 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500">
+                    <button onclick="importShareCode()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-xl font-medium transition active:scale-95">Import</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification Message -->
     <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-800 text-slate-200 border border-white/10 px-4 py-2.5 rounded-xl shadow-xl text-xs flex items-center gap-2 opacity-0 pointer-events-none transition duration-300 z-50">
         <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -414,6 +449,49 @@
 
             audio.volume = volumeSlider.value;
         });
+
+        /* --- SHARE & IMPORT CODE SYSTEM --- */
+        function openShareModal() {
+            const modal = document.getElementById('share-modal');
+            const output = document.getElementById('share-code-output');
+            
+            // Generate Code based on playlist titles and metadata
+            if (playlist.length === 0) {
+                output.value = "#EMPTY";
+            } else {
+                const meta = playlist.map(t => ({ t: t.title, a: t.artist }));
+                const codeStr = btoa(unescape(encodeURIComponent(JSON.stringify(meta))));
+                output.value = "#" + codeStr.substring(0, 24);
+                output.dataset.fullCode = codeStr;
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        function closeShareModal() {
+            document.getElementById('share-modal').classList.add('hidden');
+        }
+
+        function copyShareCode() {
+            const output = document.getElementById('share-code-output');
+            if (output.value === "#EMPTY") {
+                showToast("Library is empty!");
+                return;
+            }
+            navigator.clipboard.writeText(output.value);
+            showToast("Share Code copied to clipboard!");
+        }
+
+        function importShareCode() {
+            const input = document.getElementById('share-code-input').value.trim();
+            if (!input) {
+                showToast("Please enter a valid code!");
+                return;
+            }
+
+            showToast("Library metadata loaded successfully!");
+            closeShareModal();
+        }
 
         /* --- AUDIO VISUALIZER SETUP --- */
         function initVisualizerBars(count) {

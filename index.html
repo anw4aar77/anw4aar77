@@ -270,12 +270,12 @@
 
             </div>
 
-            <!-- TAB 2: QUEUE / NEXT UP VIEW (Spotify Style Reordering) -->
+            <!-- TAB 2: QUEUE / NEXT UP VIEW -->
             <div id="view-queue" class="h-full flex flex-col p-4 hidden">
                 <div class="mb-3 flex items-center justify-between">
                     <div>
                         <h3 class="font-bold text-sm text-white">Playback Queue</h3>
-                        <p class="text-[10px] text-slate-400">Manage and reorder upcoming tracks (Spotify style)</p>
+                        <p class="text-[10px] text-slate-400">Manage and reorder upcoming tracks</p>
                     </div>
                     <button onclick="resetQueueOrder()" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-indigo-300 px-2.5 py-1 rounded-lg border border-white/10 transition">Reset Queue</button>
                 </div>
@@ -337,9 +337,9 @@
     <script>
         /* --- GLOBAL STATE MANAGEMENT --- */
         let db = null;
-        let playlist = []; // Master Library
-        let queue = [];    // Current Queue Array (track objects or indices)
-        let currentQueueIndex = -1; // Pointer in queue
+        let playlist = []; 
+        let queue = [];    
+        let currentQueueIndex = -1;
         
         let isPlaying = false;
         let isShuffle = false;
@@ -438,7 +438,7 @@
             showToast('Library cleared successfully');
         }
 
-        /* --- INITIALIZATION --- */
+        /* --- INITIALIZATION & MEDIA SESSION API SETUP --- */
         window.addEventListener('DOMContentLoaded', async () => {
             initVisualizerBars(24);
             try {
@@ -456,9 +456,58 @@
             fileInput.addEventListener('change', handleFileSelect);
 
             audio.volume = volumeSlider.value;
+            setupMediaSessionHandlers();
         });
 
-        /* --- QUEUE MANAGEMENT (Spotify Style) --- */
+        /* --- MEDIA SESSION API (Lock Screen Controls) --- */
+        function setupMediaSessionHandlers() {
+            if (!('mediaSession' in navigator)) return;
+
+            navigator.mediaSession.setActionHandler('play', () => {
+                playAudio();
+            });
+
+            navigator.mediaSession.setActionHandler('pause', () => {
+                pauseAudio();
+            });
+
+            navigator.mediaSession.setActionHandler('previoustrack', () => {
+                playPreviousTrack();
+            });
+
+            navigator.mediaSession.setActionHandler('nexttrack', () => {
+                playNextTrack();
+            });
+
+            navigator.mediaSession.setActionHandler('seekto', (details) => {
+                if (details.seekTime && audio.duration) {
+                    audio.currentTime = details.seekTime;
+                }
+            });
+        }
+
+        function updateMediaSessionMetadata(track) {
+            if (!('mediaSession' in navigator)) return;
+
+            let artworkList = [];
+            if (track.cover) {
+                artworkList = [
+                    { src: track.cover, sizes: '96x96', type: 'image/jpeg' },
+                    { src: track.cover, sizes: '128x128', type: 'image/jpeg' },
+                    { src: track.cover, sizes: '192x192', type: 'image/jpeg' },
+                    { src: track.cover, sizes: '512x512', type: 'image/jpeg' }
+                ];
+            }
+
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: track.title || 'Unknown Track',
+                artist: track.artist || 'Unknown Artist',
+                album: track.album || 'SoundPulse Library',
+                artwork: artworkList
+            });
+        }
+
+        /* --- QUEUE MANAGEMENT --- */
         function resetQueueOrder() {
             queue = [...playlist];
             currentQueueIndex = queue.length > 0 ? 0 : -1;
@@ -466,9 +515,7 @@
         }
 
         function playTrackFromLibrary(index) {
-            // Select track from master library and make it active in queue
             const selectedTrack = playlist[index];
-            // Find if it exists in queue, otherwise add it
             let qIdx = queue.findIndex(t => t.id === selectedTrack.id);
             if (qIdx === -1) {
                 queue.push(selectedTrack);
@@ -509,6 +556,7 @@
                 albumArtPlaceholder.classList.remove('hidden');
             }
 
+            updateMediaSessionMetadata(track);
             renderPlaylist();
             renderQueue();
             playAudio();
@@ -518,12 +566,10 @@
             const newIndex = index + direction;
             if (newIndex < 0 || newIndex >= queue.length) return;
 
-            // Swap items
             const temp = queue[index];
             queue[index] = queue[newIndex];
             queue[newIndex] = temp;
 
-            // Adjust currentQueueIndex if needed
             if (currentQueueIndex === index) {
                 currentQueueIndex = newIndex;
             } else if (currentQueueIndex === newIndex) {
@@ -535,7 +581,6 @@
         }
 
         function playNextInQueue(index) {
-            // Move selected track from library/queue to right after current track
             const track = playlist[index];
             const existingQIdx = queue.findIndex(t => t.id === track.id);
             
@@ -983,7 +1028,6 @@
             btnShuffle.classList.toggle('text-slate-400', !isShuffle);
             
             if (isShuffle) {
-                // Shuffle queue starting after current track
                 const currentTrack = queue[currentQueueIndex];
                 const restOfQueue = queue.filter((_, idx) => idx !== currentQueueIndex);
                 for (let i = restOfQueue.length - 1; i > 0; i--) {
@@ -1004,7 +1048,7 @@
 
             let nextIdx = currentQueueIndex + 1;
             if (nextIdx >= queue.length) {
-                nextIdx = 0; // Loop back
+                nextIdx = 0;
             }
             playTrackFromQueue(nextIdx);
         }

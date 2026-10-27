@@ -459,37 +459,41 @@
             setupMediaSessionHandlers();
         });
 
-        /* --- MEDIA SESSION API (Lock Screen Controls) --- */
+        /* --- MEDIA SESSION API (Android Lock Screen Notification) --- */
         function setupMediaSessionHandlers() {
             if (!('mediaSession' in navigator)) return;
 
-            navigator.mediaSession.setActionHandler('play', () => {
-                playAudio();
-            });
+            try {
+                navigator.mediaSession.setActionHandler('play', () => { playAudio(); });
+                navigator.mediaSession.setActionHandler('pause', () => { pauseAudio(); });
+                navigator.mediaSession.setActionHandler('previoustrack', () => { playPreviousTrack(); });
+                navigator.mediaSession.setActionHandler('nexttrack', () => { playNextTrack(); });
+                
+                navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+                    audio.currentTime = Math.max(audio.currentTime - (details.seekOffset || 10), 0);
+                });
+                
+                navigator.mediaSession.setActionHandler('seekforward', (details) => {
+                    audio.currentTime = Math.min(audio.currentTime + (details.seekOffset || 10), audio.duration);
+                });
 
-            navigator.mediaSession.setActionHandler('pause', () => {
-                pauseAudio();
-            });
-
-            navigator.mediaSession.setActionHandler('previoustrack', () => {
-                playPreviousTrack();
-            });
-
-            navigator.mediaSession.setActionHandler('nexttrack', () => {
-                playNextTrack();
-            });
-
-            navigator.mediaSession.setActionHandler('seekto', (details) => {
-                if (details.seekTime && audio.duration) {
-                    audio.currentTime = details.seekTime;
-                }
-            });
+                navigator.mediaSession.setActionHandler('seekto', (details) => {
+                    if (details.seekTime !== undefined && !isNaN(details.seekTime)) {
+                        audio.currentTime = details.seekTime;
+                    }
+                });
+            } catch (error) {
+                console.log('MediaSession action handler error:', error);
+            }
         }
 
         function updateMediaSessionMetadata(track) {
             if (!('mediaSession' in navigator)) return;
 
-            let artworkList = [];
+            let artworkList = [
+                { src: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=512&h=512&fit=crop', sizes: '512x512', type: 'image/jpeg' }
+            ];
+
             if (track.cover) {
                 artworkList = [
                     { src: track.cover, sizes: '96x96', type: 'image/jpeg' },
@@ -505,6 +509,17 @@
                 album: track.album || 'SoundPulse Library',
                 artwork: artworkList
             });
+
+            // Update playback state for lock screen interface
+            if ('setPositionState' in navigator.mediaSession && !isNaN(audio.duration)) {
+                try {
+                    navigator.mediaSession.setPositionState({
+                        duration: audio.duration || 0,
+                        playbackRate: audio.playbackRate,
+                        position: audio.currentTime || 0
+                    });
+                } catch (e) {}
+            }
         }
 
         /* --- QUEUE MANAGEMENT --- */
@@ -984,6 +999,9 @@
             audio.play().then(() => {
                 isPlaying = true;
                 updatePlayStateUI();
+                if ('mediaSession' in navigator) {
+                    navigator.mediaSession.playbackState = "playing";
+                }
                 if (isAudioSetup) animateVisualizer();
             }).catch(err => {
                 showToast("Could not play audio file");
@@ -994,6 +1012,9 @@
             audio.pause();
             isPlaying = false;
             updatePlayStateUI();
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.playbackState = "paused";
+            }
         }
 
         function togglePlayPause() {
@@ -1081,6 +1102,17 @@
             const progress = (audio.currentTime / audio.duration) * 100;
             seekSlider.value = progress;
             timeCurrent.textContent = formatTime(audio.currentTime);
+
+            // Update MediaSession Position State so Android lock screen progress bar works smoothly
+            if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
+                try {
+                    navigator.mediaSession.setPositionState({
+                        duration: audio.duration,
+                        playbackRate: audio.playbackRate,
+                        position: audio.currentTime
+                    });
+                } catch (e) {}
+            }
         }
 
         function updateDuration() {

@@ -149,7 +149,7 @@
             <!-- Upload Dropzone -->
             <div id="upload-dropzone" onclick="document.getElementById('photo-input').click()"
                  class="border-2 border-dashed border-cardborder hover:border-brand-500/60 bg-cardbg rounded-3xl p-8 sm:p-12 text-center transition-all cursor-pointer relative overflow-hidden group flex flex-col items-center justify-center">
-                <input type="file" id="photo-input" accept="image/*" class="hidden" onchange="handleImageSelected(this.files[0])">
+                <input type="file" id="photo-input" accept="image/*" class="hidden" onchange="if(this.files && this.files[0]) handleImageSelected(this.files[0])">
                 
                 <div class="w-16 h-16 rounded-2xl bg-brand-500/10 text-brand-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <i class="fa-solid fa-image text-3xl"></i>
@@ -177,7 +177,7 @@
                     
                     <!-- Main QR Code Output Card -->
                     <div class="flex flex-col items-center justify-center p-6 bg-darkbg rounded-2xl border border-cardborder text-center space-y-4">
-                        <div class="p-4 bg-white rounded-2xl shadow-xl">
+                        <div class="p-4 bg-white rounded-2xl shadow-xl flex items-center justify-center min-w-[180px] min-h-[180px]">
                             <div id="generated-qr-code"></div>
                         </div>
                         <p class="text-xs text-gray-400 flex items-center gap-1.5">
@@ -188,7 +188,10 @@
                             <button onclick="copyPhotoLink()" class="flex-1 py-2.5 bg-cardborder hover:bg-gray-700 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5">
                                 <i class="fa-regular fa-copy"></i> Copy Link
                             </button>
-                            <button onclick="downloadOriginalInput()" class="flex-1 py-2.5 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5">
+                            <button onclick="openDirectPhotoLink()" class="flex-1 py-2.5 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-external-link"></i> Open Direct
+                            </button>
+                            <button onclick="downloadOriginalInput()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5">
                                 <i class="fa-solid fa-download"></i> Save Photo
                             </button>
                         </div>
@@ -276,7 +279,8 @@
             currentFile: null,
             receivedData: null,
             html5QrcodeScanner: null,
-            generatedShareUrl: ''
+            generatedShareUrl: '',
+            currentDataUrl: ''
         };
 
         // Utility: Get clean page URL without parameters
@@ -287,20 +291,26 @@
             return u.toString();
         }
 
-        // On Page Load: Check if opened via QR Scan (URL contains payload parameters)
+        // On Page Load: Check if opened via QR Scan
         window.onload = function() {
             setupDragAndDrop();
             checkIncomingPhotoUrl();
         };
 
-        // Handle URL parameters when scanned by iPhone Camera
+        // Handle URL parameters or stored session photo payload
         function checkIncomingPhotoUrl() {
             const urlParams = new URLSearchParams(window.location.search);
-            const photoData = urlParams.get('photo');
+            const photoId = urlParams.get('id');
             const fileName = urlParams.get('name') || 'Received_Photo.jpg';
 
+            let photoData = urlParams.get('photo');
+
+            // If ID parameter exists, fetch from Session/Local Cache
+            if (!photoData && photoId) {
+                photoData = localStorage.getItem(`dropraw_photo_${photoId}`) || sessionStorage.getItem(`dropraw_photo_${photoId}`);
+            }
+
             if (photoData) {
-                // Display Received Card
                 const receivedCard = document.getElementById('received-view-card');
                 const imgElement = document.getElementById('received-img-element');
                 
@@ -312,11 +322,9 @@
 
                 document.getElementById('rec-filename').innerText = fileName;
                 
-                // Read Dimensions and File Size from Data URL
                 const img = new Image();
                 img.onload = function() {
                     document.getElementById('rec-dim').innerText = `${this.naturalWidth} x ${this.naturalHeight} px`;
-                    // Estimate size from base64 string
                     const approxBytes = Math.round((photoData.length * 3) / 4);
                     document.getElementById('rec-size').innerText = formatBytes(approxBytes);
                 };
@@ -348,12 +356,14 @@
             });
 
             dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('drag-over');
                 const files = e.dataTransfer.files;
-                if (files.length > 0) handleImageSelected(files[0]);
+                if (files && files.length > 0) handleImageSelected(files[0]);
             }, false);
         }
 
-        // Main Image Handler: Convert file to 100% original binary stream & generate QR
+        // Main Image Handler: Convert file to binary data URL & render QR Code immediately
         function handleImageSelected(file) {
             if (!file || !file.type.startsWith('image/')) {
                 showToast("Please select a valid image file.");
@@ -365,12 +375,13 @@
 
             reader.onload = function(e) {
                 const rawDataUrl = e.target.result;
+                appState.currentDataUrl = rawDataUrl;
                 
                 // Update Image Preview & Meta
                 document.getElementById('selected-img-preview').src = rawDataUrl;
                 document.getElementById('meta-filename').innerText = file.name;
                 document.getElementById('meta-size').innerText = formatBytes(file.size);
-                document.getElementById('meta-type').innerText = file.type.toUpperCase();
+                document.getElementById('meta-type').innerText = file.type.toUpperCase() || 'IMAGE/RAW';
 
                 const img = new Image();
                 img.onload = function() {
@@ -378,43 +389,69 @@
                 };
                 img.src = rawDataUrl;
 
-                // Build Shareable Link embedded with original photo data
-                // For long data, generate a unique link or Blob parameter
-                const fullShareUrl = `${getBasePageUrl()}?photo=${encodeURIComponent(rawDataUrl)}&name=${encodeURIComponent(file.name)}`;
+                // Create a lightweight unique ID for local storage session sharing
+                const photoId = 'raw_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
+                try {
+                    localStorage.setItem(`dropraw_photo_${photoId}`, rawDataUrl);
+                } catch(err) {
+                    console.warn("Storage quota limit reached, relying on URL params.");
+                }
+
+                // Build clean scannable share URL
+                let fullShareUrl = '';
+                if (rawDataUrl.length < 2000) {
+                    fullShareUrl = `${getBasePageUrl()}?photo=${encodeURIComponent(rawDataUrl)}&name=${encodeURIComponent(file.name)}`;
+                } else {
+                    fullShareUrl = `${getBasePageUrl()}?id=${photoId}&name=${encodeURIComponent(file.name)}`;
+                }
+                
                 appState.generatedShareUrl = fullShareUrl;
 
                 // Render High Resolution QR Code
-                generateQRCode('generated-qr-code', fullShareUrl, 160);
+                generateQRCode('generated-qr-code', fullShareUrl, 170);
 
-                // Show Container
-                document.getElementById('qr-result-container').classList.remove('hidden');
-                document.getElementById('qr-result-container').scrollIntoView({ behavior: 'smooth' });
-                showToast("100% Original QR Code generated!");
+                // Reveal Output Container
+                const container = document.getElementById('qr-result-container');
+                container.classList.remove('hidden');
+                container.scrollIntoView({ behavior: 'smooth' });
+                showToast("QR Code generated successfully!");
             };
 
             reader.readAsDataURL(file);
         }
 
-        // Generate QR Code using QRCode library
-        function generateQRCode(elementId, text, size = 160) {
+        // Generate QR Code using QRCode library safely
+        function generateQRCode(elementId, text, size = 170) {
             const container = document.getElementById(elementId);
             container.innerHTML = '';
-            new QRCode(container, {
-                text: text,
-                width: size,
-                height: size,
-                colorDark: "#0b0f17",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.L
-            });
+            try {
+                new QRCode(container, {
+                    text: text,
+                    width: size,
+                    height: size,
+                    colorDark: "#0b0f17",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.L
+                });
+            } catch (err) {
+                console.error("QR Code Generation Error:", err);
+                container.innerHTML = '<span class="text-xs text-red-500 p-2">Error building QR</span>';
+            }
+        }
+
+        // Open direct photo link
+        function openDirectPhotoLink() {
+            if (appState.generatedShareUrl) {
+                window.open(appState.generatedShareUrl, '_blank');
+            }
         }
 
         // Download Functions
         function downloadOriginalInput() {
-            if (!appState.currentFile) return;
+            if (!appState.currentFile && !appState.currentDataUrl) return;
             const link = document.createElement('a');
-            link.href = URL.createObjectURL(appState.currentFile);
-            link.download = `ORIGINAL_${appState.currentFile.name}`;
+            link.href = appState.currentDataUrl || URL.createObjectURL(appState.currentFile);
+            link.download = `ORIGINAL_${appState.currentFile ? appState.currentFile.name : 'photo.jpg'}`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -465,7 +502,6 @@
                 { facingMode: "environment" },
                 { fps: 10, qrbox: { width: 220, height: 220 } },
                 (decodedText) => {
-                    // On Scan Success
                     stopCameraScanner();
                     window.location.href = decodedText;
                 },

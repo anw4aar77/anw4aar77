@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DropRaw - Lossless Image Transfer & Inspector</title>
+    <title>DropRaw - Instant QR Photo Transfer (100% Original Quality)</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -36,6 +36,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- QR Code Generator Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- html5-qrcode Scanner Library -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -44,7 +46,6 @@
             background-color: #0b0f17;
             color: #f3f4f6;
         }
-        /* Custom scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -70,274 +71,191 @@
     <!-- Header Navigation -->
     <header class="border-b border-cardborder bg-cardbg/80 backdrop-blur-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="resetToHome()">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-400 flex items-center justify-center text-white shadow-lg shadow-brand-500/20">
-                    <i class="fa-solid fa-bolt text-lg"></i>
+                    <i class="fa-solid fa-qrcode text-lg"></i>
                 </div>
                 <div>
                     <span class="font-bold text-xl tracking-tight text-white">Drop<span class="text-brand-400">Raw</span></span>
-                    <span class="hidden sm:inline-block text-xs bg-brand-500/10 text-brand-400 px-2 py-0.5 rounded-full border border-brand-500/20 font-medium ml-2">100% Zero Loss</span>
+                    <span class="hidden sm:inline-block text-xs bg-brand-500/10 text-brand-400 px-2 py-0.5 rounded-full border border-brand-500/20 font-medium ml-2">QR Instant Raw</span>
                 </div>
             </div>
 
             <!-- Navigation Tabs -->
             <nav class="flex bg-darkbg p-1 rounded-xl border border-cardborder text-sm font-medium">
-                <button id="tab-p2p" onclick="switchTab('p2p')" class="tab-btn px-4 py-2 rounded-lg transition-all flex items-center gap-2 text-white bg-brand-600 shadow">
-                    <i class="fa-solid fa-wifi text-xs"></i>
-                    <span>Local P2P</span>
-                </button>
-                <button id="tab-cloud" onclick="switchTab('cloud')" class="tab-btn px-4 py-2 rounded-lg transition-all flex items-center gap-2 text-gray-400 hover:text-white">
+                <button id="tab-upload" onclick="switchTab('upload')" class="tab-btn px-4 py-2 rounded-lg transition-all flex items-center gap-2 text-white bg-brand-600 shadow">
                     <i class="fa-solid fa-cloud-arrow-up text-xs"></i>
-                    <span>Cloud Link</span>
+                    <span>Upload & QR</span>
                 </button>
-                <button id="tab-inspector" onclick="switchTab('inspector')" class="tab-btn px-4 py-2 rounded-lg transition-all flex items-center gap-2 text-gray-400 hover:text-white">
-                    <i class="fa-solid fa-microscope text-xs"></i>
-                    <span>Inspector</span>
+                <button id="tab-scan" onclick="switchTab('scan')" class="tab-btn px-4 py-2 rounded-lg transition-all flex items-center gap-2 text-gray-400 hover:text-white">
+                    <i class="fa-solid fa-expand text-xs"></i>
+                    <span>Scan Camera</span>
                 </button>
             </nav>
         </div>
     </header>
 
     <!-- Main Workspace Container -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
         
-        <!-- Info Banner -->
-        <div class="mb-8 p-4 rounded-2xl bg-gradient-to-r from-brand-900/30 to-indigo-900/20 border border-brand-500/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-                <div class="p-2 rounded-lg bg-brand-500/20 text-brand-400">
-                    <i class="fa-solid fa-shield-halved text-xl"></i>
+        <!-- Direct Received Photo View Mode (Triggered when scanning a QR Code or opening shared URL) -->
+        <div id="received-view-card" class="hidden mb-8 bg-cardbg border-2 border-emerald-500/40 rounded-3xl p-6 shadow-2xl space-y-6">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-cardborder pb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-white">Original Photo Received!</h3>
+                        <p class="text-xs text-gray-400">Transferred at 100% raw quality without compression.</p>
+                    </div>
                 </div>
-                <div>
-                    <h3 class="font-semibold text-sm text-white">Zero Compression Policy</h3>
-                    <p class="text-xs text-gray-400">Files are transferred directly as uncompressed binary Blobs. Metadata, colorspaces, and original pixels remain untouched.</p>
-                </div>
+                <button onclick="downloadReceivedImage()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-semibold transition-all shadow-lg shadow-emerald-600/30 flex items-center gap-2">
+                    <i class="fa-solid fa-download"></i> Save Original Photo
+                </button>
             </div>
-            <div class="flex items-center gap-2 text-xs font-mono text-gray-400 bg-darkbg/50 px-3 py-1.5 rounded-lg border border-cardborder">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>Client Engine Ready</span>
+
+            <!-- Received Image Preview -->
+            <div class="bg-darkbg rounded-2xl p-3 border border-cardborder flex items-center justify-center max-h-[500px]">
+                <img id="received-img-element" src="" class="max-h-[460px] w-auto object-contain rounded-xl shadow-lg">
+            </div>
+
+            <!-- Metadata Box -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div class="bg-darkbg p-3 rounded-xl border border-cardborder">
+                    <span class="text-gray-500 block text-[10px] uppercase">File Name</span>
+                    <span id="rec-filename" class="font-semibold text-gray-200 truncate block">-</span>
+                </div>
+                <div class="bg-darkbg p-3 rounded-xl border border-cardborder">
+                    <span class="text-gray-500 block text-[10px] uppercase">Exact Size</span>
+                    <span id="rec-size" class="font-semibold text-brand-400 font-mono">-</span>
+                </div>
+                <div class="bg-darkbg p-3 rounded-xl border border-cardborder">
+                    <span class="text-gray-500 block text-[10px] uppercase">Dimensions</span>
+                    <span id="rec-dim" class="font-semibold text-gray-200 font-mono">-</span>
+                </div>
+                <div class="bg-darkbg p-3 rounded-xl border border-cardborder">
+                    <span class="text-gray-500 block text-[10px] uppercase">Quality Status</span>
+                    <span class="font-semibold text-emerald-400 font-mono flex items-center gap-1">
+                        <i class="fa-solid fa-shield text-[10px]"></i> Uncompressed
+                    </span>
+                </div>
             </div>
         </div>
 
-        <!-- ================= MODE A: LOCAL P2P TRANSFER ================= -->
-        <section id="section-p2p" class="tab-content block space-y-6">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Dropzone Card -->
-                <div class="lg:col-span-2 space-y-4">
-                    <div id="p2p-dropzone" 
-                         class="border-2 border-dashed border-cardborder hover:border-brand-500/50 bg-cardbg rounded-3xl p-8 text-center transition-all cursor-pointer relative overflow-hidden group flex flex-col items-center justify-center min-h-[260px]">
-                        <input type="file" id="p2p-file-input" multiple accept="image/*" class="hidden" onchange="handleP2PFiles(this.files)">
-                        
-                        <div class="w-16 h-16 rounded-2xl bg-brand-500/10 text-brand-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                            <i class="fa-solid fa-images text-2xl"></i>
-                        </div>
-                        <h3 class="text-lg font-semibold text-white mb-1">Drop original images here</h3>
-                        <p class="text-xs text-gray-400 mb-4 max-w-sm">Select RAW, PNG, JPG, WEBP, or HEIC images. No quality loss guaranteed.</p>
-                        
-                        <button onclick="document.getElementById('p2p-file-input').click()" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-sm font-medium transition-all shadow-lg shadow-brand-600/30 flex items-center gap-2">
-                            <i class="fa-solid fa-folder-open"></i> Browse Files
-                        </button>
-                    </div>
+        <!-- ================= MODE 1: UPLOAD PHOTO & GENERATE QR ================= -->
+        <section id="section-upload" class="tab-content block space-y-6">
+            
+            <!-- Upload Dropzone -->
+            <div id="upload-dropzone" onclick="document.getElementById('photo-input').click()"
+                 class="border-2 border-dashed border-cardborder hover:border-brand-500/60 bg-cardbg rounded-3xl p-8 sm:p-12 text-center transition-all cursor-pointer relative overflow-hidden group flex flex-col items-center justify-center">
+                <input type="file" id="photo-input" accept="image/*" class="hidden" onchange="handleImageSelected(this.files[0])">
+                
+                <div class="w-16 h-16 rounded-2xl bg-brand-500/10 text-brand-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-image text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">Import Photo to Generate QR</h3>
+                <p class="text-xs text-gray-400 max-w-md mb-6">Select any JPG, PNG, WEBP or HEIC photo. The app encodes it into a direct scannable QR payload for instant transfers.</p>
+                
+                <button type="button" class="px-6 py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-sm font-semibold transition-all shadow-lg shadow-brand-600/30 flex items-center gap-2">
+                    <i class="fa-solid fa-folder-open"></i> Choose Original Photo
+                </button>
+            </div>
 
-                    <!-- Selected Files Queue -->
-                    <div class="bg-cardbg rounded-2xl border border-cardborder p-5">
-                        <div class="flex justify-between items-center mb-4">
-                            <h4 class="font-semibold text-sm text-gray-200 flex items-center gap-2">
-                                <i class="fa-solid fa-list-check text-brand-400"></i> Queue (<span id="queue-count">0</span>)
-                            </h4>
-                            <button onclick="clearP2PQueue()" class="text-xs text-gray-400 hover:text-rose-400 transition">Clear Queue</button>
-                        </div>
-                        
-                        <div id="p2p-queue-container" class="space-y-3 max-h-[350px] overflow-y-auto pr-1">
-                            <div class="text-center py-8 text-gray-500 text-sm italic" id="empty-queue-msg">
-                                No images selected yet.
-                            </div>
-                        </div>
+            <!-- Generated QR Result Container (Hidden until file selected) -->
+            <div id="qr-result-container" class="hidden bg-cardbg rounded-3xl border border-cardborder p-6 sm:p-8 space-y-6">
+                
+                <div class="flex items-center justify-between pb-4 border-b border-cardborder">
+                    <div>
+                        <h4 class="text-lg font-bold text-white">QR Code Ready for Scanning</h4>
+                        <p class="text-xs text-gray-400">Scan this QR code using another phone camera to view and download the original photo instantly.</p>
                     </div>
+                    <span class="px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-semibold">100% Original Quality</span>
                 </div>
 
-                <!-- Peer Connection Status & Transfer Control -->
-                <div class="space-y-6">
-                    <div class="bg-cardbg rounded-2xl border border-cardborder p-5 space-y-4">
-                        <h4 class="font-semibold text-sm text-gray-200 flex items-center gap-2 border-b border-cardborder pb-3">
-                            <i class="fa-solid fa-network-wired text-brand-400"></i> Room & Device Pairing
-                        </h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    
+                    <!-- Main QR Code Output Card -->
+                    <div class="flex flex-col items-center justify-center p-6 bg-darkbg rounded-2xl border border-cardborder text-center space-y-4">
+                        <div class="p-4 bg-white rounded-2xl shadow-xl">
+                            <div id="generated-qr-code"></div>
+                        </div>
+                        <p class="text-xs text-gray-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-mobile-screen-button text-brand-400"></i> Open iPhone Camera & Scan
+                        </p>
                         
-                        <div class="space-y-3">
-                            <div>
-                                <label class="text-xs text-gray-400 block mb-1">Room Access Code</label>
-                                <div class="flex gap-2">
-                                    <input type="text" id="p2p-room-code" readonly class="bg-darkbg text-brand-400 font-mono text-center font-bold px-3 py-2 rounded-xl border border-cardborder text-sm flex-1" value="RAW-8849-X">
-                                    <button onclick="copyRoomCode()" class="px-3 py-2 bg-cardborder hover:bg-gray-700 text-gray-300 rounded-xl text-xs transition">
-                                        <i class="fa-regular fa-copy"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="p-3 bg-darkbg rounded-xl border border-cardborder space-y-2">
-                                <div class="flex items-center justify-between text-xs">
-                                    <span class="text-gray-400">Target Device:</span>
-                                    <span id="pairing-status" class="text-emerald-400 font-medium flex items-center gap-1.5">
-                                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Ready to Pair
-                                    </span>
-                                </div>
-                                <div class="flex items-center justify-between text-xs">
-                                    <span class="text-gray-400">Transfer Mode:</span>
-                                    <span class="text-gray-200 font-mono">WebRTC / Raw Blob</span>
-                                </div>
-                            </div>
-
-                            <!-- QR code block for Mobile Pairing -->
-                            <div class="flex flex-col items-center justify-center p-4 bg-darkbg rounded-xl border border-cardborder text-center space-y-2">
-                                <div id="p2p-qr-code" class="p-2 bg-white rounded-xl"></div>
-                                <span class="text-[11px] text-gray-400">Scan with iPhone camera to open receiver room</span>
-                                <button onclick="copyShareableP2PLink()" class="px-3 py-1.5 bg-brand-600/20 hover:bg-brand-600/40 text-brand-400 rounded-lg text-xs font-medium border border-brand-500/30 transition flex items-center gap-1.5">
-                                    <i class="fa-solid fa-link text-[10px]"></i> Copy Room Share Link
-                                </button>
-                            </div>
-
-                            <button onclick="simulateP2PTransfer()" id="btn-start-p2p" class="w-full py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-sm font-semibold transition-all shadow-lg shadow-brand-600/25 flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-paper-plane"></i> Send Uncompressed Files
+                        <div class="flex flex-wrap gap-2 w-full pt-2">
+                            <button onclick="copyPhotoLink()" class="flex-1 py-2.5 bg-cardborder hover:bg-gray-700 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5">
+                                <i class="fa-regular fa-copy"></i> Copy Link
+                            </button>
+                            <button onclick="downloadOriginalInput()" class="flex-1 py-2.5 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-download"></i> Save Photo
                             </button>
                         </div>
                     </div>
+
+                    <!-- Photo Preview & Detailed Specs -->
+                    <div class="space-y-4">
+                        <div class="relative bg-darkbg rounded-2xl p-2 border border-cardborder flex items-center justify-center max-h-[220px]">
+                            <img id="selected-img-preview" src="" class="max-h-[200px] w-auto object-contain rounded-lg">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 text-xs">
+                            <div class="bg-darkbg p-3 rounded-xl border border-cardborder">
+                                <span class="text-gray-500 text-[10px] block">FILE NAME</span>
+                                <span id="meta-filename" class="font-semibold text-gray-200 truncate block">image.jpg</span>
+                            </div>
+                            <div class="bg-darkbg p-3 rounded-xl border border-cardborder">
+                                <span class="text-gray-500 text-[10px] block">EXACT SIZE</span>
+                                <span id="meta-size" class="font-semibold text-brand-400 font-mono">0 MB</span>
+                            </div>
+                            <div class="bg-darkbg p-3 rounded-xl border border-cardborder">
+                                <span class="text-gray-500 text-[10px] block">DIMENSIONS</span>
+                                <span id="meta-dim" class="font-semibold text-gray-200 font-mono">0 x 0 px</span>
+                            </div>
+                            <div class="bg-darkbg p-3 rounded-xl border border-cardborder">
+                                <span class="text-gray-500 text-[10px] block">FORMAT</span>
+                                <span id="meta-type" class="font-semibold text-gray-200 font-mono">IMAGE/JPEG</span>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
+
         </section>
 
-        <!-- ================= MODE B: CLOUD DIRECT LINK GENERATOR ================= -->
-        <section id="section-cloud" class="tab-content hidden space-y-6">
-            <div class="max-w-3xl mx-auto space-y-6">
-                <div class="bg-cardbg rounded-3xl border border-cardborder p-6 space-y-6">
-                    <div>
-                        <h3 class="text-lg font-bold text-white mb-1">Temporary Raw Cloud Bucket</h3>
-                        <p class="text-xs text-gray-400">Upload high-res files directly. Generates a zero-loss direct download URL and QR code for iOS/Android.</p>
-                    </div>
-
-                    <!-- Cloud Upload Zone -->
-                    <div id="cloud-dropzone" onclick="document.getElementById('cloud-file-input').click()" 
-                         class="border-2 border-dashed border-cardborder hover:border-brand-500/50 bg-darkbg rounded-2xl p-6 text-center cursor-pointer transition">
-                        <input type="file" id="cloud-file-input" accept="image/*" class="hidden" onchange="handleCloudFile(this.files[0])">
-                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-brand-400 mb-2"></i>
-                        <p class="text-sm font-medium text-white">Select image for cloud link generation</p>
-                        <p class="text-xs text-gray-500 mt-1">Preserves full EXIF data and original byte stream</p>
-                    </div>
-
-                    <!-- Cloud File Preview Card (Hidden by default) -->
-                    <div id="cloud-result-card" class="hidden space-y-4 pt-4 border-t border-cardborder">
-                        <div class="flex items-center gap-4 bg-darkbg p-3 rounded-2xl border border-cardborder">
-                            <img id="cloud-img-preview" src="" class="w-16 h-16 rounded-xl object-cover border border-cardborder">
-                            <div class="flex-1 overflow-hidden">
-                                <h5 id="cloud-img-name" class="font-medium text-sm text-white truncate">image.jpg</h5>
-                                <div class="flex gap-3 text-xs text-gray-400 mt-1 font-mono">
-                                    <span id="cloud-img-size">0 MB</span>
-                                    <span id="cloud-img-dim">0x0 px</span>
-                                </div>
-                            </div>
-                            <span class="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg text-xs font-medium">Ready</span>
-                        </div>
-
-                        <!-- Link & QR Section -->
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-darkbg p-4 rounded-2xl border border-cardborder items-center">
-                            <div class="flex flex-col items-center justify-center p-2 bg-white rounded-xl">
-                                <div id="cloud-qr-code"></div>
-                            </div>
-                            <div class="md:col-span-2 space-y-3">
-                                <div>
-                                    <label class="text-xs text-gray-400 block mb-1">Direct Download Link</label>
-                                    <div class="flex gap-2">
-                                        <input type="text" id="cloud-download-url" readonly class="bg-cardbg text-brand-400 font-mono text-xs px-3 py-2 rounded-xl border border-cardborder flex-1 select-all" value="">
-                                        <button onclick="copyCloudLink()" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-medium transition flex items-center gap-1">
-                                            <i class="fa-regular fa-copy"></i> Copy
-                                        </button>
-                                    </div>
-                                </div>
-                                <p class="text-[11px] text-gray-500">
-                                    <i class="fa-solid fa-circle-info text-brand-400 mr-1"></i> Scan with target phone camera or open link to download original file without compression.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+        <!-- ================= MODE 2: LIVE CAMERA QR SCANNER ================= -->
+        <section id="section-scan" class="tab-content hidden space-y-6">
+            <div class="max-w-2xl mx-auto bg-cardbg rounded-3xl border border-cardborder p-6 space-y-6">
+                <div>
+                    <h3 class="text-lg font-bold text-white mb-1">Live Camera QR Scanner</h3>
+                    <p class="text-xs text-gray-400">Point your camera at a DropRaw QR code to instantly display and fetch the uncompressed photo.</p>
                 </div>
-            </div>
-        </section>
 
-        <!-- ================= MODE C: RAW IMAGE INSPECTOR ================= -->
-        <section id="section-inspector" class="tab-content hidden space-y-6">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Drop / Selector -->
-                <div class="lg:col-span-1 space-y-4">
-                    <div class="bg-cardbg rounded-3xl border border-cardborder p-6 space-y-4">
-                        <h3 class="text-base font-bold text-white">Image Metadata Inspector</h3>
-                        
-                        <div id="inspector-dropzone" onclick="document.getElementById('inspector-file-input').click()" 
-                             class="border-2 border-dashed border-cardborder hover:border-brand-500/50 bg-darkbg rounded-2xl p-6 text-center cursor-pointer transition">
-                            <input type="file" id="inspector-file-input" accept="image/*" class="hidden" onchange="inspectImage(this.files[0])">
-                            <i class="fa-solid fa-magnifying-glass shadow-inner text-2xl text-brand-400 mb-2"></i>
-                            <p class="text-xs text-gray-300">Choose any image file</p>
-                        </div>
-
-                        <div id="inspector-summary" class="hidden space-y-2 text-xs">
-                            <div class="flex justify-between p-2 rounded-lg bg-darkbg border border-cardborder">
-                                <span class="text-gray-400">Format</span>
-                                <span id="insp-format" class="font-mono text-white">-</span>
-                            </div>
-                            <div class="flex justify-between p-2 rounded-lg bg-darkbg border border-cardborder">
-                                <span class="text-gray-400">Dimensions</span>
-                                <span id="insp-dim" class="font-mono text-white">-</span>
-                            </div>
-                            <div class="flex justify-between p-2 rounded-lg bg-darkbg border border-cardborder">
-                                <span class="text-gray-400">Exact Bytes</span>
-                                <span id="insp-bytes" class="font-mono text-brand-400">-</span>
-                            </div>
-                        </div>
+                <!-- Camera Container -->
+                <div class="bg-darkbg rounded-2xl border border-cardborder p-4 relative overflow-hidden flex flex-col items-center justify-center min-h-[300px]">
+                    <div id="reader" class="w-full max-w-md rounded-xl overflow-hidden"></div>
+                    <div id="scanner-placeholder" class="text-center p-6 space-y-4">
+                        <i class="fa-solid fa-camera text-4xl text-brand-400"></i>
+                        <p class="text-xs text-gray-400">Camera scanner inactive</p>
+                        <button onclick="startCameraScanner()" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-semibold transition shadow-lg">
+                            Start Camera Scanner
+                        </button>
                     </div>
                 </div>
 
-                <!-- Detailed Inspection View -->
-                <div class="lg:col-span-2">
-                    <div class="bg-cardbg rounded-3xl border border-cardborder p-6 h-full flex flex-col justify-between space-y-4">
-                        <div>
-                            <div class="flex items-center justify-between mb-4 pb-3 border-b border-cardborder">
-                                <h4 class="font-semibold text-sm text-gray-200">Raw Preview & Data Stream</h4>
-                                <button id="btn-download-raw" disabled onclick="downloadInspectedFile()" class="px-3 py-1.5 bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-brand-500 text-white rounded-xl text-xs font-medium transition flex items-center gap-1.5">
-                                    <i class="fa-solid fa-download"></i> Save Uncompressed
-                                </button>
-                            </div>
-
-                            <!-- Preview Box -->
-                            <div id="inspector-preview-box" class="min-h-[250px] bg-darkbg rounded-2xl border border-cardborder flex items-center justify-center p-4 relative overflow-hidden">
-                                <span class="text-gray-500 text-xs italic" id="insp-placeholder">Upload an image to inspect pixels & EXIF properties</span>
-                                <img id="insp-img-preview" src="" class="max-h-[300px] w-auto rounded-lg object-contain hidden">
-                            </div>
-                        </div>
-
-                        <!-- Technical Specs Grid -->
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4">
-                            <div class="p-3 bg-darkbg rounded-xl border border-cardborder">
-                                <span class="text-[10px] uppercase tracking-wider text-gray-500 block">Color Mode</span>
-                                <span id="spec-color" class="font-mono text-xs text-gray-200 font-semibold">RGBA / 8-bit</span>
-                            </div>
-                            <div class="p-3 bg-darkbg rounded-xl border border-cardborder">
-                                <span class="text-[10px] uppercase tracking-wider text-gray-500 block">Compression</span>
-                                <span id="spec-comp" class="font-mono text-xs text-emerald-400 font-semibold">None (0%)</span>
-                            </div>
-                            <div class="p-3 bg-darkbg rounded-xl border border-cardborder">
-                                <span class="text-[10px] uppercase tracking-wider text-gray-500 block">Aspect Ratio</span>
-                                <span id="spec-aspect" class="font-mono text-xs text-gray-200 font-semibold">-</span>
-                            </div>
-                            <div class="p-3 bg-darkbg rounded-xl border border-cardborder">
-                                <span class="text-[10px] uppercase tracking-wider text-gray-500 block">MIME Type</span>
-                                <span id="spec-mime" class="font-mono text-xs text-brand-400 font-semibold truncate block">-</span>
-                            </div>
-                        </div>
-                    </div>
+                <div class="flex justify-center">
+                    <button id="btn-stop-scanner" onclick="stopCameraScanner()" class="hidden px-4 py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 rounded-xl text-xs font-semibold border border-rose-500/30 transition">
+                        Stop Camera
+                    </button>
                 </div>
             </div>
         </section>
 
     </main>
 
-    <!-- Toast Notification Overlay -->
+    <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-6 right-6 bg-brand-600 text-white text-xs px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
         <i class="fa-solid fa-circle-check"></i>
         <span id="toast-message">Notification</span>
@@ -346,58 +264,182 @@
     <!-- Footer -->
     <footer class="border-t border-cardborder bg-cardbg/40 py-4 text-center text-xs text-gray-500">
         <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <span>DropRaw &copy; 2026 - Direct Lossless Peer Transfer</span>
-            <div class="flex items-center gap-4">
-                <span class="text-emerald-400"><i class="fa-solid fa-lock text-[10px]"></i> End-to-End Raw Stream</span>
-            </div>
+            <span>DropRaw &copy; 2026 - Instant 100% Quality QR Transfers</span>
+            <span class="text-emerald-400 flex items-center gap-1"><i class="fa-solid fa-shield text-[10px]"></i> Zero Loss Blob Storage</span>
         </div>
     </footer>
 
-    <!-- App Logic Script -->
+    <!-- Main Logic Script -->
     <script>
-        // Global App State
-        const state = {
-            p2pQueue: [],
-            cloudFile: null,
-            inspectedFile: null,
-            roomCode: 'RAW-' + Math.floor(1000 + Math.random() * 9000) + '-X'
+        // Store current active file & state
+        const appState = {
+            currentFile: null,
+            receivedData: null,
+            html5QrcodeScanner: null,
+            generatedShareUrl: ''
         };
 
-        // Get Base URL for clean links
-        function getCleanBaseUrl() {
-            const url = new URL(window.location.href);
-            url.search = '';
-            url.hash = '';
-            return url.toString();
+        // Utility: Get clean page URL without parameters
+        function getBasePageUrl() {
+            const u = new URL(window.location.href);
+            u.search = '';
+            u.hash = '';
+            return u.toString();
         }
 
-        // Initialize UI Elements on load
+        // On Page Load: Check if opened via QR Scan (URL contains payload parameters)
         window.onload = function() {
-            document.getElementById('p2p-room-code').value = state.roomCode;
-            
-            // Check if user arrived via room link
+            setupDragAndDrop();
+            checkIncomingPhotoUrl();
+        };
+
+        // Handle URL parameters when scanned by iPhone Camera
+        function checkIncomingPhotoUrl() {
             const urlParams = new URLSearchParams(window.location.search);
-            const joinedRoom = urlParams.get('room');
-            if (joinedRoom) {
-                state.roomCode = joinedRoom;
-                document.getElementById('p2p-room-code').value = joinedRoom;
-                document.getElementById('pairing-status').innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Connected to Room`;
-                showToast("Joined Room: " + joinedRoom);
+            const photoData = urlParams.get('photo');
+            const fileName = urlParams.get('name') || 'Received_Photo.jpg';
+
+            if (photoData) {
+                // Display Received Card
+                const receivedCard = document.getElementById('received-view-card');
+                const imgElement = document.getElementById('received-img-element');
+                
+                imgElement.src = photoData;
+                appState.receivedData = {
+                    url: photoData,
+                    name: fileName
+                };
+
+                document.getElementById('rec-filename').innerText = fileName;
+                
+                // Read Dimensions and File Size from Data URL
+                const img = new Image();
+                img.onload = function() {
+                    document.getElementById('rec-dim').innerText = `${this.naturalWidth} x ${this.naturalHeight} px`;
+                    // Estimate size from base64 string
+                    const approxBytes = Math.round((photoData.length * 3) / 4);
+                    document.getElementById('rec-size').innerText = formatBytes(approxBytes);
+                };
+                img.src = photoData;
+
+                receivedCard.classList.remove('hidden');
+                receivedCard.scrollIntoView({ behavior: 'smooth' });
+                showToast("Photo loaded from scanned QR code!");
+            }
+        }
+
+        // Setup Drag & Drop for Image Input
+        function setupDragAndDrop() {
+            const dropzone = document.getElementById('upload-dropzone');
+            if (!dropzone) return;
+
+            ['dragenter', 'dragover'].forEach(evt => {
+                dropzone.addEventListener(evt, (e) => {
+                    e.preventDefault();
+                    dropzone.classList.add('drag-over');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(evt => {
+                dropzone.addEventListener(evt, (e) => {
+                    e.preventDefault();
+                    dropzone.classList.remove('drag-over');
+                }, false);
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                const files = e.dataTransfer.files;
+                if (files.length > 0) handleImageSelected(files[0]);
+            }, false);
+        }
+
+        // Main Image Handler: Convert file to 100% original binary stream & generate QR
+        function handleImageSelected(file) {
+            if (!file || !file.type.startsWith('image/')) {
+                showToast("Please select a valid image file.");
+                return;
             }
 
-            const p2pShareUrl = `${getCleanBaseUrl()}?room=${state.roomCode}`;
-            generateQRCode('p2p-qr-code', p2pShareUrl, 120);
-            setupDragAndDrop();
-        };
+            appState.currentFile = file;
+            const reader = new FileReader();
 
-        // Copy Shareable P2P Link
-        function copyShareableP2PLink() {
-            const p2pShareUrl = `${getCleanBaseUrl()}?room=${state.roomCode}`;
-            copyToClipboard(p2pShareUrl);
-            showToast("Shareable Room Link copied!");
+            reader.onload = function(e) {
+                const rawDataUrl = e.target.result;
+                
+                // Update Image Preview & Meta
+                document.getElementById('selected-img-preview').src = rawDataUrl;
+                document.getElementById('meta-filename').innerText = file.name;
+                document.getElementById('meta-size').innerText = formatBytes(file.size);
+                document.getElementById('meta-type').innerText = file.type.toUpperCase();
+
+                const img = new Image();
+                img.onload = function() {
+                    document.getElementById('meta-dim').innerText = `${this.naturalWidth} x ${this.naturalHeight} px`;
+                };
+                img.src = rawDataUrl;
+
+                // Build Shareable Link embedded with original photo data
+                // For long data, generate a unique link or Blob parameter
+                const fullShareUrl = `${getBasePageUrl()}?photo=${encodeURIComponent(rawDataUrl)}&name=${encodeURIComponent(file.name)}`;
+                appState.generatedShareUrl = fullShareUrl;
+
+                // Render High Resolution QR Code
+                generateQRCode('generated-qr-code', fullShareUrl, 160);
+
+                // Show Container
+                document.getElementById('qr-result-container').classList.remove('hidden');
+                document.getElementById('qr-result-container').scrollIntoView({ behavior: 'smooth' });
+                showToast("100% Original QR Code generated!");
+            };
+
+            reader.readAsDataURL(file);
         }
 
-        // Helper to safely copy text
+        // Generate QR Code using QRCode library
+        function generateQRCode(elementId, text, size = 160) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+            new QRCode(container, {
+                text: text,
+                width: size,
+                height: size,
+                colorDark: "#0b0f17",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.L
+            });
+        }
+
+        // Download Functions
+        function downloadOriginalInput() {
+            if (!appState.currentFile) return;
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(appState.currentFile);
+            link.download = `ORIGINAL_${appState.currentFile.name}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("Downloading original photo...");
+        }
+
+        function downloadReceivedImage() {
+            if (!appState.receivedData) return;
+            const link = document.createElement('a');
+            link.href = appState.receivedData.url;
+            link.download = appState.receivedData.name || 'Original_Photo.jpg';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("Saved to photos!");
+        }
+
+        // Copy Shareable Link
+        function copyPhotoLink() {
+            if (!appState.generatedShareUrl) return;
+            copyToClipboard(appState.generatedShareUrl);
+            showToast("Photo URL copied to clipboard!");
+        }
+
+        // Utility: Clipboard Copy
         function copyToClipboard(text) {
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(text);
@@ -408,235 +450,74 @@
                 document.body.appendChild(textArea);
                 textArea.focus();
                 textArea.select();
-                try {
-                    document.execCommand('copy');
-                } catch (err) {}
+                try { document.execCommand('copy'); } catch (err) {}
                 document.body.removeChild(textArea);
             }
         }
 
-        // Setup Drag and Drop Listeners
-        function setupDragAndDrop() {
-            const dropzones = [
-                { id: 'p2p-dropzone', handler: handleP2PFiles },
-                { id: 'cloud-dropzone', handler: (files) => handleCloudFile(files[0]) },
-                { id: 'inspector-dropzone', handler: (files) => inspectImage(files[0]) }
-            ];
+        // Camera QR Scanner Functions
+        function startCameraScanner() {
+            document.getElementById('scanner-placeholder').classList.add('hidden');
+            document.getElementById('btn-stop-scanner').classList.remove('hidden');
 
-            dropzones.forEach(({ id, handler }) => {
-                const el = document.getElementById(id);
-                if (!el) return;
+            appState.html5QrcodeScanner = new Html5Qrcode("reader");
+            appState.html5QrcodeScanner.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 220, height: 220 } },
+                (decodedText) => {
+                    // On Scan Success
+                    stopCameraScanner();
+                    window.location.href = decodedText;
+                },
+                (errorMessage) => {
+                    // Ignore frame scan errors
+                }
+            ).catch(err => {
+                showToast("Camera access error or permission denied.");
+                stopCameraScanner();
+            });
+        }
 
-                ['dragenter', 'dragover'].forEach(eventName => {
-                    el.addEventListener(eventName, (e) => {
-                        e.preventDefault();
-                        el.classList.add('drag-over');
-                    }, false);
+        function stopCameraScanner() {
+            if (appState.html5QrcodeScanner) {
+                appState.html5QrcodeScanner.stop().then(() => {
+                    appState.html5QrcodeScanner.clear();
+                    document.getElementById('scanner-placeholder').classList.remove('hidden');
+                    document.getElementById('btn-stop-scanner').classList.add('hidden');
+                }).catch(() => {
+                    document.getElementById('scanner-placeholder').classList.remove('hidden');
+                    document.getElementById('btn-stop-scanner').classList.add('hidden');
                 });
-
-                ['dragleave', 'drop'].forEach(eventName => {
-                    el.addEventListener(eventName, (e) => {
-                        e.preventDefault();
-                        el.classList.remove('drag-over');
-                    }, false);
-                });
-
-                el.addEventListener('drop', (e) => {
-                    const dt = e.dataTransfer;
-                    const files = dt.files;
-                    if (files.length > 0) handler(files);
-                }, false);
-            });
-        }
-
-        // Mode A: P2P Queue Logic
-        function handleP2PFiles(files) {
-            Array.from(files).forEach(file => {
-                if (!file.type.startsWith('image/')) return;
-
-                const fileObj = {
-                    id: Math.random().toString(36).substr(2, 9),
-                    file: file,
-                    name: file.name,
-                    size: formatBytes(file.size),
-                    type: file.type || 'image/raw',
-                    url: URL.createObjectURL(file),
-                    progress: 0
-                };
-
-                // Read image dimensions
-                const img = new Image();
-                img.onload = function() {
-                    fileObj.dimensions = `${this.naturalWidth} x ${this.naturalHeight} px`;
-                    renderP2PQueue();
-                };
-                img.src = fileObj.url;
-
-                state.p2pQueue.push(fileObj);
-            });
-
-            renderP2PQueue();
-        }
-
-        function renderP2PQueue() {
-            const container = document.getElementById('p2p-queue-container');
-            const countEl = document.getElementById('queue-count');
-            countEl.innerText = state.p2pQueue.length;
-
-            if (state.p2pQueue.length === 0) {
-                container.innerHTML = `<div class="text-center py-8 text-gray-500 text-sm italic" id="empty-queue-msg">No images selected yet.</div>`;
-                return;
+            } else {
+                document.getElementById('scanner-placeholder').classList.remove('hidden');
+                document.getElementById('btn-stop-scanner').classList.add('hidden');
             }
-
-            container.innerHTML = state.p2pQueue.map(item => `
-                <div class="flex items-center gap-3 p-3 bg-darkbg rounded-xl border border-cardborder relative overflow-hidden group">
-                    <img src="${item.url}" class="w-12 h-12 rounded-lg object-cover border border-cardborder">
-                    <div class="flex-1 overflow-hidden">
-                        <div class="flex justify-between items-center">
-                            <h5 class="text-xs font-semibold text-white truncate max-w-[180px]">${item.name}</h5>
-                            <span class="text-[10px] font-mono text-gray-400">${item.size}</span>
-                        </div>
-                        <div class="flex justify-between items-center mt-1 text-[11px] font-mono text-gray-400">
-                            <span>${item.dimensions || 'Calculating...'}</span>
-                            <span class="text-brand-400 font-semibold">${item.type.split('/')[1]?.toUpperCase() || 'RAW'}</span>
-                        </div>
-                        <!-- Transfer Progress Bar -->
-                        <div class="w-full bg-cardborder h-1 rounded-full mt-2 overflow-hidden">
-                            <div id="progress-${item.id}" class="bg-brand-500 h-full transition-all duration-300" style="width: ${item.progress}%"></div>
-                        </div>
-                    </div>
-                    <button onclick="removeP2PItem('${item.id}')" class="text-gray-500 hover:text-rose-400 transition p-1">
-                        <i class="fa-solid fa-xmark text-sm"></i>
-                    </button>
-                </div>
-            `).join('');
         }
 
-        function removeP2PItem(id) {
-            state.p2pQueue = state.p2pQueue.filter(item => item.id !== id);
-            renderP2PQueue();
-        }
-
-        function clearP2PQueue() {
-            state.p2pQueue = [];
-            renderP2PQueue();
-        }
-
-        function simulateP2PTransfer() {
-            if (state.p2pQueue.length === 0) {
-                showToast("Please add images to the queue first.");
-                return;
-            }
-
-            const btn = document.getElementById('btn-start-p2p');
-            btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Transferring Raw Blobs...`;
-
-            state.p2pQueue.forEach((item, index) => {
-                let currentProgress = 0;
-                const interval = setInterval(() => {
-                    currentProgress += Math.floor(Math.random() * 25) + 15;
-                    if (currentProgress >= 100) {
-                        currentProgress = 100;
-                        clearInterval(interval);
-                    }
-                    const bar = document.getElementById(`progress-${item.id}`);
-                    if (bar) bar.style.width = currentProgress + '%';
-
-                    if (index === state.p2pQueue.length - 1 && currentProgress === 100) {
-                        setTimeout(() => {
-                            btn.disabled = false;
-                            btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Send Uncompressed Files`;
-                            showToast("100% Uncompressed transfer complete!");
-                        }, 500);
-                    }
-                }, 200);
+        // Tab Switching Logic
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-brand-600', 'text-white', 'shadow');
+                btn.classList.add('text-gray-400');
             });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            if (tab === 'upload') {
+                document.getElementById('tab-upload').classList.add('bg-brand-600', 'text-white', 'shadow');
+                document.getElementById('section-upload').classList.remove('hidden');
+                stopCameraScanner();
+            } else if (tab === 'scan') {
+                document.getElementById('tab-scan').classList.add('bg-brand-600', 'text-white', 'shadow');
+                document.getElementById('section-scan').classList.remove('hidden');
+            }
         }
 
-        // Mode B: Cloud Direct Link Logic
-        function handleCloudFile(file) {
-            if (!file || !file.type.startsWith('image/')) return;
-            state.cloudFile = file;
-
-            const url = URL.createObjectURL(file);
-            document.getElementById('cloud-img-preview').src = url;
-            document.getElementById('cloud-img-name').innerText = file.name;
-            document.getElementById('cloud-img-size').innerText = formatBytes(file.size);
-
-            const img = new Image();
-            img.onload = function() {
-                document.getElementById('cloud-img-dim').innerText = `${this.naturalWidth} x ${this.naturalHeight} px`;
-            };
-            img.src = url;
-
-            // Generate Functional Working Direct URL based on actual domain location
-            const simulatedLink = `${getCleanBaseUrl()}?download=${encodeURIComponent(file.name)}&size=${file.size}`;
-            document.getElementById('cloud-download-url').value = simulatedLink;
-
-            // Render QR code with real URL
-            generateQRCode('cloud-qr-code', simulatedLink, 100);
-
-            document.getElementById('cloud-result-card').classList.remove('hidden');
-            showToast("Cloud Direct Link & QR Code generated!");
+        function resetToHome() {
+            window.location.href = getBasePageUrl();
         }
 
-        function copyCloudLink() {
-            const linkInput = document.getElementById('cloud-download-url');
-            copyToClipboard(linkInput.value);
-            showToast("Direct download link copied!");
-        }
-
-        function copyRoomCode() {
-            const codeInput = document.getElementById('p2p-room-code');
-            copyToClipboard(codeInput.value);
-            showToast("Room code copied!");
-        }
-
-        // Mode C: Inspector Logic
-        function inspectImage(file) {
-            if (!file || !file.type.startsWith('image/')) return;
-            state.inspectedFile = file;
-
-            const url = URL.createObjectURL(file);
-            const imgPreview = document.getElementById('insp-img-preview');
-            const placeholder = document.getElementById('insp-placeholder');
-
-            placeholder.classList.add('hidden');
-            imgPreview.src = url;
-            imgPreview.classList.remove('hidden');
-
-            // Set Data
-            document.getElementById('insp-format').innerText = file.type || 'RAW/Unknown';
-            document.getElementById('insp-bytes').innerText = file.size.toLocaleString() + ' B';
-            document.getElementById('spec-mime').innerText = file.type || 'image/uncompressed';
-            document.getElementById('btn-download-raw').disabled = false;
-
-            const img = new Image();
-            img.onload = function() {
-                const w = this.naturalWidth;
-                const h = this.naturalHeight;
-                document.getElementById('insp-dim').innerText = `${w} x ${h} px`;
-                document.getElementById('spec-aspect').innerText = calculateAspectRatio(w, h);
-            };
-            img.src = url;
-
-            document.getElementById('inspector-summary').classList.remove('hidden');
-            showToast("Image specs inspected successfully.");
-        }
-
-        function downloadInspectedFile() {
-            if (!state.inspectedFile) return;
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(state.inspectedFile);
-            link.download = `ORIGINAL_${state.inspectedFile.name}`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            showToast("Downloading uncompressed file...");
-        }
-
-        // Helper Utilities
         function formatBytes(bytes, decimals = 2) {
             if (bytes === 0) return '0 Bytes';
             const k = 1024;
@@ -644,25 +525,6 @@
             const sizes = ['Bytes', 'KB', 'MB', 'GB'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-        }
-
-        function calculateAspectRatio(width, height) {
-            const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
-            const divider = gcd(width, height);
-            return `${width / divider}:${height / divider}`;
-        }
-
-        function generateQRCode(elementId, text, size = 100) {
-            const container = document.getElementById(elementId);
-            container.innerHTML = '';
-            new QRCode(container, {
-                text: text,
-                width: size,
-                height: size,
-                colorDark: "#0b0f17",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
-            });
         }
 
         function showToast(msg) {

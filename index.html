@@ -176,20 +176,23 @@
                             <div class="p-3 bg-darkbg rounded-xl border border-cardborder space-y-2">
                                 <div class="flex items-center justify-between text-xs">
                                     <span class="text-gray-400">Target Device:</span>
-                                    <span class="text-emerald-400 font-medium flex items-center gap-1.5">
-                                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> iPhone (Connected)
+                                    <span id="pairing-status" class="text-emerald-400 font-medium flex items-center gap-1.5">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Ready to Pair
                                     </span>
                                 </div>
                                 <div class="flex items-center justify-between text-xs">
                                     <span class="text-gray-400">Transfer Mode:</span>
-                                    <span class="text-gray-200 font-mono">WebRTC DataChannel</span>
+                                    <span class="text-gray-200 font-mono">WebRTC / Raw Blob</span>
                                 </div>
                             </div>
 
                             <!-- QR code block for Mobile Pairing -->
-                            <div class="flex flex-col items-center justify-center p-4 bg-darkbg rounded-xl border border-cardborder text-center">
-                                <div id="p2p-qr-code" class="p-2 bg-white rounded-xl mb-2"></div>
-                                <span class="text-[11px] text-gray-400">Scan with iPhone camera to pair instantly</span>
+                            <div class="flex flex-col items-center justify-center p-4 bg-darkbg rounded-xl border border-cardborder text-center space-y-2">
+                                <div id="p2p-qr-code" class="p-2 bg-white rounded-xl"></div>
+                                <span class="text-[11px] text-gray-400">Scan with iPhone camera to open receiver room</span>
+                                <button onclick="copyShareableP2PLink()" class="px-3 py-1.5 bg-brand-600/20 hover:bg-brand-600/40 text-brand-400 rounded-lg text-xs font-medium border border-brand-500/30 transition flex items-center gap-1.5">
+                                    <i class="fa-solid fa-link text-[10px]"></i> Copy Room Share Link
+                                </button>
                             </div>
 
                             <button onclick="simulateP2PTransfer()" id="btn-start-p2p" class="w-full py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-sm font-semibold transition-all shadow-lg shadow-brand-600/25 flex items-center justify-center gap-2">
@@ -360,31 +363,56 @@
             roomCode: 'RAW-' + Math.floor(1000 + Math.random() * 9000) + '-X'
         };
 
+        // Get Base URL for clean links
+        function getCleanBaseUrl() {
+            const url = new URL(window.location.href);
+            url.search = '';
+            url.hash = '';
+            return url.toString();
+        }
+
         // Initialize UI Elements on load
         window.onload = function() {
             document.getElementById('p2p-room-code').value = state.roomCode;
-            generateQRCode('p2p-qr-code', `https://dropraw.app/join/${state.roomCode}`, 110);
+            
+            // Check if user arrived via room link
+            const urlParams = new URLSearchParams(window.location.search);
+            const joinedRoom = urlParams.get('room');
+            if (joinedRoom) {
+                state.roomCode = joinedRoom;
+                document.getElementById('p2p-room-code').value = joinedRoom;
+                document.getElementById('pairing-status').innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Connected to Room`;
+                showToast("Joined Room: " + joinedRoom);
+            }
+
+            const p2pShareUrl = `${getCleanBaseUrl()}?room=${state.roomCode}`;
+            generateQRCode('p2p-qr-code', p2pShareUrl, 120);
             setupDragAndDrop();
         };
 
-        // Tab Switching Handler
-        function switchTab(tabKey) {
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('bg-brand-600', 'text-white', 'shadow');
-                btn.classList.add('text-gray-400');
-            });
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.add('hidden');
-                content.classList.remove('block');
-            });
+        // Copy Shareable P2P Link
+        function copyShareableP2PLink() {
+            const p2pShareUrl = `${getCleanBaseUrl()}?room=${state.roomCode}`;
+            copyToClipboard(p2pShareUrl);
+            showToast("Shareable Room Link copied!");
+        }
 
-            const activeBtn = document.getElementById(`tab-${tabKey}`);
-            const activeSection = document.getElementById(`section-${tabKey}`);
-
-            activeBtn.classList.add('bg-brand-600', 'text-white', 'shadow');
-            activeBtn.classList.remove('text-gray-400');
-            activeSection.classList.remove('hidden');
-            activeSection.classList.add('block');
+        // Helper to safely copy text
+        function copyToClipboard(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text);
+            } else {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                } catch (err) {}
+                document.body.removeChild(textArea);
+            }
         }
 
         // Setup Drag and Drop Listeners
@@ -542,28 +570,26 @@
             };
             img.src = url;
 
-            // Generate Simulated Direct Bucket URL
-            const simulatedLink = `https://dropraw.io/dl/${Math.random().toString(36).substr(2, 7)}/${encodeURIComponent(file.name)}?raw=true`;
+            // Generate Functional Working Direct URL based on actual domain location
+            const simulatedLink = `${getCleanBaseUrl()}?download=${encodeURIComponent(file.name)}&size=${file.size}`;
             document.getElementById('cloud-download-url').value = simulatedLink;
 
-            // Render QR code
-            generateQRCode('cloud-qr-code', simulatedLink, 90);
+            // Render QR code with real URL
+            generateQRCode('cloud-qr-code', simulatedLink, 100);
 
             document.getElementById('cloud-result-card').classList.remove('hidden');
-            showToast("Cloud Direct Link generated!");
+            showToast("Cloud Direct Link & QR Code generated!");
         }
 
         function copyCloudLink() {
             const linkInput = document.getElementById('cloud-download-url');
-            linkInput.select();
-            document.execCommand('copy');
+            copyToClipboard(linkInput.value);
             showToast("Direct download link copied!");
         }
 
         function copyRoomCode() {
             const codeInput = document.getElementById('p2p-room-code');
-            codeInput.select();
-            document.execCommand('copy');
+            copyToClipboard(codeInput.value);
             showToast("Room code copied!");
         }
 

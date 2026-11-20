@@ -1,0 +1,8 @@
+{
+  "name": "moon-defenders-server",
+  "version": "1.0.0",
+  "description": "Account + save server for MOON DEFENDERS (no dependencies)",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}

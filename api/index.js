@@ -1,8 +1,8 @@
 'use strict';
 const crypto = require('crypto');
 
-const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL;
-const REDIS_TOK = process.env.UPSTASH_REDIS_REST_TOKEN;
+const REDIS_URL = (process.env.UPSTASH_REDIS_REST_URL || '').trim().replace(/^["']+|["']+$/g, '');
+const REDIS_TOK = (process.env.UPSTASH_REDIS_REST_TOKEN || '').trim().replace(/^["']+|["']+$/g, '');
 const ADMIN_USERS = new Set((process.env.ADMIN_USERS || 'anw4aar').split(',').map(x => x.trim().toLowerCase()).filter(Boolean));
 const ADMIN_KEY = process.env.ADMIN_KEY || '';
 const ADMIN_ON = ADMIN_KEY.length >= 12;

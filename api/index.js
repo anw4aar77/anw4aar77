@@ -94,7 +94,7 @@ async function commit(key, u, S) {
 async function runCommand(line) {
   const t = line.replace(/^\//, '').split(/\s+/).filter(Boolean), cmd = (t.shift() || '').toLowerCase();
   const E = m => ({ ok: false, msg: m }), O = m => ({ ok: true, msg: m });
-  if (cmd === 'help') return O(['Commands:', '/give diamonds|coins|xp <player> <amount>', '/give character <player> <name>', '/give fragments <player> <star|moon|chest|character name> <amount>', '/remove fragments <player> <star|moon|chest|character name> <amount>', '/setevo <player> <character name> <0-5>', '/give ore <player> <stone|copper|iron|gold|diamond> <amount>', '/remove coins|diamonds <player> <amount>', '/remove ore <player> <ore> <amount>', '/remove character <player> <name>', '/level <player> <level>', '/unlockmissions <player> <1-' + NM + '>', '/resetmissions <player>', '/player <player>', '/players [filter]', '/log [count]', '/help'].join('\n'));
+  if (cmd === 'help') return O(['Commands:', '/give diamonds|coins|xp <player> <amount>', '/give character <player> <name>', '/give fragments <player> <star|moon|chest|[character] name> <amount>', '/remove fragments <player> <star|moon|chest|character name> <amount>', '/setevo <player> <character name> <0-5>', '/give ore <player> <stone|copper|iron|gold|diamond> <amount>', '/remove coins|diamonds <player> <amount>', '/remove ore <player> <ore> <amount>', '/remove character <player> <name>', '/level <player> <level>', '/unlockmissions <player> <1-' + NM + '>', '/resetmissions <player>', '/player <player>', '/players [filter]', '/log [count]', '/help'].join('\n'));
   if (cmd === 'players') {
     const f = (t[0] || '').toLowerCase();
     const keys = (await redis('SMEMBERS', 'users')) || [];
@@ -126,7 +126,7 @@ async function runCommand(line) {
     if (!u) return E('Player not found.');
     const S = loadSave(u);
     if (what === 'fragments') {
-      const typ = t.slice(0, -1).join(' ').toLowerCase(), n = amount(t[t.length - 1]);
+      const typ = t.slice(0, -1).join(' ').toLowerCase().replace(/^(character|char|hero)\s+/, '').trim(), n = amount(t[t.length - 1]);
       if (!typ || n === null) return E('Usage: /' + cmd + ' fragments <player> <star|moon|chest|character name> <amount>');
       let hold, key, label;
       if (typ === 'star' || typ === 'stars') { hold = S.fr; key = 's'; label = 'Star Fragments'; }
@@ -159,7 +159,7 @@ async function runCommand(line) {
   if (cmd === 'setevo') {
     const k = String(t.shift() || '').toLowerCase(), u = await getJson('user:' + k); if (!u) return E('Player not found.');
     const stage = t.pop(); if (!/^[0-5]$/.test(stage || '')) return E('Evolution stage must be 0-5.');
-    const h = findHero(t.join(' ')); if (h.err) return E(h.err);
+    const h = findHero(t.join(' ').toLowerCase().replace(/^(character|char|hero)\s+/, '')); if (h.err) return E(h.err);
     const S = loadSave(u); if (!S.own[h.id]) return E(u.name + ' does not own ' + HEROES[h.id] + '.');
     const old = S.evo[h.id] | 0; if (+stage) S.evo[h.id] = +stage; else delete S.evo[h.id];
     await commit(k, u, S); return O(HEROES[h.id] + ' evolution for ' + u.name + ': ' + old + ' -> ' + (+stage) + '.');

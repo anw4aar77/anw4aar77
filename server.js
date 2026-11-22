@@ -290,4 +290,4 @@ http.createServer((req, res) => {
     res.end(d);
   });
   res.writeHead(404); res.end('Not found');
-}).listen(PORT, () => console.log('MOON DEFENDERS server running on http://localhost:' + PORT + '  (data: ' + FILE + ')'));
+}).listen(PORT, () => console.log('MOON DEFENDERS server running on https://anw4aar77.vercel.app/:' + PORT + '  (data: ' + FILE + ')'));

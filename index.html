@@ -212,19 +212,47 @@ addEventListener('visibilitychange',()=>{if(document.hidden){save();if(SYNC.dirt
 function begin(a,d,rev,arev){ACC=a;if(!a.srv)LS('md_sess',a.id);if(d===undefined){try{d=JSON.parse(LS('md_s_'+a.id))}catch(e){d=null}}S=Object.assign(def(),d||{});S.name=a.name;norm();SYNC={rev:rev||0,arev:arev||0,dirty:false,t:0};G=null;authErr='';LS('md_s_'+a.id,JSON.stringify(S));render('menu');if(a.srv)admStatus()}
 function enter(j){TOK=j.token;LS('md_tok',TOK);LS('md_user',j.name);begin({id:'srv:'+j.name.toLowerCase(),name:j.name,srv:1},j.save||null,j.rev,j.arev)}
 async function doAuth(reg){try{await doAuth0(reg)}catch(e){authErr='Could not complete this ('+(e&&e.message||e)+').';authView()}}
-async function doAuth0(reg){const u=$('#au').value.trim(),p=$('#ap').value,k=u.toLowerCase();
-if(!/^[A-Za-z0-9_]{3,16}$/.test(u)){authErr='Username: 3-16 letters, numbers or underscores.';return authView()}
-if(reg&&(p.length<8||p.length>64)){authErr='Password must be 8-64 characters.';return authView()}
-if(ONLINE||await ping()){
- if(reg){const j=await api('/api/register',{username:u,password:p});if(j.ok)return enter(j);authErr=j.error=='taken'?'That username is already taken. Please choose another one.':(j.error||'Registration failed.');return authView()}
- const j=await api('/api/login',{username:u,password:p});if(j.ok)return enter(j);
- if(j.status==401){/* an account created in this browser before online accounts existed: move it to the server */
-  const a=accs()[k];if(a&&await hpw(p,a.salt,a.fb)===a.hash){let sv=null;try{sv=JSON.parse(LS('md_s_'+a.id))}catch(e){}const r=await api('/api/register',{username:a.name,password:p,save:sv});if(r.ok){enter(r);toast('Your existing account was moved online');return}}}
- authErr=j.status==429?j.error:'Wrong username or password.';return authView()}
-if(reg&&/^https?:/.test(location.protocol)){authErr='Cannot reach the account server right now, so a new account cannot be created (it would only exist on this device). Check the database connection, then press Retry.';return authView()}
-const A=accs();
-if(reg){if(A[k]){authErr='That username is taken.';return authView()}const salt=rnd(16),fb=!(window.crypto&&crypto.subtle)?1:0;A[k]={id:'a'+rnd(8),name:u,salt,fb,hash:await hpw(p,salt,fb)};LS('md_acc',JSON.stringify(A));begin(A[k])}
-else{const a=A[k];if(!a||await hpw(p,a.salt,a.fb)!==a.hash){authErr='Wrong username or password.';return authView()}begin(a)}}
+async function doAuth0(reg){
+  const u=$('#au').value.trim(),p=$('#ap').value,k=u.toLowerCase();
+  if(!/^[A-Za-z0-9_]{3,16}$/.test(u)){authErr='Username: 3-16 letters, numbers or underscores.';return authView()}
+  if(reg&&(p.length<8||p.length>64)){authErr='Password must be 8-64 characters.';return authView()}
+  if(ONLINE||await ping()){
+    if(reg){
+      const j=await api('/api/register',{username:u,password:p});
+      if(j.ok)return enter(j);
+      authErr=j.error=='taken'?'That username is already taken. Please choose another one.':(j.error||'Registration failed.');
+      return authView();
+    }
+    const j=await api('/api/login',{username:u,password:p});
+    if(j.ok)return enter(j);
+    if(j.status==401){
+      const a=accs()[k];
+      if(a&&await hpw(p,a.salt,a.fb)===a.hash){
+        let sv=null;try{sv=JSON.parse(LS('md_s_'+a.id))}catch(e){}
+        const r=await api('/api/register',{username:a.name,password:p,save:sv});
+        if(r.ok){enter(r);toast('Your existing account was moved online');return}
+      }
+    }
+    authErr=j.status==429?j.error:'Wrong username or password.';
+    return authView();
+  }
+  if(/^https?:/.test(location.protocol)){
+    authErr='Cannot reach the account server. Make sure server.js is running and md-api / CORS_ORIGIN are set.';
+    return authView();
+  }
+  const A=accs();
+  if(reg){
+    if(A[k]){authErr='That username is taken.';return authView()}
+    const salt=rnd(16),fb=!(window.crypto&&crypto.subtle)?1:0;
+    A[k]={id:'a'+rnd(8),name:u,salt,fb,hash:await hpw(p,salt,fb)};
+    LS('md_acc',JSON.stringify(A));
+    begin(A[k]);
+  }else{
+    const a=A[k];
+    if(!a||await hpw(p,a.salt,a.fb)!==a.hash){authErr='Wrong username or password.';return authView()}
+    begin(a);
+  }
+}
 async function logout(){if(S&&ACC){LS('md_s_'+ACC.id,JSON.stringify(S));if(ACC.srv){try{SYNC.dirty=true;clearTimeout(SYNC.t);await push()}catch(e){}try{await api('/api/logout',{})}catch(e){}TOK='';LS('md_tok','');LS('md_user','')}else LS('md_sess','')}ISADM=false;ADM.on=false;ADM.out=[];S=null;ACC=null;G=null;authView()}
 function authView(){$('#nav').innerHTML='';document.body.classList.remove('in');['hc','hd','hl','hn'].forEach(i=>$('#'+i).textContent='');$('#hx').style.width='0';const r=atab=='reg';$('#v').innerHTML=`<div class="pg"><div class="gate"><div class="gate-art"><div class="moon"></div><h1>MOON<br>DEFENDERS</h1><p>The moon grid is under siege. Recruit legendary anime heroes, mine rare ores and hold the line.</p><ul class="feat"><li>⚔️ 10 heroes from Common to Mythic</li><li>🗺️ 25 missions with boss battles</li><li>⛏️ Mining, trading and daily rewards</li></ul></div><div class="auth panel"><div style="display:flex;gap:6px"><button class="${r?'on':''}" style="flex:1" onclick="atab='reg';authErr='';authView()">Create Account</button><button class="${r?'':'on'}" style="flex:1" onclick="atab='login';authErr='';authView()">Login</button></div><input class="inp" id="au" placeholder="Username" autocomplete="username" maxlength="16"><input class="inp" id="ap" type="password" placeholder="Password (8+ characters)" autocomplete="${r?'new-password':'current-password'}"><span style="color:var(--r)">${authErr}</span><button class="on" onclick="doAuth(${r})">${r?'Create account':'Log in'}</button><small>${ONLINE?'☁️ Online accounts: every username is unique and your progress is saved on the server, so you can log in from any device.':(/^https?:/.test(location.protocol)?'⚠️ Cannot reach the account server. New accounts are disabled until it is back; accounts saved in this browser can still log in.':'Offline mode: accounts and progress are saved only in this browser. Run server.js with this game to enable accounts that work on every device.')}</small>${ONLINE?'':'<button onclick="ping().then(authView)">Retry connection</button>'}</div></div></div>`}
 

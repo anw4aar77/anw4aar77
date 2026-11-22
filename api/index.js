@@ -252,8 +252,8 @@ module.exports = async (req, res) => {
       }
     }
     return send(res, 404, { ok: false, error: 'Not found' });
-  } catch (e) {
+ } catch (e) {
     console.error(e);
-    return send(res, 500, { ok: false, error: 'Server error' });
+    return send(res, 500, { ok: false, error: (e && e.message) || 'Server error' });
   }
 };

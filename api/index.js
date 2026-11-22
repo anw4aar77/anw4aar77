@@ -34,7 +34,7 @@ async function setJson(k, v, ttlSec) {
   return redis('SET', k, JSON.stringify(v));
 }
 
-const defSave = name => ({ c: 150, d: 10, xp: 0, l: 1, own: { 0: { a: 0, b: 0, c: 0, d: 0, v: 1 } }, team: [0], mis: 1, sel: 0, up: 0, kills: 0, bh: 0, dl: { last: '', day: 0 }, ach: {}, name, done: {}, tried: {}, prog: null, bought: [], ore: { stone: 0, copper: 0, iron: 0, gold: 0, diamond: 0 }, obj: {} });
+const defSave = name => ({ c: 150, d: 10, xp: 0, l: 1, own: { 0: { a: 0, b: 0, c: 0, d: 0, v: 1 } }, team: [0], mis: 1, sel: 0, up: 0, kills: 0, bh: 0, dl: { last: '', day: 0 }, ach: {}, name, done: {}, tried: {}, prog: null, bought: [], ore: { stone: 0, copper: 0, iron: 0, gold: 0, diamond: 0 }, obj: {}, fr: { s: 0, m: 0, ch: 0, h: {} }, evo: {} });
 const need = l => Math.floor(80 * Math.pow(l, 1.5));
 const th = t => crypto.createHash('sha256').update(t).digest('hex');
 const scrypt = (pw, salt) => new Promise((ok, no) => crypto.scrypt(pw, salt, 32, { N: 16384, r: 8, p: 1 }, (e, k) => e ? no(e) : ok(k.toString('hex'))));
@@ -82,6 +82,8 @@ function loadSave(u) {
   S.team = Array.isArray(S.team) && S.team.length ? S.team : [0];
   S.ore = Object.assign({ stone: 0, copper: 0, iron: 0, gold: 0, diamond: 0 }, S.ore);
   S.done = S.done || {}; S.tried = S.tried || {}; S.obj = S.obj || {}; S.ach = S.ach || {}; S.bought = S.bought || []; S.dl = S.dl || { last: '', day: 0 };
+  S.fr = Object.assign({ s: 0, m: 0, ch: 0 }, S.fr && typeof S.fr === 'object' ? S.fr : {}); S.fr.h = S.fr.h && typeof S.fr.h === 'object' ? S.fr.h : {};
+  S.evo = S.evo && typeof S.evo === 'object' ? S.evo : {};
   return S;
 }
 async function commit(key, u, S) {
@@ -92,7 +94,7 @@ async function commit(key, u, S) {
 async function runCommand(line) {
   const t = line.replace(/^\//, '').split(/\s+/).filter(Boolean), cmd = (t.shift() || '').toLowerCase();
   const E = m => ({ ok: false, msg: m }), O = m => ({ ok: true, msg: m });
-  if (cmd === 'help') return O(['Commands:', '/give diamonds|coins|xp <player> <amount>', '/give character <player> <name>', '/give ore <player> <stone|copper|iron|gold|diamond> <amount>', '/remove coins|diamonds <player> <amount>', '/remove ore <player> <ore> <amount>', '/remove character <player> <name>', '/level <player> <level>', '/unlockmissions <player> <1-' + NM + '>', '/resetmissions <player>', '/player <player>', '/players [filter]', '/log [count]', '/help'].join('\n'));
+  if (cmd === 'help') return O(['Commands:', '/give diamonds|coins|xp <player> <amount>', '/give character <player> <name>', '/give fragments <player> <star|moon|chest|character name> <amount>', '/remove fragments <player> <star|moon|chest|character name> <amount>', '/setevo <player> <character name> <0-5>', '/give ore <player> <stone|copper|iron|gold|diamond> <amount>', '/remove coins|diamonds <player> <amount>', '/remove ore <player> <ore> <amount>', '/remove character <player> <name>', '/level <player> <level>', '/unlockmissions <player> <1-' + NM + '>', '/resetmissions <player>', '/player <player>', '/players [filter]', '/log [count]', '/help'].join('\n'));
   if (cmd === 'players') {
     const f = (t[0] || '').toLowerCase();
     const keys = (await redis('SMEMBERS', 'users')) || [];
@@ -114,21 +116,33 @@ async function runCommand(line) {
     const k = String(t[0] || '').toLowerCase(), u = await getJson('user:' + k);
     if (!u) return E('Player not found.');
     const S = loadSave(u), cleared = Object.keys(S.done).length;
-    const heroes = Object.keys(S.own).map(Number).sort((x, y) => x - y).map(i => HEROES[i] + ' [' + RARITY[i] + '] Lv' + S.own[i].v + ' (DMG+' + S.own[i].a + ' RNG+' + S.own[i].b + ' SPD+' + S.own[i].c + ' ABL+' + S.own[i].d + ')');
-    return O(['Player: ' + u.name + (ADMIN_USERS.has(k) ? '  [ADMIN]' : ''), 'Level ' + S.l + '  (XP ' + fmt(S.xp) + '/' + fmt(need(S.l)) + ')   Coins ' + fmt(S.c) + '   Diamonds ' + fmt(S.d) + '   Kills ' + fmt(S.kills), 'Missions unlocked: ' + S.mis + '/' + NM + '   cleared: ' + cleared, 'Characters (' + heroes.length + '/10):', ...heroes.map(x => '  - ' + x), 'Team: ' + S.team.map(i => HEROES[i]).join(', '), 'Ores: ' + ORES.map(o => o + ' ' + fmt(S.ore[o] | 0)).join(', ')].join('\n'));
+    const heroes = Object.keys(S.own).map(Number).sort((x, y) => x - y).map(i => HEROES[i] + ' [' + RARITY[i] + '] Lv' + S.own[i].v + ' (DMG+' + S.own[i].a + ' RNG+' + S.own[i].b + ' SPD+' + S.own[i].c + ' ABL+' + S.own[i].d + ')' + (S.evo[i] ? ' Evo ' + S.evo[i] + '/5' : '') + (S.fr.h[i] ? ' [' + S.fr.h[i] + ' fragments]' : ''));
+    return O(['Player: ' + u.name + (ADMIN_USERS.has(k) ? '  [ADMIN]' : ''), 'Level ' + S.l + '  (XP ' + fmt(S.xp) + '/' + fmt(need(S.l)) + ')   Coins ' + fmt(S.c) + '   Diamonds ' + fmt(S.d) + '   Kills ' + fmt(S.kills), 'Missions unlocked: ' + S.mis + '/' + NM + '   cleared: ' + cleared, 'Characters (' + heroes.length + '/10):', ...heroes.map(x => '  - ' + x), 'Team: ' + S.team.map(i => HEROES[i]).join(', '), 'Ores: ' + ORES.map(o => o + ' ' + fmt(S.ore[o] | 0)).join(', '), 'Fragments: star ' + fmt(S.fr.s | 0) + ', moon ' + fmt(S.fr.m | 0) + ', chests ' + fmt(S.fr.ch | 0)].join('\n'));
   }
   if (cmd === 'give' || cmd === 'remove') {
     const give = cmd === 'give', what = (t.shift() || '').toLowerCase();
-    if (!['diamonds', 'coins', 'xp', 'character', 'ore'].includes(what) || (!give && what === 'xp')) return E('Invalid usage. Type /help');
+    if (!['diamonds', 'coins', 'xp', 'character', 'ore', 'fragments'].includes(what) || (!give && what === 'xp')) return E('Invalid usage. Type /help');
     const k = String(t.shift() || '').toLowerCase(), u = await getJson('user:' + k);
     if (!u) return E('Player not found.');
     const S = loadSave(u);
+    if (what === 'fragments') {
+      const typ = t.slice(0, -1).join(' ').toLowerCase(), n = amount(t[t.length - 1]);
+      if (!typ || n === null) return E('Usage: /' + cmd + ' fragments <player> <star|moon|chest|character name> <amount>');
+      let hold, key, label;
+      if (typ === 'star' || typ === 'stars') { hold = S.fr; key = 's'; label = 'Star Fragments'; }
+      else if (typ === 'moon' || typ === 'moons') { hold = S.fr; key = 'm'; label = 'Moon Fragments'; }
+      else if (typ === 'chest' || typ === 'chests') { hold = S.fr; key = 'ch'; label = 'treasure chests'; }
+      else { const h = findHero(typ); if (h.err) return E(h.err); hold = S.fr.h; key = h.id; label = HEROES[h.id] + ' Fragments'; }
+      const old = hold[key] | 0;
+      if (give) { const nv = cap(old, n); if (nv === null) return E('Exceeds balance limit.'); hold[key] = nv; await commit(k, u, S); return O('Gave ' + fmt(n) + ' ' + label + ' to ' + u.name + '. Now: ' + fmt(nv) + '.'); }
+      const rm = Math.min(old, n); hold[key] = old - rm; await commit(k, u, S); return O('Removed ' + fmt(rm) + ' ' + label + ' from ' + u.name + '. Now: ' + fmt(hold[key]) + '.');
+    }
     if (what === 'character') {
       const h = findHero(t.join(' ')); if (h.err) return E(h.err);
       if (give) { if (S.own[h.id]) return E(u.name + ' already owns ' + HEROES[h.id] + '.'); S.own[h.id] = { a: 0, b: 0, c: 0, d: 0, v: 1 }; if (S.team.length < 4) S.team.push(h.id); await commit(k, u, S); return O('Gave ' + HEROES[h.id] + ' to ' + u.name + '.'); }
       if (h.id === 0) return E('Starter hero cannot be removed.');
       if (!S.own[h.id]) return E(u.name + ' does not own ' + HEROES[h.id] + '.');
-      delete S.own[h.id]; S.team = S.team.filter(i => i !== h.id); if (!S.team.length) S.team = [0]; if (S.up === h.id) S.up = 0; await commit(k, u, S); return O('Removed ' + HEROES[h.id] + ' from ' + u.name + '.');
+      delete S.own[h.id]; delete S.evo[h.id]; S.team = S.team.filter(i => i !== h.id); if (!S.team.length) S.team = [0]; if (S.up === h.id) S.up = 0; await commit(k, u, S); return O('Removed ' + HEROES[h.id] + ' from ' + u.name + '.');
     }
     let ore = null;
     if (what === 'ore') { ore = (t.shift() || '').toLowerCase().replace(/_?ore$/, ''); if (!ORES.includes(ore)) return E('Unknown ore.'); }
@@ -141,6 +155,14 @@ async function runCommand(line) {
     const fld = what === 'coins' ? 'c' : what === 'diamonds' ? 'd' : null, hold = fld ? S : S.ore, key = fld || ore, label = fld ? what : ore + ' ore', old = hold[key] | 0;
     if (give) { const nv = cap(old, n); if (nv === null) return E('Exceeds balance limit.'); hold[key] = nv; await commit(k, u, S); return O('Gave ' + fmt(n) + ' ' + label + ' to ' + u.name + '. Now: ' + fmt(nv) + '.'); }
     const rm = Math.min(old, n); hold[key] = old - rm; await commit(k, u, S); return O('Removed ' + fmt(rm) + ' ' + label + ' from ' + u.name + '. Now: ' + fmt(hold[key]) + '.');
+  }
+  if (cmd === 'setevo') {
+    const k = String(t.shift() || '').toLowerCase(), u = await getJson('user:' + k); if (!u) return E('Player not found.');
+    const stage = t.pop(); if (!/^[0-5]$/.test(stage || '')) return E('Evolution stage must be 0-5.');
+    const h = findHero(t.join(' ')); if (h.err) return E(h.err);
+    const S = loadSave(u); if (!S.own[h.id]) return E(u.name + ' does not own ' + HEROES[h.id] + '.');
+    const old = S.evo[h.id] | 0; if (+stage) S.evo[h.id] = +stage; else delete S.evo[h.id];
+    await commit(k, u, S); return O(HEROES[h.id] + ' evolution for ' + u.name + ': ' + old + ' -> ' + (+stage) + '.');
   }
   if (cmd === 'level') {
     const k = String(t[0] || '').toLowerCase(), u = await getJson('user:' + k); if (!u) return E('Player not found.');
